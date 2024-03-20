@@ -15,7 +15,7 @@ public class EquipRemover {
     
     public static void main(String[] args) {
             ServerConstants.Host = "localhost";
-            ServerConstants.dbHost = "jdbc:mysql://localhost:3554/maplestoryt?autoReconnect=true&characterEncoding=euckr&maxReconnects=100";
+            ServerConstants.dbHost = "jdbc:mysql://localhost:3306/maplestoryt?autoReconnect=true&characterEncoding=euckr&maxReconnects=100&useSSL=false";
             ServerConstants.dbUser = "root";
             ServerConstants.dbPassword = "root";
             run();

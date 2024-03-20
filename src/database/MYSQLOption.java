@@ -5,7 +5,7 @@ import constants.ServerConstants;
 public class MYSQLOption {
 
     public static final boolean isAdmin = true;
-    public static final String MySQLURL = "jdbc:mysql://localhost:3306/maplestoryt?autoReconnect=true&characterEncoding=euckr&maxReconnects=100";
+    public static final String MySQLURL = "jdbc:mysql://localhost:3306/maplestoryt?autoReconnect=true&characterEncoding=euckr&maxReconnects=100&useSSL=false";
     public static final String MySQLUSER = ServerConstants.dbUser;
     public static final String MySQLPASS = ServerConstants.dbPassword;
 
