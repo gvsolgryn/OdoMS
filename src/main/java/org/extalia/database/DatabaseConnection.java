@@ -30,6 +30,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.util.Objects;
 
 /**
  * All OdinMS servers maintain a Database Connection. This class therefore
@@ -59,10 +60,13 @@ public class DatabaseConnection {
     private static int MySQLMINCONNECTION = 100;
     private static int MySQLMAXCONNECTION = 2100000000;
 
+    public static final String DBType = ServerProperties.getProperty("query.type");
+    public static final String MySQLServerURL = ServerProperties.getProperty("query.url");
+    public static final String MySQLPort = ServerProperties.getProperty("ports.query");
     public static final String MYSQLSCHEMA = ServerProperties.getProperty("query.schema");
     public static final String MySQLUSER = ServerProperties.getProperty("query.user");
     public static final String MySQLPASS = ServerProperties.getProperty("query.password");
-    public static final String MySQLURL = "jdbc:mysql://localhost:3306/" + MYSQLSCHEMA + "?autoReconnect=true&characterEncoding=euckr&maxReconnects=5";
+    public static final String MySQLURL = "jdbc:" + DBType + "://" + MySQLServerURL + ":" + MySQLPort + "/" + MYSQLSCHEMA + "?autoReconnect=true&characterEncoding=euckr&maxReconnects=5&useSSL=false";
 
     /**
      * 데이터베이스 연결 함수. Apache common의 dbcp api를 사용하여 커넥션 풀을 생성.
@@ -73,10 +77,19 @@ public class DatabaseConnection {
         }
 
         try {
-            //Class.forName("com.microsoft.jdbc.sqlserver.SQLServerDriver").newInstance();
-            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            /*
+             * Class.forName("com.microsoft.jdbc.sqlserver.SQLServerDriver").newInstance();
+             * Class.forName("com.mysql.jdbc.Driver").newInstance();
+             */
+            if (Objects.equals(DBType, "mariadb")) {
+                Class.forName("org.mariadb.jdbc.Driver");
+            }
+            else if (Objects.equals(DBType, "mysql")) {
+                Class.forName("com.mysql.jdbc.Driver");
+            }
         } catch (Throwable ex) {
             ex.printStackTrace();
+            System.err.println(ex);
             System.exit(1);
         }
 
@@ -101,13 +114,13 @@ public class DatabaseConnection {
             databaseProductVersion = dmd.getDatabaseProductVersion();
             c.close();
         } catch (Exception e) {
+            System.err.println(e);
             System.exit(1);
         }
     }
 
     private static DataSource setupDataSource() throws Exception {
-        ConnectionFactory conFactory = new DriverManagerConnectionFactory(MySQLURL,
-                MySQLUSER, MySQLPASS);
+        ConnectionFactory conFactory = new DriverManagerConnectionFactory(MySQLURL, MySQLUSER, MySQLPASS);
 
         PoolableConnectionFactoryAE poolableConnectionFactoryAE = new PoolableConnectionFactoryAE(conFactory, connectionPool, null, 1, false, true);
 

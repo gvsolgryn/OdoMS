@@ -1,15 +1,12 @@
 package org.extalia.client.inventory;
 
 import org.extalia.client.MapleCharacter;
-import com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException;
+//import com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException;
 import org.extalia.database.DatabaseConnection;
 import org.extalia.server.MapleInventoryManipulator;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -186,7 +183,7 @@ public class MapleRing implements Serializable {
     long[] ringID = { MapleInventoryIdentifier.getInstance(), MapleInventoryIdentifier.getInstance() };
     try {
       addToDB(itemid, partner1, partner2.getName(), partner2.getId(), ringID);
-    } catch (MySQLIntegrityConstraintViolationException mslcve) {
+    } catch (SQLIntegrityConstraintViolationException mslcve) {
       return ringID;
     } catch (SQLException ex) {
       Logger.getLogger(MapleRing.class.getName()).log(Level.SEVERE, (String)null, ex);
@@ -198,7 +195,7 @@ public class MapleRing implements Serializable {
     long[] ringID = { MapleInventoryIdentifier.getInstance(), MapleInventoryIdentifier.getInstance() };
     try {
       addToDB(itemid, partner1, partner2, id2, ringID);
-    } catch (MySQLIntegrityConstraintViolationException mslcve) {
+    } catch (SQLIntegrityConstraintViolationException mslcve) {
       return 0;
     } 
     MapleInventoryManipulator.addRing(partner1, itemid, ringID[1], sn, partner2);
