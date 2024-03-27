@@ -1,131 +1,110 @@
 package scripting;
 
+import client.MapleClient;
+import provider.MapleData;
+import provider.MapleDataProviderFactory;
+import provider.MapleDataTool;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.charset.Charset;
 
-import client.MapleClient;
-import constants.ServerConstants;
-import provider.MapleData;
-import provider.MapleDataProviderFactory;
-import provider.MapleDataTool;
-
 public class NPCAutoWriterHelper {
-
-    private int npcID;
-    private MapleClient ha;
-    private FileOutputStream out = null;
-
-    public NPCAutoWriterHelper(int id, MapleClient ha) {
-        this.npcID = id;
-        this.ha = ha;
-    }
-
-    public final boolean checkFileExist() {
-        try {
-            if (new File("Scripts/npc/" + npcID + ".js").exists()) { // ÀÌ¹Ì ½ºÅ©¸³Æ®°¡ Á¸ÀçÇÏ´Â °æ¿ì
-                return true;
-            }
-        } catch (Exception e) {
-            if (!ServerConstants.realese) {
-                e.printStackTrace();
-            }
-        }
-        return false;
-    }
-
-    public static final String getNPCName(int id) {
-        return MapleDataTool.getString(id + "/name", MapleDataProviderFactory.getDataProvider(new File("wz/String.wz")).getData("Npc.img"), "MISSINGNO");
-    }
-
-    public static final String getNPCFunc(int id) {
-        return MapleDataTool.getString(id + "/func", MapleDataProviderFactory.getDataProvider(new File("wz/String.wz")).getData("Npc.img"), "MISSINGNO");
-    }
-
-    public final String getNpcName() {
-        return MapleDataTool.getString(npcID + "/name", MapleDataProviderFactory.getDataProvider(new File("wz/String.wz")).getData("Npc.img"), "MISSINGNO");
-    }
-
-    public final String getNpcFunc() {
-        return MapleDataTool.getString(npcID + "/func", MapleDataProviderFactory.getDataProvider(new File("wz/String.wz")).getData("Npc.img"), "MISSINGNO");
-    }
-
-    public final String addInfo(int id) {
-        String a = "#d";
-        a += "¿£ÇÇ½Ã ÀÌ¸§ : " + getNPCName(id);
-        a += "\r\n#r";
-        if (!"MISSINGNO".equals(getNPCFunc(id))) {
-            a += "¿£ÇÇ½Ã ¼³¸í : " + getNPCFunc(id) + "\r\n";
-        }
-        a += "\r\n#k";
-        for (MapleData d : MapleDataProviderFactory.getDataProvider(new File("wz/String.wz")).getData("Npc.img").getChildByPath(id + "").getChildren()) {
-            if (!d.getName().equals("name") && !d.getName().equals("func")) {
-                a += d.getName() + " : " + (String) d.getData() + "\r\n";
-            }
-        }
-        return a;
-    }
-
-    public final void doMain() {
-        try {
-            if (checkFileExist()) { // ÀÌ¹Ì ½ºÅ©¸³Æ®°¡ Á¸ÀçÇÏ´Â °æ¿ì
-                return;
-            }
-            out = new FileOutputStream("Scripts/npc/" + npcID + ".js");
-        } catch (FileNotFoundException fe) {
-            dropMessage("ÆÄÀÏÀ» ÀÛ¼ºÇÏ´Âµ¥ ½ÇÆĞÇß½À´Ï´Ù. ¼­¹öÇÁ·Î±×·¥¿¡ ÆÄÀÏ ¾²±â ±ÇÇÑÀÌ ÀÖ´ÂÁö È®ÀÎÇØ ÁÖ¼¼¿ä.");
-            if (!ServerConstants.realese) {
-                fe.printStackTrace();
-            }
-        } catch (NullPointerException ne) {
-            dropMessage("ÆÄÀÏÀ» ÀÛ¼ºÇÏ´Âµ¥ ½ÇÆĞÇß½À´Ï´Ù. ³Î Æ÷ÀÎÅÍ ¿À·ù°¡ ¹ß»ıÇß½À´Ï´Ù.");
-            if (!ServerConstants.realese) {
-                ne.printStackTrace();
-            }
-        } catch (Exception e) {
-            if (!ServerConstants.realese) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public final void dropMessage(String text) {
-        ha.getPlayer().dropMessage(1, text);
-    }
-
-    public final void writeLine(String text) {
-        if (out != null) {
-            try {
-                out.write(text.getBytes(Charset.forName("euc-kr")));
-            } catch (Exception e) {
-                if (!ServerConstants.realese) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    public final void newLine() {
-        if (out != null) {
-            try {
-                out.write(System.getProperty("line.separator").getBytes());
-            } catch (Exception e) {
-                if (!ServerConstants.realese) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    public final void closeFile() {
-        try {
-            out.close();
-        } catch (Exception e) {
-            if (!ServerConstants.realese) {
-                e.printStackTrace();
-            }
-        }
-    }
-
+  private int npcID;
+  
+  private MapleClient ha;
+  
+  private FileOutputStream out = null;
+  
+  public NPCAutoWriterHelper(int id, MapleClient ha) {
+    this.npcID = id;
+    this.ha = ha;
+  }
+  
+  public final boolean checkFileExist() {
+    try {
+      if ((new File("Scripts/npc/" + this.npcID + ".js")).exists())
+        return true; 
+    } catch (Exception e) {
+      e.printStackTrace();
+    } 
+    return false;
+  }
+  
+  public static final String getNPCName(int id) {
+    return MapleDataTool.getString(id + "/name", MapleDataProviderFactory.getDataProvider(new File("wz/String.wz")).getData("Npc.img"), "MISSINGNO");
+  }
+  
+  public static final String getNPCFunc(int id) {
+    return MapleDataTool.getString(id + "/func", MapleDataProviderFactory.getDataProvider(new File("wz/String.wz")).getData("Npc.img"), "MISSINGNO");
+  }
+  
+  public final String getNpcName() {
+    return MapleDataTool.getString(this.npcID + "/name", MapleDataProviderFactory.getDataProvider(new File("wz/String.wz")).getData("Npc.img"), "MISSINGNO");
+  }
+  
+  public final String getNpcFunc() {
+    return MapleDataTool.getString(this.npcID + "/func", MapleDataProviderFactory.getDataProvider(new File("wz/String.wz")).getData("Npc.img"), "MISSINGNO");
+  }
+  
+  public final String addInfo(int id) {
+    String a = "#d";
+    a = a + "ì—”í”¼ì‹œ ì´ë¦„ : " + getNPCName(id);
+    a = a + "\r\n#r";
+    if (!"MISSINGNO".equals(getNPCFunc(id)))
+      a = a + "ì—”í”¼ì‹œ ì„¤ëª… : " + getNPCFunc(id) + "\r\n"; 
+    a = a + "\r\n#k";
+    for (MapleData d : MapleDataProviderFactory.getDataProvider(new File("wz/String.wz")).getData("Npc.img").getChildByPath(id + "").getChildren()) {
+      if (!d.getName().equals("name") && !d.getName().equals("func"))
+        a = a + d.getName() + " : " + (String)d.getData() + "\r\n"; 
+    } 
+    return a;
+  }
+  
+  public final void doMain() {
+    try {
+      if (checkFileExist())
+        return; 
+      this.out = new FileOutputStream("Scripts/npc/" + this.npcID + ".js");
+    } catch (FileNotFoundException fe) {
+      dropMessage("íŒŒì¼ì„ ì‘ì„±í•˜ëŠ”ë° ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤. ì„œë²„í”„ë¡œê·¸ë¨ì— íŒŒì¼ ì“°ê¸° ê¶Œí•œì´ ìˆëŠ”ì§€ í™•ì¸í•´ ì£¼ì„¸ìš”.");
+      fe.printStackTrace();
+    } catch (NullPointerException ne) {
+      dropMessage("íŒŒì¼ì„ ì‘ì„±í•˜ëŠ”ë° ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤. ë„ í¬ì¸í„° ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.");
+      ne.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
+    } 
+  }
+  
+  public final void dropMessage(String text) {
+    this.ha.getPlayer().dropMessage(1, text);
+  }
+  
+  public final void writeLine(String text) {
+    if (this.out != null)
+      try {
+        this.out.write(text.getBytes(Charset.forName("UTF-8")));
+      } catch (Exception e) {
+        e.printStackTrace();
+      }  
+  }
+  
+  public final void newLine() {
+    if (this.out != null)
+      try {
+        this.out.write(System.getProperty("line.separator").getBytes());
+      } catch (Exception e) {
+        e.printStackTrace();
+      }  
+  }
+  
+  public final void closeFile() {
+    try {
+      this.out.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+    } 
+  }
 }

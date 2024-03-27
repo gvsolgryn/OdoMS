@@ -1,2034 +1,2213 @@
 package scripting;
 
-import client.BingoGame;
-import static handler.channel.InventoryHandler.potential;
+import client.*;
+import client.inventory.*;
+import constants.GameConstants;
+import constants.KoreaCalendar;
+import constants.ServerConstants;
+import database.DatabaseConnection;
+import handling.channel.ChannelServer;
+import handling.channel.handler.InterServerHandler;
+import handling.channel.handler.PlayersHandler;
+import handling.login.LoginInformationProvider;
+import handling.world.party.MapleParty;
+import handling.world.party.MaplePartyCharacter;
+import handling.world.World;
+import handling.world.guild.MapleGuild;
+import provider.MapleData;
+import provider.MapleDataProvider;
+import provider.MapleDataProviderFactory;
+import provider.MapleDataTool;
+import server.*;
+import server.Timer;
+import server.life.MapleLifeFactory;
+import server.life.MapleMonster;
+import server.life.MapleMonsterInformationProvider;
+import server.life.MonsterDropEntry;
+import server.maps.Event_DojoAgent;
+import server.maps.MapleMap;
+import server.marriage.MarriageDataEntry;
+import server.quest.MapleQuest;
+import server.quest.party.MapleNettPyramid;
+import server.shops.MapleShopFactory;
+import server.shops.MapleShopItem;
+import server.enchant.StarForceStats;
+import server.enchant.EnchantFlag;
+import server.enchant.EquipmentEnchant;
+import tools.FileoutputUtil;
+import tools.Pair;
+import tools.StringUtil;
+import tools.Triple;
+import tools.packet.CField;
+import tools.packet.CWvsContext;
+import tools.packet.PacketHelper;
+import tools.packet.SLFCGPacket;
 
-import java.awt.Point;
+import javax.script.Invocable;
+import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.script.Invocable;
-
-import client.MapleCarnivalParty;
-import client.MapleCharacter;
-import client.MapleClient;
-import client.MapleKeyBinding;
-import client.MaplePet;
-import client.MapleQuestStatus;
-import client.items.Equip;
-import client.items.IEquip;
-import client.items.IItem;
-import client.items.Item;
-import client.items.ItemFlag;
-import client.items.MapleInventory;
-import client.items.MapleInventoryType;
-import client.items.StructPotentialItem;
-import client.skills.ISkill;
-import client.skills.InnerAbillity;
-import client.skills.InnerSkillValueHolder;
-import client.skills.SkillEntry;
-import client.skills.SkillFactory;
-import client.skills.SkillStatEffect;
-import client.stats.PlayerStat;
-import community.MapleGuild;
-import community.MapleGuildRanking;
-import community.MapleParty;
-import community.MaplePartyCharacter;
-import community.MapleSquadLegacy;
-import constants.GameConstants;
-import database.MYSQL;
-import handler.channel.InterServerHandler;
-import handler.channel.InventoryHandler;
-import launch.ChannelServer;
-import launch.holder.WideObjectHolder;
-import launch.world.WorldBroadcasting;
-import launch.world.WorldConnected;
-import packet.creators.MainPacketCreator;
-import packet.creators.SLFCGPacket;
-import packet.creators.UIPacket;
-import packet.skills.ZeroSkill;
-import packet.transfer.write.WritingPacket;
-import provider.MapleData;
-import provider.MapleDataProviderFactory;
-import provider.MapleDataTool;
-import server.MapleSlideMenu;
-import server.MapleSlideMenu.SlideMenu0;
-import server.MapleSlideMenu.SlideMenu1;
-import server.MapleSlideMenu.SlideMenu2;
-import server.MapleSlideMenu.SlideMenu3;
-import server.MapleSlideMenu.SlideMenu4;
-import server.MapleSlideMenu.SlideMenu5;
-import server.events.MapleDojoAgent;
-import server.events.MaplePyramidSubway;
-import server.items.InventoryManipulator;
-import server.items.ItemInformation;
-import server.life.MapleLifeProvider;
-import server.life.MapleMonster;
-import server.life.MapleMonsterProvider;
-import server.life.MapleNPC;
-import server.life.MapleNPCStats;
-import server.life.MonsterDropEntry;
-import server.life.OverrideMonsterStats;
-import server.maps.MapleCarnivalChallenge;
-import server.maps.MapleMap;
-import server.maps.MapleWorldMapProvider;
-import server.named.Named;
-import server.quest.MapleQuest;
-import server.shops.MapleShopFactory;
-import tools.HexTool;
-import tools.Pair;
-import tools.StringUtil;
-import tools.Timer;
-import tools.Timer.EtcTimer;
-import tools.Timer.MapTimer;
-import tools.Triple;
-import tools.RandomStream.Randomizer;
-import launch.world.WorldCommunity;
-import static launch.world.WorldCommunity.ªÁ««;
-import packet.transfer.read.ReadingMaple;
-import server.items.MapleItemIdenfier;
-import server.items.MapleRing;
+import java.util.*;
+import java.util.regex.Pattern;
 
 public class NPCConversationManager extends AbstractPlayerInteraction {
 
     private String getText;
-    private final byte type; // -1 = NPC, 0 = start quest, 1 = end quest
     private byte lastMsg = -1;
+    private String script;
+    private byte type;
     public boolean pendingDisposal = false;
-    private final Invocable iv;
+    private Invocable iv;
 
-    public NPCConversationManager(MapleClient c, int npc, int questid, String npcscript, byte type, Invocable iv) {
-        super(c, npc, questid, npcscript);
+    public NPCConversationManager(MapleClient c, int npc, int questid, byte type, Invocable iv, String script) {
+        super(c, npc, questid);
         this.type = type;
         this.iv = iv;
+        this.script = script;
     }
 
-    public boolean isªÁ««() {
-        return ªÁ««;
+    public void sendConductExchange(String text) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCConductExchangeTalk(this.id, text));
+        this.lastMsg = 0;
     }
 
-    public void ªÁ««() {
-        WorldCommunity.ªÁ««();
+    public void sendPacket(short a, String b) {
+        this.c.getSession().writeAndFlush(SLFCGPacket.SendPacket(a, b));
     }
 
-    public void ªÁ««≥°() {
-        WorldBroadcasting.broadcastMessage(MainPacketCreator.getGMText(11, "ø©∑Ø∫– æ∆Ω±¡ˆ∏∏ ¿Ã∫•∆Æ∞° ≥°≥™ πˆ∑»æÓø‰... ¥Ÿ¿Ωø° ∂« ∏∏≥™ø‰~"));
-        ªÁ«« = false;
+    public Invocable getIv() {
+        return this.iv;
     }
 
-	public Invocable getIv()
-	{
-		return iv;
-	}
+    public String getScript() {
+        return this.script;
+    }
 
-	public int getNpc()
-	{
-		return id;
-	}
+    public int getNpc() {
+        return this.id;
+    }
 
-	public int getQuest()
-	{
-		return id2;
-	}
+    public int getQuest() {
+        return this.id2;
+    }
 
-	public String getScript()
-	{
-		return script;
-	}
+    public byte getType() {
+        return this.type;
+    }
 
-	public byte getType()
-	{
-		return type;
-	}
+    public void safeDispose() {
+        this.pendingDisposal = true;
+    }
 
-	public void safeDispose()
-	{
-		pendingDisposal = true;
-	}
+    public void dispose() {
+        NPCScriptManager.getInstance().dispose(this.c);
+    }
 
-	public void sendSlideMenu(final int type, final String sel)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		int lasticon = 0;
-		// if (type == 0 && sel.contains("#")) {
-		// String splitted[] = sel.split("#");
-		// lasticon = Integer.parseInt(splitted[splitted.length - 2]);
-		// if (lasticon < 0) {
-		// lasticon = 0;
-		// }
-		// }
-		c.getSession().writeAndFlush(MainPacketCreator.getSlideMenu(id, type, lasticon, sel));
-		lastMsg = 0x12;// was12
-	}
+    public void askMapSelection(String sel) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getMapSelection(this.id, sel));
+        this.lastMsg = 17;
+    }
 
-	public String getDimensionalMirror(MapleCharacter character)
-	{
-		return MapleSlideMenu.SlideMenu0.getSelectionInfo(character, id);
-	}
-        
-        public void ResetInnerPot()
-	{
-		// int itemid = slea.readInt();
-		// short slot = (short) slea.readInt();
-		// Item item = c.getPlayer().getInventory(MapleInventoryType.USE).getItem(slot);
-		List<InnerSkillValueHolder> newValues = new LinkedList<InnerSkillValueHolder>();
+    public void sendNext(String text) {
+        sendNext(text, this.id);
+    }
 
-		for (InnerSkillValueHolder isvh : c.getPlayer().getInnerSkills())
-		{
-			newValues.add(InnerAbillity.getInstance().renewSkill(isvh.getRank(), 2702000, true));
-		}
+    public void sendNext(String text, int id) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(id, (byte) 0, text, "00 01", (byte) 0));
+        this.lastMsg = 0;
+    }
 
-		c.getPlayer().getInnerSkills().clear();
-		for (InnerSkillValueHolder isvh : newValues)
-		{
-			c.getPlayer().getInnerSkills().add(isvh);
-		}
+    public void sendPlayerToNpc(String text) {
+        sendNextS(text, (byte) 3, this.id);
+    }
 
-		// c.getPlayer().getInventory(MapleInventoryType.USE).removeItem(slot, (short)
-		// 1, false);
-		int j = 0;
-		for (InnerSkillValueHolder i : newValues)
-		{
-			j++;
-			c.sendPacket(MainPacketCreator.updateInnerAbility(i, j, j == 3));
-		}
-                
-		c.getPlayer().dropMessage(5, "Inner Potential has been reconfigured.");
-	}
+    public void StartSpiritSavior() {
+    }
 
-	public String getSlideMenuSelection(int type)
-	{
-		switch (type)
-		{
-		case 0:
-			return SlideMenu0.getSelectionInfo(getPlayer(), id);
-		case 1:
-			return SlideMenu1.getSelectionInfo(getPlayer(), id);
-		case 2:
-			return SlideMenu2.getSelectionInfo(getPlayer(), id);
-		case 3:
-			return SlideMenu3.getSelectionInfo(getPlayer(), id);
-		case 4:
-			return SlideMenu4.getSelectionInfo(getPlayer(), id);
-		case 5:
-			return SlideMenu5.getSelectionInfo(getPlayer(), id);
-		default:
-			return SlideMenu0.getSelectionInfo(getPlayer(), id);
-		}
-	}
+    public void StartBlockGame() {
+        MapleClient c = getClient();
+        c.getSession().writeAndFlush(CField.onUserTeleport(c.getPlayer(), 65535, 0));
+        c.getSession().writeAndFlush(CField.UIPacket.IntroDisableUI(true));
+        c.getSession().writeAndFlush(CField.UIPacket.IntroLock(true));
 
-	public int getSlideMenuDataInteger(int type)
-	{
-		switch (type)
-		{
-		case 0:
-			return SlideMenu0.getDataInteger(type);
-		case 1:
-			return SlideMenu1.getDataInteger(type);
-		case 2:
-			return SlideMenu2.getDataInteger(type);
-		case 3:
-			return SlideMenu3.getDataInteger(type);
-		case 4:
-			return SlideMenu4.getDataInteger(type);
-		case 5:
-			return SlideMenu5.getDataInteger(type);
-		default:
-			return SlideMenu0.getDataInteger(type);
-		}
-	}
+        Timer.EventTimer.getInstance().schedule(() -> {
+            c.getSession().writeAndFlush(SLFCGPacket.BlockGameCommandPacket(1));
+            c.getSession().writeAndFlush(SLFCGPacket.BlockGameCommandPacket(2));
+            c.getSession().writeAndFlush(SLFCGPacket.BlockGameControlPacket(100, 10));
+        }, 2000L);
+    }
 
-	// public String getSlideMenuSelection(int type) {
-	// try {
-	// Class<?> slideMenu = (Class<?>)
-	// MapleSlideMenu.getSlideMenu(type).newInstance();
-	// try {
-	// return (String) slideMenu.getClass().getMethod("getSelectionInfo",
-	// MapleCharacter.class, int.class).invoke(slideMenu, c.getPlayer(), id);
-	// } catch (NoSuchMethodException | SecurityException |
-	// IllegalAccessException | IllegalArgumentException |
-	// InvocationTargetException ex) {
-	// return "";
-	// }
-	// } catch (InstantiationException | IllegalAccessException ex) {
-	// return "";
-	// }
-	// }
-	//
-	// public int getSlideMenuDataInteger(int type) {
-	// try {
-	// Class<?> slideMenu = (Class<?>)
-	// MapleSlideMenu.getSlideMenu(type).newInstance();
-	// try {
-	// return (int) slideMenu.getClass().getMethod("getDataInteger",
-	// int.class).invoke(slideMenu, type);
-	// } catch (NoSuchMethodException | SecurityException |
-	// IllegalAccessException | IllegalArgumentException |
-	// InvocationTargetException ex) {
-	// return 0;
-	// }
-	// } catch (InstantiationException | IllegalAccessException ex) {
-	// return 0;
-	// }
-	// }
-	public void sendNext(String text)
-	{
-		sendNext(text, id);
-	}
 
-	public void sendNext(String text, int id)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // sendNext will dc otherwise!
-			sendSimple(text);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 0);
-		t.setText(text);
-		t.setNext(true);
+    public boolean setZodiacGrade(int grade) {
+        if (c.getPlayer().getKeyValue(190823, "grade") >= grade) {
+            return false;
+        }
+        c.getPlayer().setKeyValue(190823, "grade", String.valueOf(grade));
+        c.getPlayer().getMap().broadcastMessage(c.getPlayer(), SLFCGPacket.ZodiacRankInfo(c.getPlayer().getId(), grade), true);
+        c.getSession().writeAndFlush(SLFCGPacket.playSE("Sound/MiniGame.img/Result_Yut"));
+        showEffect(false, "Effect/CharacterEff.img/gloryonGradeup");
+        return true;
+    }
 
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 0;
-	}
+    public void sendNextNoESC(String text) {
+        sendNextS(text, (byte) 1, this.id);
+    }
 
-	public void fieldEffect(int delay)
-	{
-		EtcTimer.getInstance().schedule(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				getClient().sendPacket(MainPacketCreator.fieldEffect("12 02 F4 01 00 00 01 00 30 00"));
-				getClient().sendPacket(MainPacketCreator.fieldEffect("12 02 F4 01 00 00 01 00 31 00"));
-				getClient().sendPacket(MainPacketCreator.fieldEffect("12 02 F4 01 00 00 01 00 32 00"));
-				getClient().sendPacket(MainPacketCreator.fieldEffect("10 01 FF 00 00 00 00 00 00 00 00 00 00 00"));
-				getClient().sendPacket(MainPacketCreator.fieldEffect("10 00 00 00 00 00 00 00 00 00 E8 03 00 00"));
-			}
-		}, delay);
-	}
+    public void sendNextNoESC(String text, int id) {
+        sendNextS(text, (byte) 1, id);
+    }
 
-	public void sendPlayerToNpc(int delay, String text)
-	{
-		EtcTimer.getInstance().schedule(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				sendPlayerToNpc(text);
-			}
-		}, delay);
-	}
-        
-        public void BlockGameTimeMove(final int destination, final int movemap, final int time) {
-            getPlayer().changeMap(movemap, 0);
-            getClient().send(MainPacketCreator.getClock(time));
-            Timer.CloneTimer tMan = Timer.CloneTimer.getInstance();
-            Runnable r = new Runnable() {
-                @Override
-                public void run() {
-                    if (getPlayer() != null) {
-                        if (getMapId() == movemap) {
-                            ExitBlockGame(destination);
+    public void sendNextS(String text, byte type) {
+        sendNextS(text, type, 0);
+    }
+
+    public void sendNextS(String text, byte type, int id, int idd) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimpleS(text, type);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(id, (byte) 0, text, "00 01", type, idd));
+        this.lastMsg = 0;
+    }
+
+    public void sendNextS(String text, byte type, int idd) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimpleS(text, type);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 0, text, "00 01", type, idd));
+        this.lastMsg = 0;
+    }
+
+    public void sendCustom(String text, int type, int idd) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalks(this.id, (byte) 0, text, "00 01", (byte) type, idd));
+        this.lastMsg = 0;
+    }
+
+    public void sendPrev(String text) {
+        sendPrev(text, this.id);
+    }
+
+    public void sendPrev(String text, int id) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(id, (byte) 0, text, "01 00", (byte) 0));
+        this.lastMsg = 0;
+    }
+
+    public void sendPrevS(String text, byte type) {
+        sendPrevS(text, type, 0);
+    }
+
+    public void sendPrevS(String text, byte type, int idd) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimpleS(text, type);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 0, text, "01 00", type, idd));
+        this.lastMsg = 0;
+    }
+
+    public void sendNextPrev(String text) {
+        sendNextPrev(text, this.id);
+    }
+
+    public void sendNextPrev(String text, int id) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(id, (byte) 0, text, "01 01", (byte) 0));
+        this.lastMsg = 0;
+    }
+
+    public void EnterCS() {
+        InterServerHandler.EnterCS(this.c, this.c.getPlayer(), false);
+    }
+
+    public void PlayerToNpc(String text) {
+        sendNextPrevS(text, (byte) 3);
+    }
+
+    public void sendNextPrevS(String text) {
+        sendNextPrevS(text, (byte) 3);
+    }
+
+    public String getMobName(int mobid) {
+        MapleData data = null;
+        MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wz") + "/String.wz"));
+        String ret = "";
+        List<String> retMobs = new ArrayList<>();
+        data = dataProvider.getData("Mob.img");
+        List<Pair<Integer, String>> mobPairList = new LinkedList<>();
+        for (MapleData mobIdData : data.getChildren()) {
+            mobPairList.add(new Pair(Integer.valueOf(Integer.parseInt(mobIdData.getName())), MapleDataTool.getString(mobIdData.getChildByPath("name"), "NO-NAME")));
+        }
+        for (Pair<Integer, String> mobPair : mobPairList) {
+            if (((Integer) mobPair.getLeft()).intValue() == mobid) {
+                ret = (String) mobPair.getRight();
+            }
+        }
+        return ret;
+    }
+
+    public void sendNextPrevS(String text, byte type) {
+        sendNextPrevS(text, type, 0);
+    }
+
+    public void sendNextPrevS(String text, byte type, int id, int idd) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimpleS(text, type);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(id, (byte) 0, text, "01 01", type, idd));
+        this.lastMsg = 0;
+    }
+
+    public void sendNextPrevS(String text, byte type, int idd) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimpleS(text, type);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 0, text, "01 01", type, idd));
+        this.lastMsg = 0;
+    }
+
+    public void sendDimensionGate(String text) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 19, text, "00 00", (byte) 0));
+        this.lastMsg = 0;
+    }
+
+    public void sendOk(String text) {
+        sendOk(text, this.id);
+    }
+
+    public void sendOk(String text, int id) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(id, (byte) 0, text, "00 00", (byte) 0));
+        this.lastMsg = 0;
+    }
+
+    public void sendOkS(String text, byte type) {
+        sendOkS(text, type, 0);
+    }
+
+    public void sendOkS(String text, byte type, int idd) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimpleS(text, type);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(idd, (byte) 0, text, "00 00", type, idd));
+        this.lastMsg = 0;
+    }
+
+    public void sendYesNo(String text) {
+        sendYesNo(text, this.id);
+    }
+
+    public void sendYesNo(String text, int id) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(id, (byte) 3, text, "", (byte) 0));
+        this.lastMsg = 2;
+    }
+
+    public void sendYesNoS(String text, byte type) {
+        sendYesNoS(text, type, 0);
+    }
+
+    public void sendYesNoS(String text, byte type, int idd) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimpleS(text, type);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 3, text, "", type, idd));
+        this.lastMsg = 2;
+    }
+
+    public void sendAcceptDecline(String text) {
+        askAcceptDecline(text);
+    }
+
+    public void sendAcceptDeclineNoESC(String text) {
+        askAcceptDeclineNoESC(text);
+    }
+
+    public void askAcceptDecline(String text) {
+        askAcceptDecline(text, this.id);
+    }
+
+    public void askAcceptDecline(String text, int id) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.lastMsg = 16;
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(id, this.lastMsg, text, "", (byte) 0));
+    }
+
+    public void askPraticeReplace(String text) {
+        askPraticeReplace(text, this.id);
+    }
+
+    public void askPraticeReplace(String text, int id) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.lastMsg = 3;
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getPraticeReplace(id, this.lastMsg, text, "", (byte) 0, 1));
+    }
+
+    public void askAcceptDeclineNoESC(String text) {
+        askAcceptDeclineNoESC(text, this.id);
+    }
+
+    public void askAcceptDeclineNoESC(String text, int id) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.lastMsg = 16;
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(id, this.lastMsg, text, "", (byte) 1));
+    }
+
+    public void sendStyle(String text, int... args) {
+        askAvatar(text, args);
+    }
+
+    public void askCustomMixHairAndProb(String text) {
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalkMixStyle(this.id, text, GameConstants.isZero(this.c.getPlayer().getJob()) ? ((this.c.getPlayer().getGender() == 1)) : false, GameConstants.isAngelicBuster(this.c.getPlayer().getJob()) ? (this.c.getPlayer().getDressup()) : false));
+        this.lastMsg = 44;
+    }
+
+    public void askAvatar(String text, int... args) {
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalkStyle(this.c.getPlayer(), this.id, text, args));
+        this.lastMsg = 9;
+    }
+
+    public void askAvatar(String text, int[] args1, int[] args2) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (GameConstants.isZero(this.c.getPlayer().getJob())) {
+            this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalkStyleZero(this.id, text, args1, args2));
+        } else {
+            this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalkStyle(this.c.getPlayer(), this.id, text, args1));
+        }
+        this.lastMsg = 9;
+    }
+
+    public void askCoupon(int itemid, int... args) {
+        this.c.send(CWvsContext.UseMakeUpCoupon(this.c.getPlayer(), itemid, args));
+    }
+
+    public void askAvatarAndroid(String text, int... args) {
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalkStyleAndroid(this.id, text, args));
+    }
+
+    public void sendSimple(String text) {
+        sendSimple(text, this.id);
+    }
+
+    public void sendSimple(String text, int id) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+
+        if (!text.contains("#L")) {
+            sendNext(text);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(id, (byte) 6, text, "", (byte) 0));
+        this.lastMsg = 5;
+    }
+
+    public void sendSimpleS(String text, byte type) {
+        sendSimpleS(text, type, 0);
+    }
+
+    public void sendSimpleS(String text, byte type, int idd) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (!text.contains("#L")) {
+            sendNextS(text, type);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 6, text, "", type, idd));
+        this.lastMsg = 5;
+    }
+
+    public void sendSimpleS(String text, byte type, int id, int idd) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (!text.contains("#L")) {
+            sendNextS(text, type);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(id, (byte) 6, text, "", type, idd));
+        this.lastMsg = 5;
+    }
+
+    public void sendZeroPreview(int itemid, int type, int beta, int beta2, int alpha, int alpha2) {
+        if (GameConstants.isZero(c.getPlayer().getJob())) {
+            c.getSession().writeAndFlush(CField.NPCPacket.getStylePreview(itemid, 2, type, beta, beta2, alpha, alpha2));
+        } else {
+        }
+    }
+
+    public void sendStyle(String text, int[] styles1, int[] styles2) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (GameConstants.isZero(c.getPlayer().getJob())) {
+            this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalkStyleZero(this.id, text, styles1, styles2));
+            this.lastMsg = 36;
+        } else {
+            this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalkStyle(this.c.getPlayer(), this.id, text, styles1));
+            this.lastMsg = 9;
+        }
+    }
+
+    public void sendIllustYesNo(String text, int face, boolean isLeft) {
+        if (lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendIllustSimple(text, face, isLeft);
+            return;
+        }
+        c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 28, text, "", (byte) 0, face, true, isLeft));
+        lastMsg = 28;
+    }
+
+    public void sendIllustSimple(String text, int face, boolean isLeft) {
+        if (lastMsg > -1) {
+            return;
+        }
+        if (!text.contains("#L")) {
+            sendIllustNext(text, face, isLeft);
+            return;
+        }
+        c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 30, text, "", (byte) 0, face, true, isLeft));
+        lastMsg = 30;
+    }
+
+    public void sendIllustNext(String text, int face, boolean isLeft) {
+        if (lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendIllustSimple(text, face, isLeft);
+            return;
+        }
+        c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 26, text, "00 01", (byte) 0, face, true, isLeft));
+        lastMsg = 26;
+    }
+
+    public void sendIllustPrev(String text, int face, boolean isLeft) {
+        if (lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendIllustSimple(text, face, isLeft);
+            return;
+        }
+        c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 26, text, "01 00", (byte) 0, face, true, isLeft));
+        lastMsg = 26;
+    }
+
+    public void sendIllustNextPrev(String text, int face, boolean isLeft) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendIllustSimple(text, face, isLeft);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 26, text, "01 01", (byte) 0, face, true, isLeft));
+        this.lastMsg = 26;
+    }
+
+    public void sendIllustOk(String text, int face, boolean isLeft) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendIllustSimple(text, face, isLeft);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalk(this.id, (byte) 26, text, "00 00", (byte) 0, face, true, isLeft));
+        this.lastMsg = 26;
+    }
+
+    public void sendGetNumber(int id, String text, int def, int min, int max) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalkNum(id, text, def, min, max));
+        this.lastMsg = 4;
+    }
+
+    public void sendFriendsYesNo(String text, int id) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.c.send(CField.NPCPacket.getNPCTalk(id, (byte) 3, text, "", (byte) 36));
+        this.lastMsg = 3;
+    }
+
+    public void sendGetNumber(String text, int def, int min, int max) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalkNum(this.id, text, def, min, max));
+        this.lastMsg = 4;
+    }
+
+    public void sendGetText(String text) {
+        sendGetText(text, this.id);
+    }
+
+    public void sendGetText(String text, int id) {
+        if (this.lastMsg > -1) {
+            return;
+        }
+        if (text.contains("#L")) {
+            sendSimple(text);
+            return;
+        }
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalkText(id, text));
+        this.lastMsg = 3;
+    }
+
+    public void setGetText(String text) {
+        this.getText = text;
+    }
+
+    public String getText() {
+        return this.getText;
+    }
+
+    public void setZeroSecondHair(int hair) {
+        getPlayer().setSecondHair(hair);
+        getPlayer().updateZeroStats();
+        getPlayer().equipChanged();
+    }
+
+    public void setZeroSecondFace(int face) {
+        getPlayer().setSecondFace(face);
+        getPlayer().updateZeroStats();
+        getPlayer().equipChanged();
+    }
+
+    public void setZeroSecondSkin(int color) {
+        getPlayer().setSecondSkinColor((byte) color);
+        getPlayer().updateZeroStats();
+        getPlayer().equipChanged();
+    }
+
+    public void setAngelicSecondHair(int hair) {
+        getPlayer().setSecondHair(hair);
+        getPlayer().updateAngelicStats();
+        getPlayer().equipChanged();
+    }
+
+    public void setAngelicSecondFace(int face) {
+        getPlayer().setSecondFace(face);
+        getPlayer().updateAngelicStats();
+        getPlayer().equipChanged();
+    }
+
+    public void setAngelicSecondSkin(int color) {
+        getPlayer().setSecondSkinColor((byte) color);
+        getPlayer().updateAngelicStats();
+        getPlayer().equipChanged();
+    }
+
+    public void setHair(int hair) {
+        getPlayer().setHair(hair);
+        getPlayer().updateSingleStat(MapleStat.HAIR, hair);
+        getPlayer().equipChanged();
+    }
+
+    public void setFace(int face) {
+        getPlayer().setFace(face);
+        getPlayer().updateSingleStat(MapleStat.FACE, face);
+        getPlayer().equipChanged();
+    }
+
+    public void setSkin(int color) {
+        getPlayer().setSkinColor((byte) color);
+        getPlayer().updateSingleStat(MapleStat.SKIN, color);
+        getPlayer().equipChanged();
+    }
+
+    public int setRandomAvatar(int ticket, int... args_all) {
+        gainItem(ticket, (short) -1);
+
+        int args = args_all[Randomizer.nextInt(args_all.length)];
+        if (args < 100) {
+            c.getPlayer().setSkinColor((byte) args);
+            c.getPlayer().updateSingleStat(MapleStat.SKIN, args);
+        } else if (args < 30000) {
+            c.getPlayer().setFace(args);
+            c.getPlayer().updateSingleStat(MapleStat.FACE, args);
+        } else {
+            c.getPlayer().setHair(args);
+            c.getPlayer().updateSingleStat(MapleStat.HAIR, args);
+        }
+        c.getPlayer().equipChanged();
+        return 1;
+    }
+
+    public static Map<Integer, String> hairlist = new HashMap<>();
+    public static Map<Integer, String> facelist = new HashMap<>();
+
+    public int setAvatar(int ticket, int args) {
+        if (hairlist.isEmpty() || facelist.isEmpty()) {
+            for (Pair<Integer, String> itemPair : (Iterable<Pair<Integer, String>>) MapleItemInformationProvider.getInstance().getAllItems()) {
+                if (((String) itemPair.getRight()).toLowerCase().contains("Ìó§Ïñ¥") || ((String) itemPair.getRight()).toLowerCase().contains("Î®∏Î¶¨")) {
+                    hairlist.put(itemPair.getLeft(), itemPair.getRight());
+                    continue;
+                }
+                if (((String) itemPair.getRight()).toLowerCase().contains("ÏñºÍµ¥")) {
+                    facelist.put(itemPair.getLeft(), itemPair.getRight());
+                }
+            }
+        }
+
+        int mixranze = 0;
+
+        if (args > 99999) {
+            mixranze = args % 1000;
+            args /= 1000;
+        }
+        if (hairlist.containsKey(Integer.valueOf(args))) {
+            if (c.getPlayer().getDressup() == true) {
+                setAngelicSecondHair(args);
+            } else {
+                c.getPlayer().setHair(args);
+                c.getPlayer().updateSingleStat(MapleStat.HAIR, args);
+            }
+        } else if (facelist.containsKey(Integer.valueOf(args))) {
+            if (mixranze > 0) {
+                String sum = args + "" + mixranze;
+                args = Integer.parseInt(sum);
+            }
+            if (c.getPlayer().getDressup() == true) {
+                setAngelicSecondFace(args);
+            } else {
+                c.getPlayer().setFace(args);
+                c.getPlayer().updateSingleStat(MapleStat.FACE, args);
+            }
+        } else {
+            if (args < 0) {
+                args = 0;
+            }
+            if (c.getPlayer().getDressup() == true) {
+                setAngelicSecondSkin(args);
+            } else {
+                c.getPlayer().setSkinColor((byte) args);
+                c.getPlayer().updateSingleStat(MapleStat.SKIN, args);
+            }
+        }
+        c.getPlayer().equipChanged();
+        return 1;
+    }
+
+    public int setZeroAvatar(int ticket, int args1, int args2) {
+        int mixranze = 0, mixranze2 = 0;
+        if (args1 > 99999) {
+            mixranze = args1 % 1000;
+            args1 /= 1000;
+        }
+        if (args2 > 99999) {
+            mixranze2 = args2 % 1000;
+            args2 /= 1000;
+        }
+        if (hairlist.containsKey(Integer.valueOf(args1)) || hairlist.containsKey(Integer.valueOf(args2))) {
+            if (ticket == 0) {
+                this.c.getPlayer().setHair(args1);
+                this.c.getPlayer().updateSingleStat(MapleStat.HAIR, args1);
+            } else {
+                this.c.getPlayer().setSecondHair(args2);
+                this.c.getPlayer().updateSingleStat(MapleStat.HAIR, args2);
+                this.c.getPlayer().fakeRelog();
+            }
+        } else if (facelist.containsKey(Integer.valueOf(args1)) || facelist.containsKey(Integer.valueOf(args2))) {
+            if (mixranze > 0) {
+                String sum = args1 + "" + mixranze;
+                args1 = Integer.parseInt(sum);
+            }
+            if (mixranze2 > 0) {
+                String sum = args2 + "" + mixranze;
+                args2 = Integer.parseInt(sum);
+            }
+            if (ticket == 0) {
+                this.c.getPlayer().setFace(args1);
+                this.c.getPlayer().updateSingleStat(MapleStat.FACE, args1);
+            } else {
+                this.c.getPlayer().setSecondFace(args2);
+                this.c.getPlayer().updateSingleStat(MapleStat.FACE, args2);
+                this.c.getPlayer().fakeRelog();
+            }
+        } else if (ticket == 0) {
+            this.c.getPlayer().setSkinColor((byte) args1);
+            this.c.getPlayer().updateSingleStat(MapleStat.SKIN, args1);
+        } else {
+            this.c.getPlayer().setSecondSkinColor((byte) args2);
+            this.c.getPlayer().updateSingleStat(MapleStat.SKIN, args2);
+            this.c.getPlayer().fakeRelog();
+        }
+        this.c.getPlayer().equipChanged();
+        return 1;
+    }
+
+    public void setFaceAndroid(int faceId) {
+        this.c.getPlayer().getAndroid().setFace(faceId);
+        this.c.getPlayer().updateAndroid();
+    }
+
+    public void setHairAndroid(int hairId) {
+        this.c.getPlayer().getAndroid().setHair(hairId);
+        this.c.getPlayer().updateAndroid();
+    }
+
+    public void setSkinAndroid(int color) {
+
+        this.c.getPlayer().getAndroid().setSkin(color);
+
+        this.c.getPlayer().updateAndroid();
+    }
+
+    public void sendStorage() {
+
+        this.c.getPlayer().setStorageNPC(this.id);
+
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getStorage((byte) 0));
+    }
+
+    public void openShop(int idd) {
+        if (MapleShopFactory.getInstance().getShop(idd).getRechargeShop() == 1) {
+            boolean active = false, save = false;
+            Calendar ocal = Calendar.getInstance();
+
+            for (MapleShopItem item : MapleShopFactory.getInstance().getShop(idd).getItems()) {
+                int maxday = ocal.getActualMaximum(5);
+                int month = ocal.get(2) + 1;
+                int day = ocal.get(5);
+
+                if (item.getReCharge() > 0) {
+                    for (MapleShopLimit shl : this.c.getShopLimit()) {
+                        if (shl.getLastBuyMonth() > 0 && shl.getLastBuyDay() > 0) {
+                            Calendar baseCal = new GregorianCalendar(ocal.get(1), shl.getLastBuyMonth(), shl.getLastBuyDay());
+                            Calendar targetCal = new GregorianCalendar(ocal.get(1), month, day);
+                            long diffSec = (targetCal.getTimeInMillis() - baseCal.getTimeInMillis()) / 1000L;
+                            long diffDays = diffSec / 86400L;
+
+                            if (shl.getItemid() == item.getItemId() && shl.getShopId() == MapleShopFactory.getInstance().getShop(idd).getId() && shl.getPosition() == item.getPosition() && diffDays >= 0L) {
+                                shl.setLastBuyMonth(0);
+                                shl.setLastBuyDay(0);
+                                shl.setLimitCountAcc(0);
+                                shl.setLimitCountChr(0);
+                                save = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (item.getReChargeDay() <= day && item.getReChargeMonth() <= month) {
+                        active = true;
+                        int afterday = day + item.getReCharge();
+                        if (afterday > maxday) {
+                            afterday -= maxday;
+                            month++;
+                            if (month > 12) {
+                                month = 1;
+                            }
+                        }
+                        Connection con = null;
+                        PreparedStatement ps = null;
+                        try {
+                            con = DatabaseConnection.getConnection();
+                            ps = con.prepareStatement("UPDATE shopitems SET rechargemonth = ?, rechargeday = ?, resetday = ? WHERE position = ? AND itemid = ? AND tab = ?");
+                            ps.setInt(1, month);
+                            ps.setInt(2, afterday);
+                            ps.setInt(3, day);
+                            ps.setInt(4, item.getPosition());
+                            ps.setInt(5, item.getItemId());
+                            ps.setByte(6, item.getTab());
+
+                            ps.executeUpdate();
+                            ps.close();
+                            con.close();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        } finally {
+                            try {
+                                if (con != null) {
+                                    con.close();
+                                }
+                                if (ps != null) {
+                                    ps.close();
+                                }
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
-            };
-            tMan.schedule(r, time * 1000);
+            }
+            if (active) {
+                MapleShopFactory.getInstance().clear();
+                MapleShopFactory.getInstance().getShop(this.id);
+            } else if (save) {
+                this.c.saveShopLimit(this.c.getShopLimit());
+            }
         }
+        MapleShopFactory.getInstance().getShop(idd).sendShop(this.c);
+    }
 
-	public void StartBlockGame()
-	{
-		MapleClient c = getClient();
-		c.getSession().writeAndFlush(SLFCGPacket.CharReLocationPacket(0xFFFF, 0));
-		c.getSession().writeAndFlush(UIPacket.IntroDisableUI(true));
-		c.getSession().writeAndFlush(UIPacket.IntroLock(true));
-                // ø©±‚±Ó¡ˆ UI¿·±› 
-		long startTime = System.currentTimeMillis();
-		for (int count = 0;; count++)
-		{
-			long now = System.currentTimeMillis();
-			if (now - startTime >= 2000)
-			{
-				break;
-			}
-		}
-                // ø©±‚±Ó¡ˆ π∫¡ˆ ∏∏£∞⁄¿Ω ¿«πÃæ¯æÓ∫∏¿”
-		c.getSession().writeAndFlush(SLFCGPacket.BlockGameCommandPacket(1));
-		c.getSession().writeAndFlush(SLFCGPacket.BlockGameCommandPacket(2));
-		c.getSession().writeAndFlush(SLFCGPacket.BlockGameControlPacket(100, 10));
-	}
-        
-        public void ExitBlockGame(final int mapid) {
-            getC().getSession().writeAndFlush(SLFCGPacket.BlockGameCommandPacket(3));
-            getPlayer().setBlockCount(0);
-            long startTime = System.currentTimeMillis();
-            for (int count = 0;; count++) {
-                long now = System.currentTimeMillis();
-                if (now - startTime >= 3500) {
-                    break;
+    public int gainGachaponItem(int id, int quantity) {
+        return gainGachaponItem(id, quantity, this.c.getPlayer().getMap().getStreetName());
+    }
+
+    public int gainGachaponItem(int id, int quantity, String msg) {
+        try {
+            if (!MapleItemInformationProvider.getInstance().itemExists(id)) {
+                return -1;
+            }
+            Item item = MapleInventoryManipulator.addbyId_Gachapon(this.c, id, (short) quantity);
+            if (item == null) {
+                return -1;
+            }
+            byte rareness = GameConstants.gachaponRareItem(item.getItemId());
+            if (rareness > 0) {
+                World.Broadcast.broadcastMessage(CWvsContext.getGachaponMega(this.c.getPlayer().getName(), " : got a(n)", item, rareness, msg));
+            }
+            this.c.getSession().writeAndFlush(CField.EffectPacket.showCharmEffect(this.c.getPlayer(), id, 1, true, ""));
+            return item.getItemId();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public void changeJob(int job) {
+        this.c.getPlayer().changeJob(job);
+    }
+
+    public void startQuest(int idd) {
+        MapleQuest.getInstance(idd).start(getPlayer(), this.id);
+    }
+
+    public void completeQuest(int idd) {
+        MapleQuest.getInstance(idd).complete(getPlayer(), this.id);
+    }
+
+    public void forfeitQuest(int idd) {
+        MapleQuest.getInstance(idd).forfeit(getPlayer());
+    }
+
+    public void forceStartQuest() {
+        MapleQuest.getInstance(this.id2).forceStart(getPlayer(), getNpc(), null);
+    }
+
+    public void forceStartQuest(int idd) {
+        MapleQuest.getInstance(idd).forceStart(getPlayer(), getNpc(), null);
+    }
+
+    public void forceStartQuest(String customData) {
+        MapleQuest.getInstance(this.id2).forceStart(getPlayer(), getNpc(), customData);
+    }
+
+    public void forceCompleteQuest() {
+        MapleQuest.getInstance(this.id2).forceComplete(getPlayer(), getNpc());
+    }
+
+    public void forceCompleteQuest(int idd) {
+        MapleQuest.getInstance(idd).forceComplete(getPlayer(), getNpc());
+    }
+
+    public String getQuestCustomData(int id2) {
+        return this.c.getPlayer().getQuestNAdd(MapleQuest.getInstance(id2)).getCustomData();
+    }
+
+    public void setQuestCustomData(int id2, String customData) {
+        getPlayer().getQuestNAdd(MapleQuest.getInstance(id2)).setCustomData(customData);
+    }
+
+    public long getMeso() {
+        return getPlayer().getMeso();
+    }
+
+    public void gainAp(int amount) {
+        this.c.getPlayer().gainAp((short) amount);
+    }
+
+    public void expandInventory(byte type, int amt) {
+        this.c.getPlayer().expandInventory(type, amt);
+    }
+
+    public void gainItemInStorages(int id) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        PreparedStatement ps2 = null;
+        ResultSet rs = null;
+
+        int itemid = 0;
+        int str = 0, dex = 0, int_ = 0, luk = 0, watk = 0, matk = 0;
+        int hp = 0, upg = 0, slot = 0;
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT * FROM cashstorages WHERE id = ? and charid = ?");
+            ps.setInt(1, id);
+            ps.setInt(2, this.c.getPlayer().getId());
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                itemid = rs.getInt("itemid");
+                str = rs.getInt("str");
+                dex = rs.getInt("dex");
+                int_ = rs.getInt("int_");
+                luk = rs.getInt("luk");
+                watk = rs.getInt("watk");
+                matk = rs.getInt("matk");
+                hp = rs.getInt("maxhp");
+                upg = rs.getInt("upg");
+                slot = rs.getInt("slot");
+            }
+            ps.close();
+            rs.close();
+
+            ps2 = con.prepareStatement("DELETE FROM cashstorages WHERE id = ?");
+            ps2.setInt(1, id);
+            ps2.executeUpdate();
+            ps2.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
             }
-            getC().getSession().writeAndFlush(UIPacket.IntroDisableUI(false));
-            getC().getSession().writeAndFlush(UIPacket.IntroLock(false));
-            ChannelServer cserv = getC().getChannelServer();
-            MapleMap target = cserv.getMapFactory().getMap(mapid);
-            getPlayer().changeMap(target, target.getPortal(0));
-            getPlayer().gainItem(4310085, getPlayer().getBlockCoin());
-            getPlayer().setBlockCoin(0);
+            if (ps2 != null) {
+                try {
+                    ps2.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (rs != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+        Equip item = (Equip) ii.getEquipById(itemid);
+        item.setStr((short) str);
+        item.setDex((short) dex);
+        item.setInt((short) int_);
+        item.setLuk((short) luk);
+        item.setWatk((short) watk);
+        item.setMatk((short) matk);
+        item.setHp((short) hp);
+        item.setUpgradeSlots((byte) slot);
+        item.setLevel((byte) upg);
+        MapleInventoryManipulator.addbyItem(this.c, (Item) item);
+    }
+
+    public void StoreInStorages(int charid, int itemid, int str, int dex, int int_, int luk, int watk, int matk) {
+        Connection con = null;
+        PreparedStatement ps = null;
+
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("INSERT INTO cashstorages (charid, itemid, str, dex, int_, luk, watk, matk) VALUES(?, ?, ?, ?, ?, ?, ?, ?)");
+            ps.setInt(1, charid);
+            ps.setInt(2, itemid);
+            ps.setInt(3, str);
+            ps.setInt(4, dex);
+            ps.setInt(5, int_);
+            ps.setInt(6, luk);
+            ps.setInt(7, watk);
+            ps.setInt(8, matk);
+            ps.executeUpdate();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public String getCashStorages(int charid) {
+        String ret = "";
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT * FROM cashstorages WHERE charid = ?");
+            ps.setInt(1, charid);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                ret = ret + "#L" + rs.getInt("id") + "##i" + rs.getInt("itemid") + "##z" + rs.getInt("itemid") + "#\r\n";
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+
+                    e.printStackTrace();
+                }
+            }
+
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return ret;
+    }
+
+    public String getCharacterList(int accountid) {
+        String ret = "";
+
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT * FROM characters WHERE accountid = ?");
+            ps.setInt(1, accountid);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                ret = ret + "#L" + rs.getInt("id") + "#" + rs.getString("name") + "\r\n";
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return ret;
+    }
+
+    public final void clearSkills() {
+        Map<Skill, SkillEntry> skills = new HashMap<>(getPlayer().getSkills());
+        Map<Skill, SkillEntry> newList = new HashMap<>();
+        for (Map.Entry<Skill, SkillEntry> skill : skills.entrySet()) {
+            newList.put(skill.getKey(), new SkillEntry(0, (byte) 0, -1L));
+        }
+        getPlayer().changeSkillsLevel(newList);
+        newList.clear();
+        skills.clear();
+    }
+
+    public final void skillmaster() {
+        MapleData data = MapleDataProviderFactory.getDataProvider(MapleDataProviderFactory.fileInWZPath("Skill.wz")).getData(StringUtil.getLeftPaddedStr("" + this.c.getPlayer().getJob(), '0', 3) + ".img");
+        for (MapleData skill : data) {
+            if (skill != null) {
+                for (MapleData skillId : skill.getChildren()) {
+                    if (!skillId.getName().equals("icon")) {
+                        byte maxLevel = (byte) MapleDataTool.getIntConvert("maxLevel", skillId.getChildByPath("common"), 0);
+                        if (maxLevel < 0) {
+                            maxLevel = 1;
+                        }
+                        if (MapleDataTool.getIntConvert("invisible", skillId, 0) == 0 && this.c.getPlayer().getLevel() >= MapleDataTool.getIntConvert("reqLev", skillId, 0)) {
+                            this.c.getPlayer().changeSingleSkillLevel(SkillFactory.getSkill(Integer.parseInt(skillId.getName())), maxLevel, maxLevel);
+                        }
+                    }
+                }
+            }
         }
 
-	public void sendPlayerToNpc(String text)
-	{
-		sendNextS(text, (byte) 3, id);
-	}
-
-	public void sendNextNoESC(String text)
-	{
-		sendNextS(text, (byte) 1, id);
-	}
-
-	public void sendNextNoESC(String text, int id)
-	{
-		sendNextS(text, (byte) 1, id);
-	}
-
-	public void sendNextS(String text, byte type)
-	{
-		sendNextS(text, type, id);
-	}
-
-	public void sendNextS(String text, byte param, int idd)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimpleS(text, param);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, (param == 1 && idd != id) ? idd : id, (byte) 0);
-		t.setParam(param);
-		t.setNpcIDD(idd);
-		t.setText(text);
-		t.setNext(true);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		// c.getSession().writeAndFlush(NPCPacket.getNPCTalk(id, (byte) 0, text, "00
-		// 01", type, idd));
-		lastMsg = 0;
-	}
-
-	public void sendPrev(String text)
-	{
-		sendPrev(text, id);
-	}
-
-	public void sendPrev(String text, int id)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimple(text);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 0);
-		t.setText(text);
-		t.setPrev(true);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 0;
-	}
-
-	public void sendPrevS(String text, byte type)
-	{
-		sendPrevS(text, type, id);
-	}
-
-	public void sendPrevS(String text, byte param, int idd)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimpleS(text, param);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 0);
-		t.setParam(param);
-		t.setNpcIDD(idd);
-		t.setText(text);
-		t.setPrev(true);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 0;
-	}
-
-	public void sendNextPrev(String text)
-	{
-		sendNextPrev(text, id);
-	}
-
-	public void sendNextPrev(String text, int id)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimple(text);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 0);
-		t.setText(text);
-		t.setPrev(true);
-		t.setNext(true);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 0;
-	}
-
-	public void PlayerToNpc(String text)
-	{
-		sendNextPrevS(text, (byte) 3);
-	}
-
-	public void sendNextPrevS(String text)
-	{
-		sendNextPrevS(text, (byte) 3);
-	}
-
-	public void sendNextPrevS(String text, byte type)
-	{
-		sendNextPrevS(text, type, id);
-	}
-
-	public void sendNextPrevS(String text, byte type, int idd)
-	{
-		sendNextPrevS(text, type, idd, id);
-	}
-
-	public void sendNextPrevS(String text, byte param, int idd, int npcid)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimpleS(text, param);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 0);
-		t.setParam(param);
-		t.setNpcIDD(idd);
-		t.setText(text);
-		t.setPrev(true);
-		t.setNext(true);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 0;
-	}
-
-	public void sendOk(String text)
-	{
-		sendOk(text, id);
-	}
-
-	public void sendOk(String text, int id)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimple(text);
-			return;
-		}
-
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 0);
-		t.setText(text);
-                c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 0;
-	}
-
-	public void sendOkS(String text, byte type)
-	{
-		sendOkS(text, type, id);
-	}
-
-	public void sendOkS(String text, byte param, int idd)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimpleS(text, param);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 0);
-		t.setParam(param);
-		t.setNpcIDD(idd);
-		t.setText(text);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 0;
-	}
-
-	public void sendSelfTalk(String text)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimpleS(text, type);
-			return;
-		}
-		c.getSession().writeAndFlush(MainPacketCreator.getSelfTalkText(text));
-		lastMsg = 0;
-	}
-
-	public void sendYesNo(String text)
-	{
-		sendYesNo(text, id);
-	}
-
-	public void sendYesNo(String text, int id)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimple(text);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 3);
-		t.setText(text);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 3;
-	}
-
-	public void sendYesNoS(String text, byte type)
-	{
-		sendYesNoS(text, type, id);
-	}
-
-	public void sendYesNoS(String text, byte param, int idd)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimpleS(text, param);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 3);
-		t.setParam(param);
-		t.setNpcIDD(idd);
-		t.setText(text);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 3;
-	}
-
-	public void askMapSelection(final String sel)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		c.getSession().writeAndFlush(MainPacketCreator.getMapSelection(id, sel));
-		lastMsg = ((byte) 0x13);
-	}
-
-	public void sendAcceptDecline(String text)
-	{
-		askAcceptDecline(text);
-	}
-
-	public void sendAcceptDeclineNoESC(String text)
-	{
-		askAcceptDeclineNoESC(text);
-	}
-
-	public void askAcceptDecline(String text)
-	{
-		askAcceptDecline(text, id);
-	}
-
-	public void askAcceptDecline(String text, int id)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimple(text);
-			return;
-		}
-		lastMsg = ((byte) 16);
-
-		NPCTalk t = new NPCTalk((byte) 4, id, lastMsg);
-		t.setText(text);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		// c.getSession().writeAndFlush(NPCPacket.getNPCTalk(id, (byte) lastMsg, text,
-		// "", (byte) 0));
-	}
-
-	public void askAcceptDeclineNoESC(String text)
-	{
-		askAcceptDeclineNoESC(text, id);
-	}
-
-	public void askAcceptDeclineNoESC(String text, int id)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimple(text);
-			return;
-		}
-		lastMsg = (byte) 16;
-
-		NPCTalk t = new NPCTalk((byte) 4, id, lastMsg);
-		t.setText(text);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		// c.getSession().writeAndFlush(NPCPacket.getNPCTalk(id, (byte) lastMsg, text,
-		// "", (byte) 1));
-	}
-
-	public void askAngelicBusterAvatar()
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		lastMsg = 24;
-
-		NPCTalk t = new NPCTalk((byte) 4, id, lastMsg);
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-	}
-
-	public int parseInt(double d)
-	{
-		return (int) d;
-	}
-
-	public int parseInt(String d)
-	{
-		return Integer.parseInt(d);
-	}
-
-	public void askAvatar(String text, Object... args)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		lastMsg = 10;
-		NPCTalk t = new NPCTalk((byte) 4, id, lastMsg);
-		t.setText(text);
-		t.setArgs(args);
-		if (GameConstants.isZero(c.getPlayer().getJob()))
-		{
-			t.setZeroBeta(c.getPlayer().getGender() == 1);
-		}
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		// c.getSession().writeAndFlush(NPCPacket.getNPCTalkStyle(id, text, args,
-		// false));
-	}
-
-	public void sendSimple(String text)
-	{
-		sendSimple(text, id);
-	}
-
-	public void sendSimple(String text, int id)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (!text.contains("#L"))
-		{ // sendSimple will dc otherwise!
-			sendNext(text);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 6);
-		getPlayer().lastNpcTalk = text;
-		t.setText(text);
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 6;
-	}
-
-	public void sendSimpleS(String text, byte type)
-	{
-		sendSimpleS(text, type, id);
-	}
-
-	public void sendSimpleS(String text, byte type, int idd)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (!text.contains("#L"))
-		{ // sendSimple will dc otherwise!
-			sendNextS(text, type);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, (type == 1 && idd != id) ? idd : id, (byte) 6);
-		t.setNpcIDD(idd);
-		t.setParam(type);
-		t.setText(text);
-		getPlayer().lastNpcTalk = text;
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 6;
-	}
-
-	public void sendStyle(String text, Object args[])
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 10);
-		t.setText(text);
-		t.setArgs(args);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		// c.getSession().writeAndFlush(NPCPacket.getNPCTalkStyle(id, text, styles,
-		// false));
-		lastMsg = 10;
-	}
-
-	public void sendSecondStyle(String text, Object args[])
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 10);
-		t.setText(text);
-		t.setArgs(args);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		// c.getSession().writeAndFlush(NPCPacket.getNPCTalkStyle(id, text, styles,
-		// true));
-		lastMsg = 10;
-	}
-
-	public void sendGetNumber(String text, int amount, int min, int max)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimple(text);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 5);
-		t.setText(text);
-		t.setAmount(amount);
-		t.setMin(min);
-		t.setMax(max);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		// c.getSession().writeAndFlush(NPCPacket.getNPCTalkNum(id, text, def, min,
-		// max));
-		lastMsg = 5;
-	}
-
-	public void sendGetText(String text)
-	{
-		sendGetText(id, text, "", 0, 0);
-	}
-
-	public void sendGetText(String text, String def, int min, int max)
-	{
-		sendGetText(id, text, def, min, max);
-	}
-
-	public void sendGetText(int id, String text, String def, int min, int max)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		if (text.contains("#L"))
-		{ // will dc otherwise!
-			sendSimple(text);
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 4);
-		t.setText(text);
-		t.setDef(def);
-		t.setMin(min);
-		t.setMax(max);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 4;
-	}
-
-	public void askCustomMixHairAndProb(String text)
-	{
-		c.getSession().writeAndFlush(
-				MainPacketCreator.getNPCTalkMixStyle(id, text, GameConstants.isAngelicBuster(c.getPlayer().getJob())));
-		lastMsg = 44;
-	}
-
-	public void setGetText(String text)
-	{
-		this.getText = text;
-	}
-
-	public String getText()
-	{
-		return getText;
-	}
-
-	public void setHair(int hair)
-	{
-		// if (hairExists(hair)) {
-		getPlayer().setHair(hair);
-		getPlayer().updateSingleStat(PlayerStat.HAIR, hair);
-		getPlayer().equipChanged();
-		// }
-	}
-
-	public void setSecondHair(int hair)
-	{
-		// if (hairExists(hair)) {
-		getPlayer().setSecondHair(hair);
-		getPlayer().updateSingleStat(PlayerStat.HAIR, hair);
-		getPlayer().equipChanged();
-		// }
-	}
-
-	public void setFace(int face)
-	{
-		// =if (faceExists(face)) {
-		getPlayer().setFace(face);
-		getPlayer().updateSingleStat(PlayerStat.FACE, face);
-		getPlayer().equipChanged();
-		// }
-	}
-
-	public void setSecondFace(int face)
-	{
-		// if (faceExists(face)) {
-		getPlayer().setSecondFace(face);
-		getPlayer().updateSingleStat(PlayerStat.FACE, face);
-		getPlayer().equipChanged();
-		// }
-	}
-
-	public void setSkin(int color)
-	{
-		getPlayer().setSkinColor((byte) color);
-		getPlayer().updateSingleStat(PlayerStat.SKIN, color);
-		getPlayer().equipChanged();
-	}
-
-	public static boolean itemExists(int itemId)
-	{
-		ItemInformation ii = ItemInformation.getInstance();
-		for (Pair<Integer, String> item : ii.getAllItems())
-		{
-			if (item.getLeft() == itemId)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public int setRandomAvatar(int ticket, int... args_all)
-	{
-		if (!haveItem(ticket))
-		{
-			return -1;
-		}
-		gainItem(ticket, (short) -1);
-
-		int args = args_all[Randomizer.nextInt(args_all.length)];
-		if (args < 100)
-		{
-			c.getPlayer().setSkinColor((byte) args);
-			c.getPlayer().updateSingleStat(PlayerStat.SKIN, args);
-		}
-		else if (args < 30000)
-		{
-			c.getPlayer().setFace(args);
-			c.getPlayer().updateSingleStat(PlayerStat.FACE, args);
-		}
-		else
-		{
-			c.getPlayer().setHair(args);
-			c.getPlayer().updateSingleStat(PlayerStat.HAIR, args);
-		}
-		c.getPlayer().equipChanged();
-
-		return 1;
-	}
-
-	public int setAvatar(int ticket, int args)
-	{
-		if (!haveItem(ticket))
-		{
-			return -1;
-		}
-		gainItem(ticket, (short) -1);
-
-		if (args < 100)
-		{
-			c.getPlayer().setSkinColor((byte) args);
-			c.getPlayer().updateSingleStat(PlayerStat.SKIN, args);
-		}
-		else if (args < 30000)
-		{
-			c.getPlayer().setFace(args);
-			c.getPlayer().updateSingleStat(PlayerStat.FACE, args);
-		}
-		else
-		{
-			c.getPlayer().setHair(args);
-			c.getPlayer().updateSingleStat(PlayerStat.HAIR, args);
-		}
-		c.getPlayer().equipChanged();
-
-		return 1;
-	}
-
-	public void sendStorage()
-	{
-		c.getPlayer().setConversation(4);
-		// c.getPlayer().getStorage().sendStorage(c);
-		c.getPlayer().getStorage().send2ndPWChecking(c, id, false);
-	}
-
-	public void openShop(int id)
-	{
-		MapleShopFactory.getInstance().getShop(id).sendShop(c);
-	}
-
-	public void changeJob(short job)
-	{
-		c.getPlayer().changeJob(job);
-	}
-
-	public void startQuest(int idd)
-	{
-		MapleQuest.getInstance(idd).start(getPlayer(), id);
-	}
-
-	public void completeQuest(int idd)
-	{
-		MapleQuest.getInstance(idd).complete(getPlayer(), id);
-	}
-
-	public void forfeitQuest(int idd)
-	{
-		MapleQuest.getInstance(idd).forfeit(getPlayer());
-	}
-
-	public void forceStartQuest()
-	{
-		MapleQuest.getInstance(id2).forceStart(getPlayer(), getNpc(), null);
-	}
-
-	@Override
-	public void forceStartQuest(int idd)
-	{
-		MapleQuest.getInstance(idd).forceStart(getPlayer(), getNpc(), null);
-	}
-
-	public void forceStartQuest(String customData)
-	{
-		MapleQuest.getInstance(id2).forceStart(getPlayer(), getNpc(), customData);
-	}
-
-	public void forceCompleteQuest()
-	{
-		MapleQuest.getInstance(id2).forceComplete(getPlayer(), getNpc());
-	}
-
-	@Override
-	public void forceCompleteQuest(final int idd)
-	{
-		MapleQuest.getInstance(idd).forceComplete(getPlayer(), getNpc());
-	}
-
-	public String getQuestCustomData()
-	{
-		return c.getPlayer().getQuestNAdd(MapleQuest.getInstance(id2)).getCustomData();
-	}
-
-	public String getQuestCustomData(int quest)
-	{
-		return c.getPlayer().getQuestNAdd(MapleQuest.getInstance(quest)).getCustomData();
-	}
-
-	public void setQuestCustomData(String customData)
-	{
-		getPlayer().getQuestNAdd(MapleQuest.getInstance(id2)).setCustomData(customData);
-	}
-
-	public long getMeso()
-	{
-		return getPlayer().getMeso();
-	}
-
-	public void gainAp(final int amount)
-	{
-		c.getPlayer().gainAp((short) amount);
-	}
-
-	public void expandInventory(byte type, int amt)
-	{
-		c.getPlayer().expandInventory(type, amt);
-	}
-
-	public void unequipEverything()
-	{
-		MapleInventory equipped = getPlayer().getInventory(MapleInventoryType.EQUIPPED);
-		MapleInventory equip = getPlayer().getInventory(MapleInventoryType.EQUIP);
-		List<Short> ids = new LinkedList<>();
-		for (IItem item : equipped.newList())
-		{
-			ids.add(item.getPosition());
-		}
-		for (short itemid : ids)
-		{
-			InventoryManipulator.unequip(getC(), itemid, equip.getNextFreeSlot());
-		}
-	}
-
-	public final void clearSkills()
-	{
-		final Map<ISkill, SkillEntry> skills = new HashMap<>(getPlayer().getSkills());
-		final Map<ISkill, SkillEntry> newList = new HashMap<>();
-		for (Entry<ISkill, SkillEntry> skill : skills.entrySet())
-		{
-			newList.put(skill.getKey(), new SkillEntry((byte) 0, (byte) 0, -1));
-		}
-		getPlayer().changeSkillsLevel(newList);
-		newList.clear();
-		skills.clear();
-	}
-            public int getRC() {
-        return getPlayer().getRC();
-    }
-            
-   public int getCSPoints() {
-        return getPlayer().getCSPoints();
+        if (GameConstants.isZero(this.c.getPlayer().getJob())) {
+            int[] jobs = {10000, 10100, 10110, 10111, 10112};
+            for (int job : jobs) {
+                data = MapleDataProviderFactory.getDataProvider(MapleDataProviderFactory.fileInWZPath("Skill.wz")).getData(job + ".img");
+                for (MapleData skill : data) {
+                    if (skill != null) {
+                        for (MapleData skillId : skill.getChildren()) {
+                            if (!skillId.getName().equals("icon")) {
+                                byte maxLevel = (byte) MapleDataTool.getIntConvert("maxLevel", skillId.getChildByPath("common"), 0);
+                                if (maxLevel < 0) {
+                                    maxLevel = 1;
+                                }
+                                if (MapleDataTool.getIntConvert("invisible", skillId, 0) == 0 && this.c.getPlayer().getLevel() >= MapleDataTool.getIntConvert("reqLev", skillId, 0)) {
+                                    this.c.getPlayer().changeSingleSkillLevel(SkillFactory.getSkill(Integer.parseInt(skillId.getName())), maxLevel, maxLevel);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (this.c.getPlayer().getLevel() >= 200) {
+                    this.c.getPlayer().changeSingleSkillLevel(SkillFactory.getSkill(100001005), 1, (byte) 1);
+                }
+            }
+        }
+        if (GameConstants.isKOC(this.c.getPlayer().getJob()) && this.c.getPlayer().getLevel() >= 100) {
+            this.c.getPlayer().changeSkillLevel(11121000, (byte) 30, (byte) 30);
+            this.c.getPlayer().changeSkillLevel(12121000, (byte) 30, (byte) 30);
+            this.c.getPlayer().changeSkillLevel(13121000, (byte) 30, (byte) 30);
+            this.c.getPlayer().changeSkillLevel(14121000, (byte) 30, (byte) 30);
+            this.c.getPlayer().changeSkillLevel(15121000, (byte) 30, (byte) 30);
+        }
     }
 
-    public void setRC(int rc) {
-        getPlayer().gainRC(rc - getRC());
+    public static void writeLog(String path, String data, boolean writeafterend) {
+        try {
+            File fFile = new File(path);
+
+            if (!fFile.exists()) {
+                fFile.createNewFile();
+            }
+            FileOutputStream out = new FileOutputStream(path, true);
+            long time = System.currentTimeMillis();
+            SimpleDateFormat dayTime = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+            String str = dayTime.format(new Date(time));
+            String msg = "\r\n" + str + " | " + data;
+            out.write(msg.getBytes());
+            out.close();
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-    
-    public void loseRC(int rc) {
-        getPlayer().loseRC(rc);
+
+    public void addBoss(String boss) {
+
+        if (this.c.getPlayer().getParty() != null) {
+            this.c.getPlayer().removeV_boss("bossPractice");
+            KoreaCalendar kc = new KoreaCalendar();
+            String today = (kc.getYeal() % 100) + "/" + kc.getMonths() + "/" + kc.getDays();
+            for (MaplePartyCharacter chr : getPlayer().getParty().getMembers()) {
+                MapleCharacter ch = this.c.getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
+                if (ch != null) {
+                    ch.removeV_boss("bossPractice");
+                    ch.removeV_boss(boss);
+                    ch.addKV_boss(boss, (System.currentTimeMillis() + 1800000L) + "");
+                    FileoutputUtil.log(FileoutputUtil.Î≥¥Ïä§ÏûÖÏû•, "[ÏûÖÏû•] Í≥ÑÏ†ï Î≤àÌò∏ : " + this.c.getAccID() + " | ÌååÌã∞Î≤àÌò∏ : " + chr.getPlayer().getParty().getId() + " | Ï∫êÎ¶≠ÌÑ∞ : " + ch.getName() + "(" + ch.getId() + ") | ÏûÖÏû• Î≥¥Ïä§ : " + boss);
+                    switch (boss) {
+                        case "Normal_Zakum":
+                            MapleQuest.getInstance(7003).forceStart(ch, 0, today);
+                            MapleQuest.getInstance(7004).forceStart(ch, 0, "1");
+                            break;
+                        case "Normal_Hillah":
+                            ch.updateInfoQuest(3981, "eNum=1;lastDate=" + today);
+                            break;
+                        case "Normal_Kawoong":
+                            MapleQuest.getInstance(3590).forceStart(ch, 0, today);
+                            MapleQuest.getInstance(3591).forceStart(ch, 0, "1");
+                            break;
+                        case "Easy_Populatus":
+                        case "Normal_Populatus":
+                            MapleQuest.getInstance(7200).forceStart(ch, 0, today);
+                            MapleQuest.getInstance(7201).forceStart(ch, 0, "1");
+                            break;
+                        case "Easy_VonLeon":
+                        case "Normal_VonLeon":
+                        case "Hard_VonLeon":
+                            ch.updateInfoQuest(7850, "eNum=1;lastDate=" + today);
+                            break;
+                        case "Normal_Horntail":
+                        case "Chaos_Horntail":
+                            ch.updateInfoQuest(7312, "eNum=1;lastDate=" + today);
+                            break;
+                        case "Easy_Arkarium":
+                        case "Normal_Arkarium":
+                            ch.updateInfoQuest(7851, "eNum=1;lastDate=" + today);
+                            break;
+                        case "Normal_Pinkbean":
+                            ch.setKeyValue(7403, "eNum", "1");
+                            ch.setKeyValue(7403, "lastDate", today);
+                            break;
+                        case "Chaos_Pinkbean":
+                            ch.setKeyValue(7403, "eNumC", "1");
+                            ch.setKeyValue(7403, "lastDateC", today);
+                            break;
+                        case "Hard_Lotus":
+                            ch.setKeyValue(33126, "lastDate", today);
+                            break;
+                        case "Hard_Demian":
+                            ch.setKeyValue(34016, "lastDate", today);
+                            break;
+                        case "Easy_Lucid":
+                            ch.setKeyValue(34364, "eNumE", "1");
+                            ch.setKeyValue(34364, "lastDateE", today);
+                            break;
+                        case "Normal_Lucid":
+                            ch.setKeyValue(34364, "eNum", "1");
+                            ch.setKeyValue(34364, "lastDate", today);
+                            break;
+                        case "Hard_Lucid":
+                            ch.setKeyValue(34364, "eNumH", "1");
+                            ch.setKeyValue(34364, "lastDateH", today);
+                            break;
+                        case "Normal_Will":
+                            ch.setKeyValue(35100, "lastDateN", today);
+                            break;
+                        case "Hard_Will":
+                            ch.setKeyValue(35100, "lastDate", today);
+                            break;
+                        case "Normal_Dusk":
+                            ch.setKeyValue(35137, "lastDateN", today);
+                            ch.setKeyValue(35139, "lastDateH", today);
+                            break;
+                        case "Chaos_Dusk":
+                            ch.setKeyValue(35137, "lastDateN", today);
+                            ch.setKeyValue(35139, "lastDateH", today);
+                            break;
+                        case "Normal_JinHillah":
+                            ch.setKeyValue(35260, "lastDate", today);
+                            break;
+                        case "Normal_Dunkel":
+                            ch.setKeyValue(35138, "lastDateN", today);
+                            ch.setKeyValue(35140, "lastDateH", today);
+                            break;
+                        case "Hard_Dunkel":
+                            ch.setKeyValue(35138, "lastDateN", today);
+                            ch.setKeyValue(35140, "lastDateH", today);
+                            break;
+                        case "Black_Mage":
+                            ch.setKeyValue(35377, "lastDate", today);
+                            break;
+                        case "Hard_Seren":
+                            ch.setKeyValue(39932, "lastDate", today);
+                            break;
+                        case "Chaos_Karlos":
+                            ch.setKeyValue(39949, "lastDate", today);
+                            break;
+                            
+                         //Ìï¥Ïô∏ Î≥¥Ïä§
+                        case "Teng": //ÌÖ°Íµ¨
+                            ch.setKeyValue(39959, "lastDate", today);
+                            break;
+                        case "Jgg": //ÏßÑÍ≤©Ïùò Í±∞Ïù∏
+                            ch.setKeyValue(39969, "lastDate", today);
+                            break;
+                        case "Chaos_Mitsuhide": //ÏïÑÏºÄÏπò ÎØ∏Ï∏†ÌûàÎç∞ (ÌïòÎìú)
+                            ch.setKeyValue(39979, "lastDate", today);
+                            break;
+                    }
+                }
+            }
+        }
     }
-    
-    public void gainRC(int rc) {
-        if (rc < 0) {
-            c.getPlayer().loseRC(rc);
+
+    public void addBossPractice(String boss) {
+        if (this.c.getPlayer().getParty() != null) {
+            for (MaplePartyCharacter chr : getPlayer().getParty().getMembers()) {
+                MapleCharacter ch = this.c.getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
+                if (ch != null) {
+                    ch.addKV_boss("bossPractice", "1");
+                    FileoutputUtil.log(FileoutputUtil.Î≥¥Ïä§ÏûÖÏû•, "[Ïó∞ÏäµÎ™®Îìú ÏûÖÏû•] Í≥ÑÏ†ï Î≤àÌò∏ : " + this.c.getAccID() + " | ÌååÌã∞Î≤àÌò∏ : " + chr.getPlayer().getParty().getId() + " | Ï∫êÎ¶≠ÌÑ∞ : " + this.c.getPlayer().getName() + "(" + this.c.getPlayer().getId() + ") | ÏûÖÏû• Î≥¥Ïä§ : " + boss);
+                }
+            }
+        }
+    }
+
+    public Object[] BossNotAvailableChrList(String boss, int limit) {
+        Object[] arr = new Object[0];
+        if (this.c.getPlayer().getParty() != null) {
+            for (MaplePartyCharacter chr : getPlayer().getParty().getMembers()) {
+                for (ChannelServer channel : ChannelServer.getAllInstances()) {
+                    MapleCharacter ch = channel.getPlayerStorage().getCharacterById(chr.getId());
+                    if (ch != null && ch.getGMLevel() < 6) {
+                        String k = ch.getV(boss);
+                        int key = (k == null) ? 0 : Integer.parseInt(ch.getV(boss));
+                        if (key >= limit - 1) {
+                            arr = add(arr, new Object[]{ch.getName()});
+                        }
+                    }
+                }
+            }
+        }
+        return arr;
+    }
+
+    public Object[] LevelNotAvailableChrList(int level) {
+        Object[] arr = new Object[0];
+        if (this.c.getPlayer().getParty() != null) {
+            for (MaplePartyCharacter chr : getPlayer().getParty().getMembers()) {
+                for (ChannelServer channel : ChannelServer.getAllInstances()) {
+                    MapleCharacter ch = channel.getPlayerStorage().getCharacterById(chr.getId());
+                    if (ch != null && ch.getGMLevel() < 6 && ch.getLevel() < level) {
+                        arr = add(arr, new Object[]{ch.getName()});
+                    }
+                }
+            }
+        }
+        return arr;
+    }
+
+    public static Object[] add(Object[] arr, Object... elements) {
+        Object[] tempArr = new Object[arr.length + elements.length];
+        System.arraycopy(arr, 0, tempArr, 0, arr.length);
+        for (int i = 0; i < elements.length; i++) {
+            tempArr[arr.length + i] = elements[i];
+        }
+        return tempArr;
+    }
+
+    public boolean partyhaveItem(int itemid, int qty) {
+        if (this.c.getPlayer().getParty() != null) {
+            for (MaplePartyCharacter chr : getPlayer().getParty().getMembers()) {
+                for (ChannelServer channel : ChannelServer.getAllInstances()) {
+                    MapleCharacter ch = channel.getPlayerStorage().getCharacterById(chr.getId());
+                    if (ch != null && ch.getGMLevel() <= 6) {
+                        int getqty = itemQuantity(itemid);
+                        if (getqty < qty) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isBossAvailable(String boss, int limit) {
+        if (this.c.getPlayer().getParty() != null) {
+            KoreaCalendar kc = new KoreaCalendar();
+            String today = (kc.getYeal() % 100) + "/" + kc.getMonths() + "/" + kc.getDays();
+            Iterator<MaplePartyCharacter> iterator = getPlayer().getParty().getMembers().iterator();
+            if (iterator.hasNext()) {
+                MaplePartyCharacter chr = iterator.next();
+                for (ChannelServer channel : ChannelServer.getAllInstances()) {
+                    MapleCharacter ch = channel.getPlayerStorage().getCharacterById(chr.getId());
+                    if (ch != null && !ch.isGM()) {
+                        boolean enter = false, weekly = false;
+                        String CheckS = "lastDate";
+                        int checkenterquestid = 0, checkclearquestid = 0;
+                        switch (boss) {
+                            case "GuildBoss":
+                                checkenterquestid = 7002;
+                                checkclearquestid = 7001;
+                                weekly = true;
+                                break;
+                            case "Normal_Zakum":
+                                checkenterquestid = 7003;
+                                break;
+                            case "Chaos_Zakum":
+                                checkclearquestid = 15166;
+                          //     weekly = true;
+                                break;
+                            case "Easy_Magnus":
+                            case "Normal_Magnus":
+                                checkclearquestid = 3993;
+                                break;
+                            case "Hard_Magnus":
+                                checkclearquestid = 3992;
+                             //   weekly = true;
+                                break;
+                            case "Normal_Hillah":
+                                checkenterquestid = 3981;
+                                break;
+                            case "Hard_Hillah":
+                                checkclearquestid = 3650;
+                           //     weekly = true;
+                                break;
+                            case "Normal_Kawoong":
+                                checkenterquestid = 3590;
+                                break;
+                            case "Easy_Populatus":
+                            case "Normal_Populatus":
+                                checkenterquestid = 7200;
+                                break;
+                            case "Chaos_Populatus":
+                                checkclearquestid = 3657;
+                           //     weekly = true;
+                                break;
+                            case "Normal_Pierre":
+                                checkclearquestid = 30032;
+                                break;
+                            case "Chaos_Pierre":
+                                checkclearquestid = 30043;
+                            //    weekly = true;
+                                break;
+                            case "Normal_VonBon":
+                                checkclearquestid = 30039;
+                                break;
+                            case "Chaos_VonBon":
+                                checkclearquestid = 30044;
+                           //     weekly = true;
+                                break;
+                            case "Normal_BloodyQueen":
+                                checkclearquestid = 30033;
+                                break;
+                            case "Chaos_BloodyQueen":
+                                checkclearquestid = 30045;
+                           //     weekly = true;
+                                break;
+                            case "Normal_Vellum":
+                                checkclearquestid = 30041;
+                                break;
+                            case "Chaos_Vellum":
+                                checkclearquestid = 30046;
+                           //     weekly = true;
+                                break;
+                            case "Easy_VonLeon":
+                            case "Normal_VonLeon":
+                            case "Hard_VonLeon":
+                                checkenterquestid = 7850;
+                                break;
+                            case "Normal_Horntail":
+                            case "Chaos_Horntail":
+                                checkenterquestid = 7312;
+                                break;
+                            case "Easy_Arkarium":
+                            case "Normal_Arkarium":
+                                checkenterquestid = 7851;
+                                break;
+                            case "Normal_Pinkbean":
+                                checkenterquestid = 7403;
+                                checkclearquestid = 3652;
+                                break;
+                            case "Chaos_Pinkbean":
+                                checkenterquestid = 7403;
+                                checkclearquestid = 3653;
+                           //     weekly = true;
+                                CheckS = "lastDateC";
+                                break;
+                            case "Easy_Cygnus":
+                            case "Normal_Cygnus":
+                                checkclearquestid = 31199;
+                            //    weekly = true;
+                                break;
+                            case "Normal_Lotus":
+                                checkclearquestid = 33303;
+                            //    weekly = true;
+                                break;
+                            case "Hard_Lotus":
+                                checkenterquestid = 33126;
+                                checkclearquestid = 33303;
+                            //    weekly = true;
+                                break;
+                            case "Normal_Demian":
+                                checkclearquestid = 34017;
+                            //    weekly = true;
+                                break;
+                            case "Hard_Demian":
+                                checkenterquestid = 34016;
+                                checkclearquestid = 34017;
+                            //    weekly = true;
+                                break;
+                            case "Easy_Lucid":
+                                checkenterquestid = 34364;
+                                checkclearquestid = 3685;
+                                CheckS = "lastDateE";
+                            //    weekly = true;
+                                break;
+                            case "Normal_Lucid":
+                                checkenterquestid = 34364;
+                                checkclearquestid = 3685;
+                            //    weekly = true;
+                                break;
+                            case "Hard_Lucid":
+                                checkenterquestid = 34364;
+                                checkclearquestid = 3685;
+                                CheckS = "lastDateH";
+                             //   weekly = true;
+                                break;
+                            case "Normal_Will":
+                                checkenterquestid = 35100;
+                                checkclearquestid = 3658;
+                           //     weekly = true;
+                                break;
+                            case "Hard_Will":
+                                checkenterquestid = 35100;
+                                checkclearquestid = 3658;
+                                CheckS = "lastDateN";
+                             //   weekly = true;
+                                break;
+                            case "Normal_Dusk":
+                                checkenterquestid = 35137;
+                                checkclearquestid = 3680;
+                                CheckS = "lastDateN";
+                             //   weekly = true;
+                                break;
+
+                            case "Chaos_Dusk":
+                                checkenterquestid = 35139;
+                                checkclearquestid = 3680;
+                                CheckS = "lastDateH";
+                            //    weekly = true;
+                                break;
+                            case "Normal_JinHillah":
+                                checkenterquestid = 35260;
+                                checkclearquestid = 3673;
+                              //  weekly = true;
+                                break;
+                            case "Normal_Dunkel":
+                                checkenterquestid = 35138;
+                                checkclearquestid = 3681;
+                                CheckS = "lastDateN";
+                              //  weekly = true;
+                                break;
+                            case "Hard_Dunkel":
+                                checkenterquestid = 35140;
+                                checkclearquestid = 3681;
+                                CheckS = "lastDateH";
+                              //  weekly = true;
+                                break;
+                            case "Black_Mage":
+                                checkenterquestid = 35377;
+                                checkclearquestid = 3679;
+                              //  weekly = true;
+                                break;
+                            case "Hard_Seren":
+                                checkenterquestid = 39932;
+                                checkclearquestid = 3687;
+                                //    weekly = true;
+                                break;
+                            case "Chaos_Karlos":
+                                checkenterquestid = 39949;
+                                checkclearquestid = 3699;
+                                //    weekly = true;
+                                break;
+                            //Ìï¥Ïô∏Î≥¥Ïä§
+                            case "Teng": //ÌÖ°Íµ¨
+                                checkenterquestid = 39959;
+                                checkclearquestid = 3711;
+                                break;
+                            case "Jgg": //ÌÖ°Íµ¨
+                                checkenterquestid = 39969;
+                                checkclearquestid = 3722;
+                                break;
+                            case "Chaos_Mitsuhide": //ÌÖ°Íµ¨
+                                checkenterquestid = 39979;
+                                checkclearquestid = 3733;
+                                break;
+                        }
+
+                        if (checkenterquestid > 0) {
+                            if (chr.getPlayer().getKeyValueStr_boss(checkenterquestid, CheckS) != null && chr.getPlayer().getKeyValueStr_boss(checkenterquestid, CheckS).equals(today)) {
+                                enter = true;
+                            }
+                        }
+                        if (!enter) {
+                            MapleQuestStatus quests = (MapleQuestStatus) chr.getPlayer().getQuest_Map().get(MapleQuest.getInstance(checkenterquestid));
+                            if (quests != null && quests.getCustomData() != null && quests.getCustomData().equals(today)) {
+                                enter = true;
+                            }
+                        }
+                        if (checkclearquestid > 0 && !enter) {
+                            if (weekly) {
+                                if (chr.getPlayer().getKeyValueStr_boss(checkclearquestid, "lasttime") != null) {
+                                    String[] array = chr.getPlayer().getKeyValueStr_boss(checkclearquestid, "lasttime").split("/");
+                                    Calendar clear = new GregorianCalendar(Integer.parseInt("20" + array[0]), Integer.parseInt(array[1]) - 1, Integer.parseInt(array[2]));
+                                    Calendar ocal = Calendar.getInstance();
+                                    int yeal = clear.get(1), days = clear.get(5), day = ocal.get(7), day2 = clear.get(7), maxday = clear.getMaximum(5), month = clear.get(2);
+                                    int check = (day2 == 5) ? 7 : ((day2 == 6) ? 6 : ((day2 == 7) ? 5 : 0));
+                                    if (check == 0) {
+                                        for (int i = day2; i < 5; i++) {
+                                            check++;
+                                        }
+                                    }
+                                    int afterday = days + check;
+
+                                    if (afterday > maxday) {
+                                        afterday -= maxday;
+                                        month++;
+                                    }
+                                    if (month > 12) {
+                                        yeal++;
+                                        month = 1;
+                                    }
+                                    Calendar after = new GregorianCalendar(yeal, month, afterday);
+
+                                    if (after.getTimeInMillis() > System.currentTimeMillis()) {
+                                        enter = true;
+                                    }
+                                }
+                            } else if (chr.getPlayer().getKeyValueStr_boss(checkclearquestid, "lasttime") != null && chr.getPlayer().getKeyValueStr_boss(checkclearquestid, "lasttime").equals(today)) {
+                                enter = true;
+                            }
+                            if (!enter) {
+                                if (ch.getV(boss) != null && Long.parseLong(ch.getV(boss)) - System.currentTimeMillis() >= 0L) {
+                                    enter = true;
+                                }
+                            }
+                        }
+                        if (enter) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String isBossString(String boss) {
+
+        String txt = "ÌååÌã∞Ïõê Ï§ë #rÏûÖÏû• Ï°∞Í±¥#kÏùÑ Ï∂©Ï°±ÌïòÏßÄ Î™ªÌïòÎäî ÌååÌã∞ÏõêÏù¥ ÏûàÏäµÎãàÎã§.\r\nÎ™®Îì† ÌååÌã∞ÏõêÏù¥ Ï°∞Í±¥ÏùÑ Ï∂©Ï°±Ìï¥Ïïº ÏûÖÏû•Ïù¥ Í∞ÄÎä•Ìï©ÎãàÎã§.\r\n\r\n";
+
+        if (this.c.getPlayer().getParty() != null) {
+            KoreaCalendar kc = new KoreaCalendar();
+            String today = (kc.getYeal() % 100) + "/" + kc.getMonths() + "/" + kc.getDays();
+            for (MaplePartyCharacter chr : getPlayer().getParty().getMembers()) {
+                for (ChannelServer channel : ChannelServer.getAllInstances()) {
+                    MapleCharacter ch = channel.getPlayerStorage().getCharacterById(chr.getId());
+                    if (ch != null && !ch.isGM()) {
+                        boolean enter = false, weekly = false;
+                        String CheckS = "lastDate";
+                        int checkenterquestid = 0, checkclearquestid = 0;
+                        switch (boss) {
+                            case "Normal_Zakum":
+                                checkenterquestid = 7003;
+                                break;
+                            case "Chaos_Zakum":
+                                checkclearquestid = 15166;
+                              //  weekly = true;
+                                break;
+                            case "Easy_Magnus":
+                            case "Normal_Magnus":
+                                checkclearquestid = 3993;
+                                break;
+                            case "Hard_Magnus":
+                                checkclearquestid = 3992;
+                              //  weekly = true;
+                                break;
+                            case "Normal_Hillah":
+                                checkenterquestid = 3981;
+                                break;
+                            case "Hard_Hillah":
+                                checkclearquestid = 3650;
+                             //   weekly = true;
+                                break;
+                            case "Normal_Kawoong":
+                                checkenterquestid = 3590;
+                                break;
+                            case "Easy_Populatus":
+                            case "Normal_Populatus":
+                                checkenterquestid = 7200;
+                                break;
+                            case "Chaos_Populatus":
+                                checkclearquestid = 3657;
+                            //    weekly = true;
+                                break;
+                            case "Normal_Pierre":
+                                checkclearquestid = 30032;
+                                break;
+                            case "Chaos_Pierre":
+                                checkclearquestid = 30043;
+                            //    weekly = true;
+                                break;
+                            case "Normal_VonBon":
+                                checkclearquestid = 30039;
+                                break;
+                            case "Chaos_VonBon":
+                                checkclearquestid = 30044;
+                            //    weekly = true;
+                                break;
+                            case "Normal_BloodyQueen":
+                                checkclearquestid = 30033;
+                                break;
+                            case "Chaos_BloodyQueen":
+                                checkclearquestid = 30045;
+                             //   weekly = true;
+                                break;
+                            case "Normal_Vellum":
+                                checkclearquestid = 30041;
+                                break;
+                            case "Chaos_Vellum":
+                                checkclearquestid = 30046;
+                            //    weekly = true;
+                                break;
+                            case "Easy_VonLeon":
+                            case "Normal_VonLeon":
+                            case "Hard_VonLeon":
+                                checkenterquestid = 7850;
+                                break;
+                            case "Normal_Horntail":
+                            case "Chaos_Horntail":
+                                checkenterquestid = 7312;
+                                break;
+                            case "Easy_Arkarium":
+                            case "Normal_Arkarium":
+                                checkenterquestid = 7851;
+                                break;
+                            case "Normal_Pinkbean":
+                                checkenterquestid = 7403;
+                                checkclearquestid = 3652;
+                                break;
+                            case "Chaos_Pinkbean":
+                                checkenterquestid = 7403;
+                                checkclearquestid = 3653;
+                             //   weekly = true;
+                                CheckS = "lastDateC";
+                                break;
+                            case "Easy_Cygnus":
+                            case "Normal_Cygnus":
+                                checkclearquestid = 31199;
+                              //  weekly = true;
+                                break;
+                            case "Normal_Lotus":
+                                checkclearquestid = 33303;
+                             //   weekly = true;
+                                break;
+                            case "Hard_Lotus":
+                                checkenterquestid = 33126;
+                                checkclearquestid = 33303;
+                              //  weekly = true;
+                                break;
+                            case "Normal_Demian":
+                                checkclearquestid = 34017;
+                              //  weekly = true;
+                                break;
+                            case "Hard_Demian":
+                                checkenterquestid = 34016;
+                                checkclearquestid = 34017;
+                            //    weekly = true;
+                                break;
+                            case "Easy_Lucid":
+                                checkenterquestid = 34364;
+                                checkclearquestid = 3685;
+                                CheckS = "lastDateE";
+                             //   weekly = true;
+                                break;
+                            case "Normal_Lucid":
+                                checkenterquestid = 34364;
+                                checkclearquestid = 3685;
+                             //   weekly = true;
+                                break;
+                            case "Hard_Lucid":
+                                checkenterquestid = 34364;
+                                checkclearquestid = 3685;
+                                CheckS = "lastDateH";
+                            //    weekly = true;
+                                break;
+                            case "Normal_Will":
+                                checkenterquestid = 35100;
+                                checkclearquestid = 3658;
+                                CheckS = "lastDateN";
+                           //     weekly = true;
+                                break;
+                            case "Hard_Will":
+                                checkenterquestid = 35100;
+                                checkclearquestid = 3658;
+                           //     weekly = true;
+                                break;
+                            case "Normal_Dusk":
+                                checkenterquestid = 35137;
+                                checkclearquestid = 3680;
+                                CheckS = "lastDateN";
+                           //     weekly = true;
+                                break;
+                            case "Chaos_Dusk":
+                                checkenterquestid = 35139;
+                                checkclearquestid = 3680;
+                                CheckS = "lastDateH";
+                            //    weekly = true;
+                                break;
+                            case "Normal_JinHillah":
+                                checkenterquestid = 35260;
+                                checkclearquestid = 3673;
+                                weekly = true;
+                                break;
+                            case "Normal_Dunkel":
+                                checkenterquestid = 35138;
+                                checkclearquestid = 3681;
+                                CheckS = "lastDateN";
+                            //    weekly = true;
+                                break;
+                            case "Hard_Dunkel":
+                                checkenterquestid = 35140;
+                                checkclearquestid = 3681;
+                                CheckS = "lastDateH";
+                           //     weekly = true;
+                                break;
+                            case "Black_Mage":
+                                checkenterquestid = 35377;
+                                checkclearquestid = 3679;
+                          //      weekly = true;
+                                break;
+                            case "Hard_Seren":
+                                checkenterquestid = 39932;
+                                checkclearquestid = 3687;
+                           //     weekly = true;
+                                break;
+                            case "Chaos_Karlos":
+                                checkenterquestid = 39949;
+                                checkclearquestid = 3699;
+                                //    weekly = true;
+                                break;
+                            //Ìï¥Ïô∏Î≥¥Ïä§
+                            case "Teng": //ÌÖ°Íµ¨
+                                checkenterquestid = 39959;
+                                checkclearquestid = 3711;
+                                break;
+                            case "Jgg": //ÌÖ°Íµ¨
+                                checkenterquestid = 39969;
+                                checkclearquestid = 3722;
+                                break;
+                            case "Chaos_Mitsuhide": //ÌÖ°Íµ¨
+                                checkenterquestid = 39979;
+                                checkclearquestid = 3733;
+                                break;
+                        }
+
+                        if (checkenterquestid > 0) {
+                            if (chr.getPlayer().getKeyValueStr(checkenterquestid, CheckS) != null && chr.getPlayer().getKeyValueStr(checkenterquestid, CheckS).equals(today)) {
+                                enter = true;
+                                txt = txt + "#b" + chr.getName() + "#kÎãò ÏûÖÏû• Í∞ÄÎä• ÌöüÏàò Ï¥àÍ≥º ÌïòÏòÄÏäµÎãàÎã§.\r\n";
+                            }
+
+                            if (!enter) {
+                                MapleQuestStatus quests = (MapleQuestStatus) chr.getPlayer().getQuest_Map().get(MapleQuest.getInstance(checkenterquestid));
+                                if (quests != null && quests.getCustomData() != null && quests.getCustomData().equals(today)) {
+                                    enter = true;
+                                    txt = txt + "#b" + chr.getName() + "#kÎãò ÏûÖÏû• Í∞ÄÎä• ÌöüÏàò Ï¥àÍ≥º ÌïòÏòÄÏäµÎãàÎã§.\r\n";
+                                }
+                            }
+                        }
+                        if (checkclearquestid > 0 && !enter) {
+                            if (weekly) {
+                                if (chr.getPlayer().getKeyValueStr(checkclearquestid, "lasttime") != null) {
+                                    String[] array = chr.getPlayer().getKeyValueStr(checkclearquestid, "lasttime").split("/");
+                                    Calendar clear = new GregorianCalendar(Integer.parseInt("20" + array[0]), Integer.parseInt(array[1]) - 1, Integer.parseInt(array[2]));
+                                    Calendar ocal = Calendar.getInstance();
+
+                                    int yeal = clear.get(1), days = clear.get(5), day = ocal.get(7), day2 = clear.get(7), maxday = clear.getMaximum(5), month = clear.get(2);
+                                    int check = (day2 == 5) ? 7 : ((day2 == 6) ? 6 : ((day2 == 7) ? 5 : 0));
+
+                                    if (check == 0) {
+                                        for (int i = day2; i < 5; i++) {
+                                            check++;
+                                        }
+                                    }
+                                    int afterday = days + check;
+                                    if (afterday > maxday) {
+                                        afterday -= maxday;
+                                        month++;
+                                    }
+                                    if (month > 12) {
+                                        yeal++;
+                                        month = 1;
+                                    }
+                                    Calendar after = new GregorianCalendar(yeal, month, afterday);
+                                    if (after.getTimeInMillis() > System.currentTimeMillis()) {
+                                        enter = true;
+                                        txt = txt + "#b" + chr.getName() + "#kÎãò ÏûÖÏû• Í∞ÄÎä• ÌöüÏàò Ï¥àÍ≥º ÌïòÏòÄÏäµÎãàÎã§.\r\n";
+                                    }
+                                }
+                            } else if (chr.getPlayer().getKeyValueStr(checkclearquestid, "lasttime") != null && chr.getPlayer().getKeyValueStr(checkclearquestid, "lasttime").equals(today)) {
+                                enter = true;
+                                txt = txt + "#b" + chr.getName() + "#kÎãò ÏûÖÏû• Í∞ÄÎä• ÌöüÏàò Ï¥àÍ≥º ÌïòÏòÄÏäµÎãàÎã§.\r\n";
+                            }
+                            if (!enter) {
+                                if (Long.parseLong(ch.getV(boss)) - System.currentTimeMillis() >= 0L) {
+                                    enter = true;
+                                    txt = txt + "#b" + chr.getName() + "#kÎãò #e#r" + ((Long.parseLong(ch.getV(boss)) - System.currentTimeMillis()) / 1000L / 60L) + "Î∂Ñ" + ((Long.parseLong(ch.getV(boss)) - System.currentTimeMillis()) / 1000L % 60L) + "Ï¥à#k#n Îí§Ïóê ÏûÖÏû• Í∞ÄÎä•Ìï©ÎãàÎã§.\r\n";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return txt;
+    }
+
+    public boolean isLevelAvailable(int level) {
+        if (this.c.getPlayer().getParty() != null) {
+            for (MaplePartyCharacter chr : getPlayer().getParty().getMembers()) {
+                for (ChannelServer channel : ChannelServer.getAllInstances()) {
+                    MapleCharacter ch = channel.getPlayerStorage().getCharacterById(chr.getId());
+                    if (ch != null && ch.getGMLevel() <= 6 && ch.getLevel() < level) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean hasSkill(int skillid) {
+        Skill theSkill = SkillFactory.getSkill(skillid);
+
+        if (theSkill != null) {
+            return (this.c.getPlayer().getSkillLevel(theSkill) > 0);
+        }
+        return false;
+    }
+
+    public void showEffect(boolean broadcast, String effect) {
+        if (broadcast) {
+            c.getPlayer().getMap().broadcastMessage(CField.showEffect(effect));
         } else {
-            c.getPlayer().gainRC(rc);
+            c.getSession().writeAndFlush(CField.showEffect(effect));
         }
-        }  
-
-	public boolean hasSkill(int skillid)
-	{
-		ISkill theSkill = SkillFactory.getSkill(skillid);
-		if (theSkill != null)
-		{
-			return c.getPlayer().getSkillLevel(theSkill) > 0;
-		}
-		return false;
-	}
-
-	public void showEffect(boolean broadcast, String effect)
-	{
-		if (broadcast)
-		{
-			c.getPlayer().getMap().broadcastMessage(MainPacketCreator.showMapEffect(effect));
-		}
-		else
-		{
-			c.getSession().writeAndFlush(MainPacketCreator.showMapEffect(effect));
-		}
-	}
-
-	public void playSound(boolean broadcast, String sound)
-	{
-		if (broadcast)
-		{
-			c.getPlayer().getMap().broadcastMessage(MainPacketCreator.playSound(sound));
-		}
-		else
-		{
-			c.getSession().writeAndFlush(MainPacketCreator.playSound(sound));
-		}
-	}
-
-	public void environmentChange(boolean broadcast, String env)
-	{
-		if (broadcast)
-		{
-			c.getPlayer().getMap().broadcastMessage(MainPacketCreator.environmentChange(env, 2));
-		}
-		else
-		{
-			c.getSession().writeAndFlush(MainPacketCreator.environmentChange(env, 2));
-		}
-	}
-
-	public void updateBuddyCapacity(int capacity)
-	{
-		c.getPlayer().setBuddyCapacity((byte) capacity);
-	}
-
-	public int getBuddyCapacity()
-	{
-		return c.getPlayer().getBuddyCapacity();
-	}
-
-	public int partyMembersInMap()
-	{
-		int inMap = 0;
-		if (getPlayer().getParty() == null)
-		{
-			return inMap;
-		}
-		for (MapleCharacter char2 : getPlayer().getMap().getCharacters())
-		{
-			if (char2.getParty() != null && char2.getParty().getId() == getPlayer().getParty().getId())
-			{
-				inMap++;
-			}
-		}
-		return inMap;
-	}
-
-	public List<MapleCharacter> getPartyMembers()
-	{
-		if (getPlayer().getParty() == null)
-		{
-			return null;
-		}
-		List<MapleCharacter> chars = new LinkedList<>(); // creates an empty
-		// array full of
-		// shit..
-		for (MaplePartyCharacter chr : getPlayer().getParty().getMembers())
-		{
-			for (ChannelServer channel : ChannelServer.getAllInstances())
-			{
-				MapleCharacter ch = channel.getPlayerStorage().getCharacterById(chr.getId());
-				if (ch != null)
-				{ // double check <3
-					chars.add(ch);
-				}
-			}
-		}
-		return chars;
-	}
-
-    public int getFrozenMobCount() {
-        return getPlayer().getFrozenMobCount();
     }
 
-    public void addFrozenMobCount(int a1) {
-        int val = (getFrozenMobCount() + a1) > 9999 ? 9999 : getFrozenMobCount() + a1;
-        getPlayer().setFrozenMobCount(val);
-        getClient().getSession().writeAndFlush(MainPacketCreator.OnAddPopupSay(1052230, 3500, "#face1#«¡∑Œ¡ ∏µ≈© ∏ÛΩ∫≈Õºˆ∏¶ √Ê¿¸«ﬂæÓ!", ""));
-    }     
+    public void playSound(boolean broadcast, String sound) {
+        if (broadcast) {
+            c.getPlayer().getMap().broadcastMessage(CField.playSound(sound));
+        } else {
 
-	public int findFrozenMap()
-	{
-		int mapid = 993014200;
-		MapleWorldMapProvider mapFactory = ChannelServer.getInstance(getClient().getChannel()).getMapFactory();
-		while (mapid != 993014301)
-		{
-			if (mapFactory.getMap(mapid).getAllPlayer().size() == 0)
-			{
-				return mapid;
-			}
-			mapid++;
-		}
-		return 0;
-	}
+            c.getSession().writeAndFlush(CField.playSound(sound));
+        }
+    }
 
-	public void warpClock(int mapid, int mapid2, int portal, int time)
-	{
-		warp(mapid);
-		getClient().sendPacket(MainPacketCreator.getClock(time));
-		MapTimer.getInstance().schedule(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				if (getPlayer().getMapId() == mapid)
-				{
-					getPlayer().changeMap(mapid2, portal);
-				}
-			}
-		}, time * 1000);
-	}
+    public void environmentChange(boolean broadcast, String env) {
+        if (broadcast) {
+            c.getPlayer().getMap().broadcastMessage(CField.environmentChange(env, 2));
+        } else {
+            c.getSession().writeAndFlush(CField.environmentChange(env, 2));
+        }
+    }
 
-	public void warpPartyWithExp(int mapId, int exp)
-	{
-		if (getPlayer().getParty() == null)
-		{
-			warp(mapId, 0);
-			gainExp(exp);
-			return;
-		}
-		MapleMap target = getMap(mapId);
-		for (MaplePartyCharacter chr : getPlayer().getParty().getMembers())
-		{
-			MapleCharacter curChar = c.getChannelServer().getPlayerStorage().getCharacterByName(chr.getName());
-			if ((curChar.getEventInstance() == null && getPlayer().getEventInstance() == null)
-					|| curChar.getEventInstance() == getPlayer().getEventInstance())
-			{
-				curChar.changeMap(target, target.getPortal(0));
-				curChar.gainExp(exp, true, false, true);
-			}
-		}
-	}
+    public void updateBuddyCapacity(int capacity) {
+        c.getPlayer().setBuddyCapacity((byte) capacity);
+    }
 
-	public void warpPartyWithExpMeso(int mapId, int exp, int meso)
-	{
-		if (getPlayer().getParty() == null)
-		{
-			warp(mapId, 0);
-			gainExp(exp);
-			gainMeso(meso);
-			return;
-		}
-		MapleMap target = getMap(mapId);
-		for (MaplePartyCharacter chr : getPlayer().getParty().getMembers())
-		{
-			MapleCharacter curChar = c.getChannelServer().getPlayerStorage().getCharacterByName(chr.getName());
-			if ((curChar.getEventInstance() == null && getPlayer().getEventInstance() == null)
-					|| curChar.getEventInstance() == getPlayer().getEventInstance())
-			{
-				curChar.changeMap(target, target.getPortal(0));
-				curChar.gainExp(exp, true, false, true);
-				curChar.gainMeso(meso, true);
-			}
-		}
-	}
+    public int getBuddyCapacity() {
+        return c.getPlayer().getBuddyCapacity();
+    }
 
-	public MapleSquadLegacy getSquad(String type)
-	{
-		return c.getChannelServer().getMapleSquad(type);
-	}
+    public int partyMembersInMap() {
+        int inMap = 0;
 
-	public int getSquadAvailability(String type)
-	{
-		final MapleSquadLegacy squad = c.getChannelServer().getMapleSquad(type);
-		if (squad == null)
-		{
-			return -1;
-		}
-		return squad.getStatus();
-	}
+        if (getPlayer().getParty() == null) {
+            return inMap;
+        }
 
-	public boolean registerExpedition(String type, int minutes, String startText)
-	{
-		if (c.getChannelServer().getMapleSquad(type) == null)
-		{
-			final MapleSquadLegacy squad = new MapleSquadLegacy(c.getChannel(), type, c.getPlayer(),
-					minutes * 60 * 1000);
-			final boolean ret = c.getChannelServer().addMapleSquad(squad, type);
-			if (ret)
-			{
-				final MapleMap map = c.getPlayer().getMap();
-				map.broadcastMessage(MainPacketCreator.getClock(minutes * 60));
-				map.broadcastMessage(MainPacketCreator.serverNotice(-6, startText));
-			}
-			return ret;
-		}
-		return false;
-	}
+        for (MapleCharacter char2 : getPlayer().getMap().getCharactersThreadsafe()) {
+            if (char2.getParty() != null && char2.getParty().getId() == getPlayer().getParty().getId()) {
+                inMap++;
+            }
+        }
+        return inMap;
+    }
 
-	public boolean registerSquad(String type, int minutes, String startText)
-	{
-		if (c.getChannelServer().getMapleSquad(type) == null)
-		{
-			final MapleSquadLegacy squad = new MapleSquadLegacy(c.getChannel(), type, c.getPlayer(),
-					minutes * 60 * 1000);
-			final boolean ret = c.getChannelServer().addMapleSquad(squad, type);
-			if (ret)
-			{
-				final MapleMap map = c.getPlayer().getMap();
-				map.broadcastMessage(MainPacketCreator.getClock(minutes * 60));
-				map.broadcastMessage(MainPacketCreator.serverNotice(6, c.getPlayer().getName() + startText));
-			}
-			return ret;
-		}
-		return false;
-	}
+    public List<MapleCharacter> getPartyMembers() {
+        if (getPlayer().getParty() == null) {
+            return null;
+        }
+        List<MapleCharacter> chars = new LinkedList<>();
+        for (MaplePartyCharacter chr : getPlayer().getParty().getMembers()) {
+            for (ChannelServer channel : ChannelServer.getAllInstances()) {
+                MapleCharacter ch = channel.getPlayerStorage().getCharacterById(chr.getId());
+                if (ch != null) {
+                    chars.add(ch);
+                }
+            }
+        }
+        return chars;
+    }
 
-	public boolean getSquadList(String type, byte type_)
-	{
-		try
-		{
-			final MapleSquadLegacy squad = c.getChannelServer().getMapleSquad(type);
-			if (squad == null)
-			{
-				return false;
-			}
-			if (type_ == 0 || type_ == 3)
-			{ // Normal viewing
-				sendNext(squad.getSquadMemberString(type_));
-			}
-			else if (type_ == 1)
-			{ // Squad Leader banning, Check out banned
-				// participant
-				sendSimple(squad.getSquadMemberString(type_));
-			}
-			else if (type_ == 2)
-			{
-				if (squad.getBannedMemberSize() > 0)
-				{
-					sendSimple(squad.getSquadMemberString(type_));
-				}
-				else
-				{
-					sendNext(squad.getSquadMemberString(type_));
-				}
-			}
-			return true;
-		}
-		catch (NullPointerException ex)
-		{
-			ex.printStackTrace();
-			return false;
-		}
-	}
-	// public void teachSkill(int id, int skillevel, byte masterlevel, long
-	// expiration) {
-	// getPlayer().changeSkillLevelAll(SkillFactory.getSkill(id), skillevel,
-	// masterlevel, expiration);
-	// }
-
-	public byte isSquadLeader(String type)
-	{
-		final MapleSquadLegacy squad = c.getChannelServer().getMapleSquad(type);
-		if (squad == null)
-		{
-			return -1;
-		}
-		else
-		{
-			if (squad.getLeader() != null && squad.getLeader().getId() == c.getPlayer().getId())
-			{
-				return 1;
-			}
-			else
-			{
-				return 0;
-			}
-		}
-	}
-
-	public boolean reAdd(String eim, String squad)
-	{
-		EventInstanceManager eimz = getDisconnected(eim);
-		MapleSquadLegacy squadz = getSquad(squad);
-		if (eimz != null && squadz != null)
-		{
-			squadz.reAddMember(getPlayer());
-			eimz.registerPlayer(getPlayer());
-			return true;
-		}
-		return false;
-	}
-
-	public void banMember(String type, int pos)
-	{
-		final MapleSquadLegacy squad = c.getChannelServer().getMapleSquad(type);
-		if (squad != null)
-		{
-			squad.banMember(pos);
-		}
-	}
-
-	public void acceptMember(String type, int pos)
-	{
-		final MapleSquadLegacy squad = c.getChannelServer().getMapleSquad(type);
-		if (squad != null)
-		{
-			squad.acceptMember(pos);
-		}
-	}
-
-	public int addMember(String type, boolean join)
-	{
-		try
-		{
-			final MapleSquadLegacy squad = c.getChannelServer().getMapleSquad(type);
-			if (squad != null)
-			{
-				return squad.addMember(c.getPlayer(), join);
-			}
-			return -1;
-		}
-		catch (NullPointerException ex)
-		{
-			ex.printStackTrace();
-			return -1;
-		}
-	}
-
-	public byte isSquadMember(String type)
-	{
-		final MapleSquadLegacy squad = c.getChannelServer().getMapleSquad(type);
-		if (squad == null)
-		{
-			return -1;
-		}
-		else
-		{
-			if (squad.getMembers().contains(c.getPlayer()))
-			{
-				return 1;
-			}
-			else if (squad.isBanned(c.getPlayer()))
-			{
-				return 2;
-			}
-			else
-			{
-				return 0;
-			}
-		}
-	}
-
-	public void resetReactors()
-	{
-		getPlayer().getMap().resetReactors(getClient());
-	}
-
-	public void genericGuildMessage(int code)
-	{
-		c.getSession().writeAndFlush(MainPacketCreator.genericGuildMessage((byte) code));
-	}
-
-	public void disbandGuild()
-	{
-		final int gid = c.getPlayer().getGuildId();
-		if (gid <= 0 || c.getPlayer().getGuildRank() != 1)
-		{
-			return;
-		}
-		WideObjectHolder.getInstance().disbandGuild(gid);
-	}
-
-    public void increaseGuildCapacity() { //±ÊµÂ ¿Œø¯ ¥√∏Æ±‚
-        if (c.getPlayer().getMeso() < 10000000) {
-            c.getSession().writeAndFlush(MainPacketCreator.serverNotice(1, "1000∏∏ ∏ﬁº“∞° √Ê∫–«œ¡ˆ æ Ω¿¥œ¥Ÿ."));
+    public void warpPartyWithExp(int mapId, int exp) {
+        if (getPlayer().getParty() == null) {
+            warp(mapId, 0);
+            gainExp(exp);
             return;
         }
-        final int gid = c.getPlayer().getGuildId();
-        if (gid <= 0) {
+        MapleMap target = getMap(mapId);
+
+        for (MaplePartyCharacter chr : getPlayer().getParty().getMembers()) {
+            MapleCharacter curChar = this.c.getChannelServer().getPlayerStorage().getCharacterByName(chr.getName());
+            if ((curChar.getEventInstance() == null && getPlayer().getEventInstance() == null) || curChar.getEventInstance() == getPlayer().getEventInstance()) {
+                curChar.changeMap(target, target.getPortal(0));
+                curChar.gainExp(exp, true, false, true);
+            }
+        }
+    }
+
+    public void warpPartyWithExpMeso(int mapId, int exp, int meso) {
+        if (getPlayer().getParty() == null) {
+            warp(mapId, 0);
+            gainExp(exp);
+            gainMeso(meso);
             return;
         }
-        ChannelServer.increaseGuildCapacity(gid);
-        c.getPlayer().gainMeso(-10000000, true, false, true);
+        MapleMap target = getMap(mapId);
+
+        for (MaplePartyCharacter chr : getPlayer().getParty().getMembers()) {
+            MapleCharacter curChar = this.c.getChannelServer().getPlayerStorage().getCharacterByName(chr.getName());
+            if ((curChar.getEventInstance() == null && getPlayer().getEventInstance() == null) || curChar.getEventInstance() == getPlayer().getEventInstance()) {
+                curChar.changeMap(target, target.getPortal(0));
+                curChar.gainExp(exp, true, false, true);
+                curChar.gainMeso(meso, true);
+            }
+        }
     }
 
-	public void displayGuildRanks()
-	{
-		c.getSession().writeAndFlush(MainPacketCreator.showGuildRanks(id, MapleGuildRanking.getInstance().getRank()));
-	}
-
-	public boolean removePlayerFromInstance()
-	{
-		if (c.getPlayer().getEventInstance() != null)
-		{
-			c.getPlayer().getEventInstance().removePlayer(c.getPlayer());
-			return true;
-		}
-		return false;
-	}
-
-	public boolean isPlayerInstance()
-	{
-		return c.getPlayer().getEventInstance() != null;
-	}
-
-	public void makeTaintedEquip(byte slot)
-	{
-		Equip sel = (Equip) c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem(slot);
-		sel.setStr((short) 69);
-		sel.setDex((short) 69);
-		sel.setInt((short) 69);
-		sel.setLuk((short) 69);
-		sel.setHp((short) 69);
-		sel.setMp((short) 69);
-		sel.setWatk((short) 69);
-		sel.setMatk((short) 69);
-		sel.setWdef((short) 69);
-		sel.setMdef((short) 69);
-		sel.setAcc((short) 69);
-		sel.setAvoid((short) 69);
-		sel.setHands((short) 69);
-		sel.setSpeed((short) 69);
-		sel.setJump((short) 69);
-		sel.setUpgradeSlots((byte) 69);
-		sel.setViciousHammer((byte) 69);
-		sel.setEnhance((byte) 69);
-		c.getPlayer().equipChanged();
-		c.getPlayer().fakeRelog();
-	}
-
-	public void changeStat(byte slot, int type, int amount)
-	{
-		Equip sel = (Equip) c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem(slot);
-		switch (type)
-		{
-		case 0:
-			sel.setStr((short) amount);
-			break;
-		case 1:
-			sel.setDex((short) amount);
-			break;
-		case 2:
-			sel.setInt((short) amount);
-			break;
-		case 3:
-			sel.setLuk((short) amount);
-			break;
-		case 4:
-			sel.setHp((short) amount);
-			break;
-		case 5:
-			sel.setMp((short) amount);
-			break;
-		case 6:
-			sel.setWatk((short) amount);
-			break;
-		case 7:
-			sel.setMatk((short) amount);
-			break;
-		case 8:
-			sel.setWdef((short) amount);
-			break;
-		case 9:
-			sel.setMdef((short) amount);
-			break;
-		case 10:
-			sel.setAcc((short) amount);
-			break;
-		case 11:
-			sel.setAvoid((short) amount);
-			break;
-		case 12:
-			sel.setHands((short) amount);
-			break;
-		case 13:
-			sel.setSpeed((short) amount);
-			break;
-		case 14:
-			sel.setJump((short) amount);
-			break;
-		case 15:
-			sel.setUpgradeSlots((byte) amount);
-			break;
-		case 16:
-			sel.setViciousHammer((byte) amount);
-			break;
-		case 17:
-			sel.setLevel((byte) amount);
-			break;
-		case 18:
-			sel.setEnhance((byte) amount);
-			break;
-		case 19:
-			sel.setPotential1(amount);
-			break;
-		case 20:
-			sel.setPotential2(amount);
-			break;
-		case 21:
-			sel.setPotential3(amount);
-			break;
-		case 22:
-			sel.setPotential4(amount);
-			break;
-		case 23:
-			sel.setPotential5(amount);
-			break;
-		case 24:
-			sel.setOwner(getText());
-			break;
-		default:
-			break;
-		}
-		c.getPlayer().equipChanged();
-		c.getPlayer().fakeRelog();
-	}
-
-	public void openPackageDeliverer()
-	{
-		// c.getPlayer().setConversation(2);
-		// c.getSession().writeAndFlush(CField.sendPackageMSG((byte) 9, null));
-	}
-
-	public void openMerchantItemStore()
-	{
-		// c.getPlayer().setConversation(3);
-		// HiredMerchantHandler.displayMerch(c);
-		// c.getSession().writeAndFlush(CWvsContext.enableActions());
-	}
-
-	public void sendPVPWindow()
-	{
-		c.getSession().writeAndFlush(UIPacket.openUI(0x32));
-		// c.getSession().writeAndFlush(CField.sendPVPMaps());
-	}
-
-	public void sendAzwanWindow()
-	{
-		c.getSession().writeAndFlush(UIPacket.openUI(0x46));
-	}
-
-	public void sendOpenJobChangeUI()
-	{
-		c.getSession().writeAndFlush(UIPacket.openUI(0xA4)); // job selections change
-		// depending on ur job
-	}
-
-	public void sendTimeGateWindow()
-	{
-		c.getSession().writeAndFlush(UIPacket.openUI(0xA8));
-	}
-
-	public void SendEvolution()
-	{
-		c.getSession().writeAndFlush(UIPacket.openUI(100));
-	}
-
-	public void sendRepairWindow()
-	{
-		c.getSession().writeAndFlush(UIPacket.sendRepairWindow(id));
-	}
-
-	public void sendJewelCraftWindow()
-	{
-		c.getSession().writeAndFlush(UIPacket.sendJewelCraftWindow(id));
-	}
-
-	public void sendRedLeaf(boolean viewonly, boolean autocheck)
-	{
-		/*
-		 * if (autocheck) { viewonly = c.getPlayer().getFriendShipToAdd() == 0; }
-		 * c.getSession().writeAndFlush(UIPacket.sendRedLeaf(viewonly ? 0 :
-		 * c.getPlayer().getFriendShipToAdd(), viewonly));
-		 */
-	}
-
-	public int GetCount(String boss, int limit)
-	{
-		if (getPlayer().getDateKey(boss, false) == null)
-		{
-			return limit;
-		}
-		return limit - Integer.parseInt(this.c.getPlayer().getDateKey(boss, false));
-	}
-
-	public final boolean CountCheck(String paramString, int paramInt)
-	{
-		if (getPlayer().getDateKey(paramString, false) == null)
-		{
-			getPlayer().setDateKey(paramString, "0", false);
-		}
-		return Integer.parseInt(getPlayer().getDateKey(paramString, false)) < paramInt;
-	}
-
-	public void CountAdd(String paramString, int paramInt)
-	{
-		if (getPlayer().getDateKey(paramString, false) == null)
-		{
-			getPlayer().setDateKey(paramString, "0", false);
-		}
-		getPlayer().setDateKey(paramString, "" + (Integer.parseInt(getPlayer().getDateKey(paramString, false)) + 1),
-				false);
-		// return Integer.parseInt(getPlayer().getDateKey(paramString, false)) <
-		// paramInt;
-	}
-
-	public void sendProfessionWindow()
-	{
-		c.getSession().writeAndFlush(UIPacket.openUI(42));
-	}
-
-	public void OpenUI(int ui)
-	{
-		c.getPlayer().getMap().broadcastMessage(UIPacket.openUI(ui));
-	}
-
-	public void openUI(int ui)
-	{
-		c.getPlayer().getMap().broadcastMessage(UIPacket.openUI(ui));
-	}
-
-	public void getMulungRanking()
-	{
-		// c.getSession().writeAndFlush(CWvsContext.getMulungRanking());
-	}
-
-	public final int getDojoPoints()
-	{
-		return dojo_getPts();
-	}
-
-	public final int getDojoRecord()
-	{
-		return c.getPlayer().getIntNoRecord(GameConstants.DOJO_RECORD);
-	}
-
-	public void setDojoRecord(final boolean reset, final boolean take, int amount)
-	{
-		if (reset)
-		{
-			c.getPlayer().getQuestNAdd(MapleQuest.getInstance(GameConstants.DOJO_RECORD)).setCustomData("0");
-			c.getPlayer().getQuestNAdd(MapleQuest.getInstance(GameConstants.DOJO)).setCustomData("0");
-		}
-		else if (take)
-		{
-			c.getPlayer().getQuestNAdd(MapleQuest.getInstance(GameConstants.DOJO_RECORD))
-					.setCustomData(String.valueOf(c.getPlayer().getIntRecord(GameConstants.DOJO_RECORD) - amount));
-			c.getPlayer().getQuestNAdd(MapleQuest.getInstance(GameConstants.DOJO))
-					.setCustomData(String.valueOf(c.getPlayer().getIntRecord(GameConstants.DOJO_RECORD) - amount));
-		}
-		else
-		{
-			c.getPlayer().getQuestNAdd(MapleQuest.getInstance(GameConstants.DOJO_RECORD))
-					.setCustomData(String.valueOf(c.getPlayer().getIntRecord(GameConstants.DOJO_RECORD) + 1));
-		}
-	}
-
-	public boolean start_DojoAgent(final boolean dojo, final boolean party, final int mapid)
-	{
-		if (dojo)
-		{
-			return MapleDojoAgent.warpStartDojo(c.getPlayer(), party, getMap(mapid));
-		}
-		return MapleDojoAgent.warpStartAgent(c.getPlayer(), party);
-	}
-
-	public boolean start_PyramidSubway(final int pyramid)
-	{
-		if (pyramid >= 0)
-		{
-			return MaplePyramidSubway.warpStartPyramid(c.getPlayer(), pyramid);
-		}
-		return MaplePyramidSubway.warpStartSubway(c.getPlayer());
-	}
-
-	public boolean bonus_PyramidSubway(final int pyramid)
-	{
-		if (pyramid >= 0)
-		{
-			return MaplePyramidSubway.warpBonusPyramid(c.getPlayer(), pyramid);
-		}
-		return MaplePyramidSubway.warpBonusSubway(c.getPlayer());
-	}
-
-	public final short getKegs()
-	{
-		// return c.getChannelServer().getFireWorks().getKegsPercentage();
-		return -1;
-	}
-
-	public void giveKegs(final int kegs)
-	{
-		// c.getChannelServer().getFireWorks().giveKegs(c.getPlayer(), kegs);
-	}
-
-	public final short getSunshines()
-	{
-		// return c.getChannelServer().getFireWorks().getSunsPercentage();
-		return -1;
-	}
-
-	public void addSunshines(final int kegs)
-	{
-		// c.getChannelServer().getFireWorks().giveSuns(c.getPlayer(), kegs);
-	}
-
-	public final short getDecorations()
-	{
-		// return c.getChannelServer().getFireWorks().getDecsPercentage();
-		return -1;
-	}
-
-	public void addDecorations(final int kegs)
-	{
-		/*
-		 * try { c.getChannelServer().getFireWorks().giveDecs(c.getPlayer(), kegs); }
-		 * catch (Exception e) { }
-		 */
-	}
-
-	public final MapleCarnivalParty getCarnivalParty()
-	{
-		return c.getPlayer().getCarnivalParty();
-	}
-
-	public final MapleCarnivalChallenge getNextCarnivalRequest()
-	{
-		return null;
-	}
-
-	public final MapleCarnivalChallenge getCarnivalChallenge(MapleCharacter chr)
-	{
-		return new MapleCarnivalChallenge(chr);
-	}
-
-	public int setAndroid(int args)
-	{
-		if (args < 30000)
-		{
-			c.getPlayer().getAndroid().setFace(args);
-			c.getPlayer().getAndroid().saveToDb();
-		}
-		else
-		{
-			c.getPlayer().getAndroid().setHair(args);
-			c.getPlayer().getAndroid().saveToDb();
-		}
-		c.getPlayer().setAndroid(c.getPlayer().getAndroid()); // Respawn it
-		c.getPlayer().equipChanged();
-		return 1;
-	}
-
-	public void sendAndroidStyle(String text, int styles[])
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 11);
-		t.setText(text);
-		t.setArgs(styles);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 11;
-	}
-
-	public void setAndroidHair(int hair)
-	{
-		getPlayer().getAndroid().setHair(hair);
-		getPlayer().getAndroid().saveToDb();
-		c.getPlayer().setAndroid(c.getPlayer().getAndroid());
-	}
-
-	public void setAndroidFace(int face)
-	{
-		getPlayer().getAndroid().setFace(face);
-		getPlayer().getAndroid().saveToDb();
-		c.getPlayer().setAndroid(c.getPlayer().getAndroid());
-	}
-
-	public int getAndroidStat(final String type)
-	{
-		switch (type)
-		{
-		case "HAIR":
-			return c.getPlayer().getAndroid().getHair();
-		case "FACE":
-			return c.getPlayer().getAndroid().getFace();
-		case "GENDER":
-			int itemid = c.getPlayer().getAndroid().getItemId();
-			if (itemid == 1662000 || itemid == 1662002)
-			{
-				return 0;
-			}
-			else
-			{
-				return 1;
-			}
-		}
-		return -1;
-	}
-
-        public void reloadChar() {
-        getPlayer().reloadChar();
-    }
-
-
-	public void askAndroid(String text, int... args)
-	{
-		if (lastMsg > -1)
-		{
-			return;
-		}
-		NPCTalk t = new NPCTalk((byte) 4, id, (byte) 11);
-		t.setText(text);
-		t.setArgs(args);
-
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		lastMsg = 11;
-	}
-
-	@Override
-	public MapleCharacter getChar()
-	{
-		return getPlayer();
-	}
-            public MapleCharacter getChar(int id) {
+    public MapleCharacter getChar(int id) {
         MapleCharacter chr = null;
         for (ChannelServer cs : ChannelServer.getAllInstances()) {
             chr = cs.getPlayerStorage().getCharacterById(id);
+
             if (chr != null) {
                 return chr;
             }
@@ -2036,1602 +2215,1634 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         return null;
     }
 
-    public MapleCharacter getChar(String name) {
-        return getPlayer().getMap().getCharacterByName_InMap(name);
-    }
-    
-        public void makeRing(int itemid, MapleCharacter chr) {
+    public void makeRing(int itemid, MapleCharacter chr) {
         try {
-            IItem item = ItemInformation.getInstance().getEquipById(itemid);
-            IItem item1 = ItemInformation.getInstance().getEquipById(itemid);
-            item.setCash(true);
-            item.setUniqueId(MapleItemIdenfier.getInstance().getNewUniqueId());
-            item1.setCash(true);
-            item1.setUniqueId(MapleItemIdenfier.getInstance().getNewUniqueId());
-            MapleRing.makeRing(itemid, chr, item.getUniqueId(), item1.getUniqueId()); //≥ª≤®
-            MapleRing.makeRing(itemid, getPlayer(), item1.getUniqueId(), item.getUniqueId());//∆ƒ∆Æ≥ ≤®
-            InventoryManipulator.addbyItem(getClient(), item);
-            InventoryManipulator.addbyItem(chr.getClient(), item1);
+            MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+
+            Item item = ii.getEquipById(itemid);
+            Item item1 = ii.getEquipById(itemid);
+            item.setUniqueId(MapleInventoryIdentifier.getInstance());
+            item1.setUniqueId(MapleInventoryIdentifier.getInstance());
+            MapleRing.makeRing(itemid, chr, item.getUniqueId(), item1.getUniqueId());
+            MapleRing.makeRing(itemid, getPlayer(), item1.getUniqueId(), item.getUniqueId());
+            MapleInventoryManipulator.addbyItem(getClient(), item);
+            MapleInventoryManipulator.addbyItem(chr.getClient(), item1);
+
             chr.reloadChar();
-            reloadChar();
-            sendOk("º±≈√«œΩ≈ π›¡ˆ∏¶ ¡¶¿€ øœ∑· «œø¥Ω¿¥œ¥Ÿ. ¿Œ∫•≈‰∏Æ∏¶ »Æ¿Œ«ÿ ∫¡¡÷Ω√±Ê πŸ∂¯¥œ¥Ÿ.");
-            chr.dropMessage(5, getPlayer().getName() + "¥‘¿∏∑Œ ∫Œ≈Õ π›¡ˆ∞° µµ¬¯ «œø¥Ω¿¥œ¥Ÿ. ¿Œ∫•≈‰∏Æ∏¶ »Æ¿Œ«ÿ ¡÷Ω√±Ê πŸ∂¯¥œ¥Ÿ.");
+            c.getPlayer().reloadChar();
+
+            sendOk("ÏÑ†ÌÉùÌïòÏã† Î∞òÏßÄÎ•º Ï†úÏûë ÏôÑÎ£å ÌïòÏòÄÏäµÎãàÎã§. Ïù∏Î≤§ÌÜ†Î¶¨Î•º ÌôïÏù∏Ìï¥ Î¥êÏ£ºÏãúÍ∏∏ Î∞îÎûçÎãàÎã§.");
+            chr.dropMessage(5, getPlayer().getName() + "ÎãòÏúºÎ°ú Î∂ÄÌÑ∞ Î∞òÏßÄÍ∞Ä ÎèÑÏ∞© ÌïòÏòÄÏäµÎãàÎã§. Ïù∏Î≤§ÌÜ†Î¶¨Î•º ÌôïÏù∏Ìï¥ Ï£ºÏãúÍ∏∏ Î∞îÎûçÎãàÎã§.");
         } catch (Exception ex) {
-            sendOk("π›¡ˆ∏¶ ¡¶¿€«œ¥¬µ• ø¿∑˘∞° πﬂª˝ «œø¥Ω¿¥œ¥Ÿ.");
+            sendOk("Î∞òÏßÄÎ•º Ï†úÏûëÌïòÎäîÎç∞ Ïò§Î•òÍ∞Ä Î∞úÏÉù ÌïòÏòÄÏäµÎãàÎã§.");
         }
     }
 
-	public void equipSecondaryByID(final int shieldID)
-	{
-		if (shieldID > 0)
-		{
-			// c.getPlayer().setShield(shieldID);
-		}
-		else
-		{
-			System.out.println("Please insert an item-id to equip.");
-		}
-
-	}
-
-	public static int editEquipById(MapleCharacter chr, int max, int itemid, String stat, int newval)
-	{
-		return editEquipById(chr, max, itemid, stat, (short) newval);
-	}
-
-	public static int editEquipById(MapleCharacter chr, int max, int itemid, String stat, short newval)
-	{
-		// Is it an equip?
-		if (!GameConstants.isEquip(itemid))
-		{
-			return -1;
-		}
-
-		// Get List
-		List<IItem> equips = chr.getInventory(MapleInventoryType.EQUIP).listById(itemid);
-		List<IItem> equipped = chr.getInventory(MapleInventoryType.EQUIPPED).listById(itemid);
-
-		// Do you have any?
-		if (equips.isEmpty() && equipped.isEmpty())
-		{
-			return 0;
-		}
-
-		int edited = 0;
-
-		// edit items
-		for (IItem itm : equips)
-		{
-			Equip e = (Equip) itm;
-			if (edited >= max)
-			{
-				break;
-			}
-			edited++;
-			switch (stat)
-			{
-			case "str":
-				e.setStr(newval);
-				break;
-			case "dex":
-				e.setDex(newval);
-				break;
-			case "int":
-				e.setInt(newval);
-				break;
-			case "luk":
-				e.setLuk(newval);
-				break;
-			case "watk":
-				e.setWatk(newval);
-				break;
-			case "matk":
-				e.setMatk(newval);
-				break;
-			default:
-				return -2;
-			}
-		}
-		for (IItem itm : equipped)
-		{
-			Equip e = (Equip) itm;
-			if (edited >= max)
-			{
-				break;
-			}
-			edited++;
-			switch (stat)
-			{
-			case "str":
-				e.setStr(newval);
-				break;
-			case "dex":
-				e.setDex(newval);
-				break;
-			case "int":
-				e.setInt(newval);
-				break;
-			case "luk":
-				e.setLuk(newval);
-				break;
-			case "watk":
-				e.setWatk(newval);
-				break;
-			case "matk":
-				e.setMatk(newval);
-				break;
-			default:
-				return -2;
-			}
-		}
-
-		// Return items edited
-		return (edited);
-	}
-
-	public int getReborns()
-	{ // tjat
-		return getPlayer().getReborns();
-	}
-
-	public boolean getSR(Triple<String, Map<Integer, String>, Long> ma, int sel)
-	{
-		if (ma.second.get(sel) == null || ma.second.get(sel).length() <= 0)
-		{
-			dispose();
-			return false;
-		}
-		sendOk(ma.second.get(sel));
-		return true;
-	}
-
-	public Equip getEquip(int itemid)
-	{
-		return (Equip) ItemInformation.getInstance().getEquipById(itemid);
-	}
-
-	public void setExpiration(Object statsSel, long expire)
-	{
-		if (statsSel instanceof Equip)
-		{
-			((Equip) statsSel).setExpiration(System.currentTimeMillis() + (expire * 24 * 60 * 60 * 1000));
-		}
-	}
-
-	public void setLock(Object statsSel)
-	{
-		if (statsSel instanceof Equip)
-		{
-			Equip eq = (Equip) statsSel;
-			if (eq.getExpiration() == -1)
-			{
-				eq.setFlag((byte) (eq.getFlag() | ItemFlag.LOCK.getValue()));
-			}
-		}
-	}
-
-	public boolean addFromDrop(Object statsSel)
-	{
-		if (statsSel instanceof IItem)
-		{
-			final IItem it = (IItem) statsSel;
-			if (InventoryManipulator.checkSpace(getClient(), it.getItemId(), it.getQuantity(), it.getOwner()))
-			{
-				InventoryManipulator.addFromDrop(getClient(), it, false);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public int getVPoints()
-	{
-		return getPlayer().getVPoints();
-	}
-
-	public int getStarterQuestID()
-	{
-		return getPlayer().getStarterQuestID();
-	}
-
-	public int getStarterQuestStatus()
-	{
-		return getPlayer().getStarterQuest();
-	}
-
-	public void setStarterQuestID(int id)
-	{
-		getPlayer().setStarterQuestID(id);
-	}
-
-	public void setStarterQuestStatus(int id)
-	{
-		getPlayer().setStarterQuest(id);
-	}
-
-	public int getDPoints()
-	{
-		return getPlayer().getVPoints();
-	}
-
-	public void setDPoints(int dpoints)
-	{
-		// getPlayer().setDPoints(getPlayer().getDPoints() + dpoints);
-	}
-
-	public int getEPoints()
-	{
-		return 0;
-	}
-
-	public void setEPoints(int epoints)
-	{
-		// getPlayer().setEPoints(getPlayer().getEPoints() + epoints);
-	}
-
-	public void setAndroidSkinColor(int color)
-	{
-		getPlayer().getAndroid().setSkinColor(color);
-		getPlayer().getAndroid().saveToDb();
-		c.getPlayer().setAndroid(c.getPlayer().getAndroid());
-	}
-
-	public void setSecondSkin(int color)
-	{
-		getPlayer().setSecondSkinColor((byte) color);
-		getPlayer().updateSingleStat(PlayerStat.SKIN, color);
-		getPlayer().equipChanged();
-	}
-
-	public boolean replaceItem(int slot, int invType, Object statsSel, int offset, String type)
-	{
-		return replaceItem(slot, invType, statsSel, offset, type, false);
-	}
-
-	public boolean replaceItem(int slot, int invType, Object statsSel, int offset, String type, boolean takeSlot)
-	{
-		MapleInventoryType inv = MapleInventoryType.getByType((byte) invType);
-		if (inv == null)
-		{
-			return false;
-		}
-		IItem item = getPlayer().getInventory(inv).getItem((byte) slot);
-		if (item == null || statsSel instanceof IItem)
-		{
-			item = (IItem) statsSel;
-		}
-		if (offset > 0)
-		{
-			if (inv != MapleInventoryType.EQUIP)
-			{
-				return false;
-			}
-			Equip eq = (Equip) item;
-			if (takeSlot)
-			{
-				if (eq.getUpgradeSlots() < 1)
-				{
-					return false;
-				}
-				else
-				{
-					eq.setUpgradeSlots((byte) (eq.getUpgradeSlots() - 1));
-				}
-				if (eq.getExpiration() == -1)
-				{
-					eq.setFlag((byte) (eq.getFlag() | ItemFlag.LOCK.getValue()));
-				}
-			}
-			if (type.equalsIgnoreCase("Slots"))
-			{
-				eq.setUpgradeSlots((byte) (eq.getUpgradeSlots() + offset));
-				eq.setViciousHammer((byte) (eq.getViciousHammer() + offset));
-			}
-			else if (type.equalsIgnoreCase("Level"))
-			{
-				eq.setLevel((byte) (eq.getLevel() + offset));
-			}
-			else if (type.equalsIgnoreCase("Hammer"))
-			{
-				eq.setViciousHammer((byte) (eq.getViciousHammer() + offset));
-			}
-			else if (type.equalsIgnoreCase("STR"))
-			{
-				eq.setStr((short) (eq.getStr() + offset));
-			}
-			else if (type.equalsIgnoreCase("DEX"))
-			{
-				eq.setDex((short) (eq.getDex() + offset));
-			}
-			else if (type.equalsIgnoreCase("INT"))
-			{
-				eq.setInt((short) (eq.getInt() + offset));
-			}
-			else if (type.equalsIgnoreCase("LUK"))
-			{
-				eq.setLuk((short) (eq.getLuk() + offset));
-			}
-			else if (type.equalsIgnoreCase("HP"))
-			{
-				eq.setHp((short) (eq.getHp() + offset));
-			}
-			else if (type.equalsIgnoreCase("MP"))
-			{
-				eq.setMp((short) (eq.getMp() + offset));
-			}
-			else if (type.equalsIgnoreCase("PAD"))
-			{
-				eq.setWatk((short) (eq.getWatk() + offset));
-			}
-			else if (type.equalsIgnoreCase("MAD"))
-			{
-				eq.setMatk((short) (eq.getMatk() + offset));
-			}
-			else if (type.equalsIgnoreCase("PDD"))
-			{
-				eq.setWdef((short) (eq.getWdef() + offset));
-			}
-			else if (type.equalsIgnoreCase("MDD"))
-			{
-				eq.setMdef((short) (eq.getMdef() + offset));
-			}
-			else if (type.equalsIgnoreCase("ACC"))
-			{
-				eq.setAcc((short) (eq.getAcc() + offset));
-			}
-			else if (type.equalsIgnoreCase("Avoid"))
-			{
-				eq.setAvoid((short) (eq.getAvoid() + offset));
-			}
-			else if (type.equalsIgnoreCase("Hands"))
-			{
-				eq.setHands((short) (eq.getHands() + offset));
-			}
-			else if (type.equalsIgnoreCase("Speed"))
-			{
-				eq.setSpeed((short) (eq.getSpeed() + offset));
-			}
-			else if (type.equalsIgnoreCase("Jump"))
-			{
-				eq.setJump((short) (eq.getJump() + offset));
-			}
-			else if (type.equalsIgnoreCase("ItemEXP"))
-			{
-				eq.setItemEXP(eq.getItemEXP() + offset);
-			}
-			else if (type.equalsIgnoreCase("Expiration"))
-			{
-				eq.setExpiration((long) (eq.getExpiration() + offset));
-			}
-			else if (type.equalsIgnoreCase("Flag"))
-			{
-				eq.setFlag((byte) (eq.getFlag() + offset));
-			}
-			item = eq.copy();
-		}
-		InventoryManipulator.removeFromSlot(getClient(), inv, (short) slot, item.getQuantity(), false);
-		InventoryManipulator.addFromDrop(getClient(), item, false);
-		return true;
-	}
-
-	public boolean replaceItem(int slot, int invType, Object statsSel, int upgradeSlots)
-	{
-		return replaceItem(slot, invType, statsSel, upgradeSlots, "Slots");
-	}
-
-	public boolean isCash(final int itemId)
-	{
-		return ItemInformation.getInstance().isCash(itemId);
-	}
-
-	public int getTotalStat(final int itemId)
-	{
-		return ItemInformation.getInstance().getTotalStat((Equip) ItemInformation.getInstance().getEquipById(itemId));
-	}
-
-	public int getReqLevel(final int itemId)
-	{
-		return ItemInformation.getInstance().getReqLevel(itemId);
-	}
-
-	public SkillStatEffect getEffect(int buff)
-	{
-		return ItemInformation.getInstance().getItemEffect(buff);
-	}
-
-	public void buffGuild(final int buff, final int duration, final String msg)
-	{
-		ItemInformation ii = ItemInformation.getInstance();
-		if (ii.getItemEffect(buff) != null && getPlayer().getGuildId() > 0)
-		{
-			final SkillStatEffect mse = ii.getItemEffect(buff);
-			for (ChannelServer cserv : ChannelServer.getAllInstances())
-			{
-				for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters())
-				{
-					if (chr.getGuildId() == getPlayer().getGuildId())
-					{
-						mse.applyTo(chr, null, true);
-						chr.dropMessage(5, "Your guild has gotten a " + msg + " buff.");
-					}
-				}
-			}
-		}
-	}
-
-	/* public boolean createAlliance(String alliancename)
-	{
-		MapleParty pt = c.getPlayer().getParty();
-		MapleCharacter otherChar = c.getChannelServer().getPlayerStorage()
-				.getCharacterById(pt.getMemberByIndex(1).getId());
-		if (otherChar == null || otherChar.getId() == c.getPlayer().getId())
-		{
-			return false;
-		}
-		try
-		{
-			return WideObjectHolder.getInstance().createAlliance(alliancename, c.getPlayer().getId(), otherChar.getId(),
-					c.getPlayer().getGuildId(), otherChar.getGuildId());
-		}
-		catch (Exception re)
-		{
-			return false;
-		}
-	} */
-
-	public boolean addCapacityToAlliance()
-	{
-		try
-		{
-			final MapleGuild gs = WideObjectHolder.getInstance().getGuild(c.getPlayer().getGuildId());
-			if (gs != null && c.getPlayer().getGuildRank() == 1 && c.getPlayer().getAllianceRank() == 1)
-			{
-				if (WideObjectHolder.getInstance().getAllianceLeader(gs.getAllianceId()) == c.getPlayer().getId()
-						&& WideObjectHolder.getInstance().changeAllianceCapacity(gs.getAllianceId()))
-				{
-					gainMeso(-10000000);
-					return true;
-				}
-			}
-		}
-		catch (Exception re)
-		{
-		}
-		return false;
-	}
-
-	public boolean disbandAlliance()
-	{
-		try
-		{
-			final MapleGuild gs = WideObjectHolder.getInstance().getGuild(c.getPlayer().getGuildId());
-			if (gs != null && c.getPlayer().getGuildRank() == 1 && c.getPlayer().getAllianceRank() == 1)
-			{
-				if (WideObjectHolder.getInstance().getAllianceLeader(gs.getAllianceId()) == c.getPlayer().getId()
-						&& WideObjectHolder.getInstance().disbandAlliance(gs.getAllianceId()))
-				{
-					return true;
-				}
-			}
-		}
-		catch (Exception re)
-		{
-		}
-		return false;
-	}
-
-	public byte getLastMsg()
-	{
-		return lastMsg;
-	}
-
-	public final void setLastMsg(final byte last)
-	{
-		this.lastMsg = last;
-	}
-
-	public final void maxAllSkills()
-	{
-		HashMap<ISkill, SkillEntry> sa = new HashMap<>();
-		for (ISkill skil : SkillFactory.getAllSkills())
-		{
-			if (GameConstants.isApplicableSkill(skil.getId()) && skil.getId() < 90000000)
-			{ // no
-				// db/additionals/resistance
-				// skills
-				sa.put(skil, new SkillEntry((byte) skil.getMaxLevel(), (byte) skil.getMaxLevel(),
-						SkillFactory.getDefaultSExpiry(skil)));
-			}
-		}
-		getPlayer().changeSkillsLevel(sa);
-	}
-
-	public final void maxSkillsByJob()
-	{
-		HashMap<ISkill, SkillEntry> sa = new HashMap<>();
-		for (ISkill skil : SkillFactory.getAllSkills())
-		{
-			if (GameConstants.isApplicableSkill(skil.getId()) && skil.canBeLearnedBy(getPlayer().getJob())
-					&& !skil.isInvisible())
-			{ // no db/additionals/resistance
-				// skills
-				sa.put(skil, new SkillEntry((byte) skil.getMaxLevel(), (byte) skil.getMaxLevel(),
-						SkillFactory.getDefaultSExpiry(skil)));
-			}
-		}
-		getPlayer().changeSkillsLevel(sa);
-	}
-
-	public final void removeSkillsByJob()
-	{
-		HashMap<ISkill, SkillEntry> sa = new HashMap<>();
-		for (ISkill skil : SkillFactory.getAllSkills())
-		{
-			if (GameConstants.isApplicableSkill(skil.getId()) && skil.canBeLearnedBy(getPlayer().getJob()))
-			{ // no
-				// db/additionals/resistance
-				// skills
-				sa.put(skil,
-						new SkillEntry((byte) -1, (byte) skil.getMaxLevel(), SkillFactory.getDefaultSExpiry(skil)));
-			}
-		}
-		getPlayer().changeSkillsLevel(sa);
-	}
-
-	public final void maxSkillsByJobId(int jobid)
-	{
-		HashMap<ISkill, SkillEntry> sa = new HashMap<>();
-		for (ISkill skil : SkillFactory.getAllSkills())
-		{
-			if (GameConstants.isApplicableSkill(skil.getId()) && skil.canBeLearnedBy(getPlayer().getJob())
-					&& skil.getId() >= jobid * 1000000 && skil.getId() < (jobid + 1) * 1000000 && !skil.isInvisible())
-			{
-				sa.put(skil, new SkillEntry((byte) skil.getMaxLevel(), (byte) skil.getMaxLevel(),
-						SkillFactory.getDefaultSExpiry(skil)));
-			}
-		}
-		getPlayer().changeSkillsLevel(sa);
-	}
-
-	public final void resetStats(int str, int dex, int z, int luk)
-	{
-		c.getPlayer().resetStats(str, dex, z, luk);
-	}
-
-	public void killAllMonsters(int mapid)
-	{
-		MapleMap map = c.getChannelServer().getMapFactory().getMap(mapid);
-		map.killAllMonsters(false); // No drop.
-	}
-
-	public void cleardrops()
-	{
-		MapleMonsterProvider.getInstance().clearDrops();
-	}
-
-	public final boolean dropItem(int slot, int invType, int quantity)
-	{
-		MapleInventoryType inv = MapleInventoryType.getByType((byte) invType);
-		if (inv == null)
-		{
-			return false;
-		}
-		InventoryManipulator.drop(c, inv, (short) slot, (short) quantity);
-		return true;
-	}
-
-	public final List<Integer> getAllPotentialInfo()
-	{
-		List<Integer> list = new ArrayList<>(ItemInformation.getInstance().getAllPotentialInfo().keySet());
-		Collections.sort(list);
-		return list;
-	}
-
-	public final List<Integer> getAllPotentialInfoSearch(String content)
-	{
-		List<Integer> list = new ArrayList<>();
-		for (Entry<Integer, List<StructPotentialItem>> i : ItemInformation.getInstance().getAllPotentialInfo()
-				.entrySet())
-		{
-			for (StructPotentialItem ii : i.getValue())
-			{
-				if (ii.toString().contains(content))
-				{
-					list.add(i.getKey());
-				}
-			}
-		}
-		Collections.sort(list);
-		return list;
-	}
-
-	public void MakeGMItem(byte slot, MapleCharacter player)
-	{
-		MapleInventory equip = player.getInventory(MapleInventoryType.EQUIP);
-		Equip eu = (Equip) equip.getItem(slot);
-		int item = equip.getItem(slot).getItemId();
-		short hand = eu.getHands();
-		byte level = eu.getLevel();
-		Equip nItem = new Equip(item, slot, (byte) 0);
-		nItem.setStr((short) 32767); // STR
-		nItem.setDex((short) 32767); // DEX
-		nItem.setInt((short) 32767); // INT
-		nItem.setLuk((short) 32767); // LUK
-		nItem.setUpgradeSlots((byte) 0);
-		nItem.setHands(hand);
-		nItem.setLevel(level);
-		player.getInventory(MapleInventoryType.EQUIP).removeItem(slot);
-		player.getInventory(MapleInventoryType.EQUIP).addFromDB(nItem);
-	}
-
-	public final void sendRPS()
-	{
-		// c.getSession().writeAndFlush(MainPacketCreator.getRPSMode((byte) 8, -1, -1,
-		// -1));
-	}
-
-	public final void setQuestRecord(Object ch, final int questid, final String data)
-	{
-		((MapleCharacter) ch).getQuestNAdd(MapleQuest.getInstance(questid)).setCustomData(data);
-	}
-
-	public final void doWeddingEffect(final Object ch)
-	{
-		/*
-		 * final MapleCharacter chr = (MapleCharacter) ch; final MapleCharacter player =
-		 * getPlayer();
-		 * getMap().broadcastMessage(CWvsContext.yellowChat(player.getName() +
-		 * ", do you take " + chr.getName() +
-		 * " as your wife and promise to stay beside her through all downtimes, crashes, and lags?"
-		 * )); CloneTimer.getInstance().schedule(new Runnable() {
-		 * 
-		 * @Override public void run() { if (chr == null || player == null) {
-		 * warpMap(680000500, 0); } else {
-		 * chr.getMap().broadcastMessage(CWvsContext.yellowChat(chr.getName() +
-		 * ", do you take " + player.getName() +
-		 * " as your husband and promise to stay beside him through all downtimes, crashes, and lags?"
-		 * )); } } }, 10000); CloneTimer.getInstance().schedule(new Runnable() {
-		 * 
-		 * @Override public void run() { if (chr == null || player == null) { if (player
-		 * != null) { setQuestRecord(player, 160001, "3"); setQuestRecord(player,
-		 * 160002, "0"); } else if (chr != null) { setQuestRecord(chr, 160001, "3");
-		 * setQuestRecord(chr, 160002, "0"); } warpMap(680000500, 0); } else {
-		 * setQuestRecord(player, 160001, "2"); setQuestRecord(chr, 160001, "2");
-		 * sendNPCText( player.getName() + " and " + chr.getName() +
-		 * ", I wish you two all the best on your " +
-		 * chr.getClient().getChannelServer().getServerName() + " journey together!",
-		 * 9201002); chr.getMap().startExtendedMapEffect("You may now kiss the bride, "
-		 * + player.getName() + "!", 5120006); if (chr.getGuildId() > 0) {
-		 * World.Guild.guildPacket(chr.getGuildId(), CWvsContext.sendMarriage(false,
-		 * chr.getName())); } if (player.getGuildId() > 0) {
-		 * World.Guild.guildPacket(player.getGuildId(), CWvsContext.sendMarriage(false,
-		 * player.getName())); } } } }, 20000); // 10 sec 10 sec
-		 */
-
-	}
-
-	public void putKey(int key, int type, int action)
-	{
-		getPlayer().changeKeybinding(key, new MapleKeyBinding((byte) type, action));
-		getClient().getSession().writeAndFlush(MainPacketCreator.getKeymap(getPlayer().getKeyLayout()));
-	}
-
-	public void doRing(final String name, final int itemid)
-	{
-		// PlayersHandler.DoRing(getClient(), name, itemid);
-	}
-
-	public int getNaturalStats(final int itemid, final String it)
-	{
-		Map<String, Integer> eqStats = ItemInformation.getInstance().getEquipStats(itemid);
-		if (eqStats != null && eqStats.containsKey(it))
-		{
-			return eqStats.get(it);
-		}
-		return 0;
-	}
-
-	public String checkDrop(MapleCharacter chr, int mobId)
-	{
-		final List<MonsterDropEntry> ranks = MapleMonsterProvider.getInstance().retrieveDrop(mobId);
-		if (ranks != null && ranks.size() > 0)
-		{
-			int num = 0;
-			int itemId;
-			int ch;
-			MonsterDropEntry de;
-			StringBuilder name = new StringBuilder();
-			for (int i = 0; i < ranks.size(); i++)
-			{
-				de = ranks.get(i);
-				if (de.chance > 0 && (de.questid <= 0
-						|| (de.questid > 0 && MapleQuest.getInstance(de.questid).getName().length() > 0)))
-				{
-					itemId = de.itemId;
-					if (num == 0)
-					{
-						name.append("Drops for #o").append(mobId).append("#\r\n");
-						name.append("--------------------------------------\r\n");
-					}
-					String namez = "#z" + itemId + "#";
-					if (itemId == 0)
-					{ // meso
-						itemId = 4031041; // display sack of cash
-						namez = (de.Minimum * getClient().getChannelServer().getMesoRate()) + " to "
-								+ (de.Maximum * getClient().getChannelServer().getMesoRate()) + " meso";
-					}
-					ch = de.chance * getClient().getChannelServer().getDropRate();
-					name.append(num + 1).append(") #v").append(itemId).append("#").append(namez).append(" - ")
-							.append(Integer.valueOf(ch >= 999999 ? 1000000 : ch).doubleValue() / 10000.0)
-							.append("% chance. ")
-							.append(de.questid > 0 && MapleQuest.getInstance(de.questid).getName().length() > 0
-									? ("Requires quest " + MapleQuest.getInstance(de.questid).getName()
-											+ " to be started.")
-									: "")
-							.append("\r\n");
-					num++;
-				}
-			}
-			if (name.length() > 0)
-			{
-				return name.toString();
-			}
-
-		}
-		return "No drops was returned.";
-	}
-
-	public String getLeftPadded(final String in, final char padchar, final int length)
-	{
-		return StringUtil.getLeftPaddedStr(in, padchar, length);
-	}
-
-	public void handleDivorce()
-	{
-		/*
-		 * if (getPlayer().getMarriageId() <= 0) {
-		 * sendNext("Please make sure you have a marriage."); return; } final int chz =
-		 * World.Find.findChannel(getPlayer().getMarriageId()); if (chz == -1) { // sql
-		 * queries try { Connection con = DatabaseConnection.getConnection();
-		 * PreparedStatement ps = con.prepareStatement(
-		 * "UPDATE queststatus SET customData = ? WHERE characterid = ? AND (quest = ? OR quest = ?)"
-		 * ); ps.setString(1, "0"); ps.setInt(2, getPlayer().getMarriageId());
-		 * ps.setInt(3, 160001); ps.setInt(4, 160002); ps.executeUpdate(); ps.close();
-		 * 
-		 * ps =
-		 * con.prepareStatement("UPDATE characters SET marriageid = ? WHERE id = ?");
-		 * ps.setInt(1, 0); ps.setInt(2, getPlayer().getMarriageId());
-		 * ps.executeUpdate(); ps.close(); } catch (SQLException e) {
-		 * e.printStackTrace(); return; } setQuestRecord(getPlayer(), 160001, "0");
-		 * setQuestRecord(getPlayer(), 160002, "0"); getPlayer().setMarriageId(0);
-		 * sendNext("You have been successfully divorced..."); return; } else if (chz <
-		 * -1) { sendNext("Please make sure your partner is logged on."); return; }
-		 * MapleCharacter cPlayer = ChannelServer.getInstance(chz).getPlayerStorage()
-		 * .getCharacterById(getPlayer().getMarriageId()); if (cPlayer != null) {
-		 * cPlayer.dropMessage(1, "Your partner has divorced you.");
-		 * cPlayer.setMarriageId(0); setQuestRecord(cPlayer, 160001, "0");
-		 * setQuestRecord(getPlayer(), 160001, "0"); setQuestRecord(cPlayer, 160002,
-		 * "0"); setQuestRecord(getPlayer(), 160002, "0"); getPlayer().setMarriageId(0);
-		 * sendNext("You have been successfully divorced..."); } else {
-		 * sendNext("An error occurred..."); }
-		 */
-	}
-
-	/*
-	 * Start of Custom Features
-	 */
-	public void gainAPS(int gain)
-	{
-		getPlayer().gainAp(gain);
-	}
-
-	/*
-	 * End of Custom Features
-	 */
-	public void changeJobById(short job)
-	{
-		c.getPlayer().changeJob(job);
-	}
-
-	public int getJobId()
-	{
-		return getPlayer().getJob();
-	}
-
-	public int getLevel()
-	{
-		return getPlayer().getLevel();
-	}
-
-	public int getEquipId(byte slot)
-	{
-		MapleInventory equip = getPlayer().getInventory(MapleInventoryType.EQUIP);
-		return equip.getItem(slot).getItemId();
-	}
-
-	public int getUseId(byte slot)
-	{
-		MapleInventory use = getPlayer().getInventory(MapleInventoryType.USE);
-		return use.getItem(slot).getItemId();
-	}
-
-	public int getSetupId(byte slot)
-	{
-		MapleInventory setup = getPlayer().getInventory(MapleInventoryType.SETUP);
-		return setup.getItem(slot).getItemId();
-	}
-
-	public int getCashId(byte slot)
-	{
-		MapleInventory cash = getPlayer().getInventory(MapleInventoryType.CASH);
-		return cash.getItem(slot).getItemId();
-	}
-
-	public int getETCId(byte slot)
-	{
-		MapleInventory etc = getPlayer().getInventory(MapleInventoryType.ETC);
-		return etc.getItem(slot).getItemId();
-	}
-
-	public String EquipList(MapleClient c)
-	{
-		StringBuilder str = new StringBuilder();
-		MapleInventory equip = c.getPlayer().getInventory(MapleInventoryType.EQUIP);
-		List<String> stra = new LinkedList<>();
-		for (IItem item : equip.list())
-		{
-			stra.add("#L" + item.getPosition() + "##v" + item.getItemId() + "##l");
-		}
-		for (String strb : stra)
-		{
-			str.append(strb);
-		}
-		return str.toString();
-	}
-
-	public String UseList(MapleClient c)
-	{
-		StringBuilder str = new StringBuilder();
-		MapleInventory use = c.getPlayer().getInventory(MapleInventoryType.USE);
-		List<String> stra = new LinkedList<>();
-		for (IItem item : use.list())
-		{
-			stra.add("#L" + item.getPosition() + "##v" + item.getItemId() + "##l");
-		}
-		for (String strb : stra)
-		{
-			str.append(strb);
-		}
-		return str.toString();
-	}
-
-	public String CashList(MapleClient c)
-	{
-		StringBuilder str = new StringBuilder();
-		MapleInventory cash = c.getPlayer().getInventory(MapleInventoryType.CASH);
-		List<String> stra = new LinkedList<>();
-		for (IItem item : cash.list())
-		{
-			stra.add("#L" + item.getPosition() + "##v" + item.getItemId() + "##l");
-		}
-		for (String strb : stra)
-		{
-			str.append(strb);
-		}
-		return str.toString();
-	}
-
-	public String ETCList(MapleClient c)
-	{
-		StringBuilder str = new StringBuilder();
-		MapleInventory etc = c.getPlayer().getInventory(MapleInventoryType.ETC);
-		List<String> stra = new LinkedList<>();
-		for (IItem item : etc.list())
-		{
-			stra.add("#L" + item.getPosition() + "##v" + item.getItemId() + "##l");
-		}
-		for (String strb : stra)
-		{
-			str.append(strb);
-		}
-		return str.toString();
-	}
-
-	public String SetupList(MapleClient c)
-	{
-		StringBuilder str = new StringBuilder();
-		MapleInventory setup = c.getPlayer().getInventory(MapleInventoryType.SETUP);
-		List<String> stra = new LinkedList<>();
-		for (IItem item : setup.list())
-		{
-			stra.add("#L" + item.getPosition() + "##v" + item.getItemId() + "##l");
-		}
-		for (String strb : stra)
-		{
-			str.append(strb);
-		}
-		return str.toString();
-	}
-
-	public void wearEquip(int itemid, byte slot)
-	{
-		final ItemInformation li = ItemInformation.getInstance();
-		final MapleInventory equip = c.getPlayer().getInventory(MapleInventoryType.EQUIPPED);
-		IItem item = li.getEquipById(itemid);
-		item.setPosition(slot);
-		equip.addFromDB(item);
-	}
-
-	public void write(Object o)
-	{
-		c.getSession().writeAndFlush(o);
-	}
-
-	public void showHilla()
-	{
-		try
-		{
-			c.getSession().writeAndFlush(MainPacketCreator.showMapEffect("phantom/hillah"));
-			MapleNPC hilla = new MapleNPC(1402400, new MapleNPCStats("Hilla"));
-			hilla.setPosition(new Point(-131, -2));
-			hilla.setCy(-7);
-			hilla.setF(1);
-			hilla.setFh(12);
-			hilla.setRx0(-181);
-			hilla.setRx1(-81);
-			MapleNPC guard1 = new MapleNPC(1402401, new MapleNPCStats("Hilla's Guard"));
-			guard1.setPosition(new Point(-209, -2));
-			guard1.setCy(-7);
-			guard1.setF(1);
-			guard1.setFh(12);
-			guard1.setRx0(-259);
-			guard1.setRx1(-159);
-			MapleNPC guard2 = new MapleNPC(1402401, new MapleNPCStats("Hilla's Guard"));
-			guard2.setPosition(new Point(-282, -2));
-			guard2.setCy(-7);
-			guard2.setF(1);
-			guard2.setFh(12);
-			guard2.setRx0(-332);
-			guard2.setRx1(-232);
-			MapleNPC guard3 = new MapleNPC(1402401, new MapleNPCStats("Hilla's Guard"));
-			guard3.setPosition(new Point(-59, -2));
-			guard3.setCy(-7);
-			guard3.setF(1);
-			guard3.setFh(12);
-			guard3.setRx0(-109);
-			guard3.setRx1(-9);
-			c.getSession().writeAndFlush(MainPacketCreator.spawnNPC(hilla, true));
-			c.getSession().writeAndFlush(MainPacketCreator.spawnNPC(guard1, true));
-			c.getSession().writeAndFlush(MainPacketCreator.spawnNPC(guard2, true));
-			c.getSession().writeAndFlush(MainPacketCreator.spawnNPC(guard3, true));
-			Thread.sleep(6000);
-		}
-		catch (InterruptedException e)
-		{
-		}
-		NPCScriptManager.getInstance().start(c.getPlayer().getClient(), 1104201, "PTtutor500_2");
-	}
-
-	public void showSkaia()
-	{
-		try
-		{
-			c.getSession().writeAndFlush(MainPacketCreator.showMapEffect("phantom/skaia"));
-			Thread.sleep(8000);
-		}
-		catch (InterruptedException e)
-		{
-		}
-		NPCScriptManager.getInstance().start(c.getPlayer().getClient(), 1104201, "PTtutor500_3");
-	}
-
-	public void showPhantomWait()
-	{
-		try
-		{
-			c.getSession().writeAndFlush(MainPacketCreator.showMapEffect("phantom/phantom"));
-			Thread.sleep(2000);
-		}
-		catch (InterruptedException e)
-		{
-		}
-		NPCScriptManager.getInstance().start(c.getPlayer().getClient(), 1104201, "PTtutor500_4");
-	}
-            public void openCS() {
-        InterServerHandler.EnterCS(c, c.getPlayer(), false);
+    public void makeRingRC(int itemid, MapleCharacter chr) {
+        try {
+            MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+
+            Item item = ii.getEquipById(itemid);
+            Item item1 = ii.getEquipById(itemid);
+
+            item.setUniqueId(MapleInventoryIdentifier.getInstance());
+            Equip eitem = (Equip) item;
+
+            eitem.setStr((short) 300);
+            eitem.setDex((short) 300);
+            eitem.setInt((short) 300);
+            eitem.setLuk((short) 300);
+            eitem.setWatk((short) 300);
+            eitem.setMatk((short) 300);
+
+            item1.setUniqueId(MapleInventoryIdentifier.getInstance());
+            Equip eitem1 = (Equip) item1;
+
+            eitem1.setStr((short) 300);
+            eitem1.setDex((short) 300);
+            eitem1.setInt((short) 300);
+            eitem1.setLuk((short) 300);
+            eitem1.setWatk((short) 300);
+            eitem1.setMatk((short) 300);
+
+            MapleRing.makeRing(itemid, chr, eitem.getUniqueId(), eitem1.getUniqueId());
+            MapleRing.makeRing(itemid, getPlayer(), eitem1.getUniqueId(), eitem.getUniqueId());
+
+            MapleInventoryManipulator.addbyItem(getClient(), item);
+            MapleInventoryManipulator.addbyItem(chr.getClient(), item1);
+
+            chr.reloadChar();
+            c.getPlayer().reloadChar();
+            sendOk("ÏÑ†ÌÉùÌïòÏã† Î∞òÏßÄÎ•º Ï†úÏûë ÏôÑÎ£å ÌïòÏòÄÏäµÎãàÎã§. Ïù∏Î≤§ÌÜ†Î¶¨Î•º ÌôïÏù∏Ìï¥ Î¥êÏ£ºÏãúÍ∏∏ Î∞îÎûçÎãàÎã§.");
+            chr.dropMessage(5, getPlayer().getName() + "ÎãòÏúºÎ°ú Î∂ÄÌÑ∞ Î∞òÏßÄÍ∞Ä ÎèÑÏ∞© ÌïòÏòÄÏäµÎãàÎã§. Ïù∏Î≤§ÌÜ†Î¶¨Î•º ÌôïÏù∏Ìï¥ Ï£ºÏãúÍ∏∏ Î∞îÎûçÎãàÎã§.");
+        } catch (Exception ex) {
+            sendOk("Î∞òÏßÄÎ•º Ï†úÏûëÌïòÎäîÎç∞ Ïò§Î•òÍ∞Ä Î∞úÏÉù ÌïòÏòÄÏäµÎãàÎã§.");
+        }
     }
 
-	public void movePhantom()
-	{
-		try
-		{
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 3, 2));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 2000));
-			Thread.sleep(2000);
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 3, 0));
-		}
-		catch (InterruptedException e)
-		{
-		}
-		NPCScriptManager.getInstance().start(c.getPlayer().getClient(), 1104201, "PTtutor500_1");
-	}
+    public void makeRingHB(int itemid, MapleCharacter chr) {
+        try {
+            int asd = 300;
+            int asd2 = 300;
 
-	public void showPhantomMovie()
-	{
-		warp(150000000);
-		try
-		{
-			c.getSession().writeAndFlush(UIPacket.playMovie("phantom.avi", true));
-			Thread.sleep(4 * 60 * 1000); // 4 minutes
-		}
-		catch (InterruptedException e)
-		{
-		}
-		MapleQuest.getInstance(25000).forceComplete(c.getPlayer(), 1402000);
-		c.getSession().writeAndFlush(UIPacket.getDirectionStatus(false));
-		c.getSession().writeAndFlush(UIPacket.IntroEnableUI(0));
-	}
+            MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
 
-	public void sendNextNoESC(int delay, String text)
-	{
-		EtcTimer.getInstance().schedule(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				sendNextNoESC(text);
-			}
-		}, delay);
-	}
+            Item item = ii.getEquipById(itemid);
+            Item item1 = ii.getEquipById(itemid);
 
-	public void sendNextS(int deay, String text, int type)
-	{
-		EtcTimer.getInstance().schedule(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				sendNextS(text, (byte) type);
-			}
-		}, deay);
-	}
+            item.setUniqueId(MapleInventoryIdentifier.getInstance());
 
-	public void sendNextPrevS(int deay, String text, int type)
-	{
-		EtcTimer.getInstance().schedule(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				sendNextPrevS(text, (byte) type);
-			}
-		}, deay);
-	}
+            Equip eitem = (Equip) item;
 
-	public void sendNextNoESC(int delay, String text, int npcid)
-	{
-		EtcTimer.getInstance().schedule(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				sendNextNoESC(text, npcid);
-			}
-		}, delay);
-	}
+            eitem.setStr((short) asd);
+            eitem.setDex((short) asd);
+            eitem.setInt((short) asd);
+            eitem.setLuk((short) asd);
+            eitem.setWatk((short) asd2);
+            eitem.setMatk((short) asd2);
 
-	public void warp(int delay, int mapid, int portal)
-	{
-		EtcTimer.getInstance().schedule(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				warp(mapid, portal);
-			}
-		}, delay);
-	}
+            item1.setUniqueId(MapleInventoryIdentifier.getInstance());
 
-	public void mihileNeinheartDisappear()
-	{
-		try
-		{
-			c.getSession()
-					.write(UIPacket.getDirectionInfo("Effect/Direction7.img/effect/tuto/step0/4", 2000, 0, -100, 1, 0));
-			c.getSession().writeAndFlush(UIPacket.directionFacialExpression(6, 2000));
-			c.getPlayer().getClient().getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 2000));
-			Thread.sleep(2000);
-			NPCScriptManager.getInstance().start(c, 1106000, "tuto002");
-		}
-		catch (InterruptedException e)
-		{
-		}
-	}
+            Equip eitem1 = (Equip) item1;
 
-	public void mihileMove913070001()
-	{
-		try
-		{
-			c.getPlayer().getClient().getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 3, 2));
-			c.getPlayer().getClient().getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 800));
-			Thread.sleep(800);
-		}
-		catch (InterruptedException e)
-		{
-		}
-		c.getSession().writeAndFlush(UIPacket.IntroEnableUI(0));
-		c.getSession().writeAndFlush(UIPacket.IntroDisableUI(false));
-		while (c.getPlayer().getLevel() < 2)
-		{
-			c.getPlayer().levelUp();
-		}
-		c.getPlayer().setExp(0);
-		warp(913070001, 0);
-		c.getSession().writeAndFlush(MainPacketCreator.enableActions(c.getPlayer()));
-	}
+            eitem1.setStr((short) asd);
+            eitem1.setDex((short) asd);
+            eitem1.setInt((short) asd);
+            eitem1.setLuk((short) asd);
+            eitem1.setWatk((short) asd2);
+            eitem1.setMatk((short) asd2);
 
-	public void mihileSoul()
-	{
-		try
-		{
-			c.getSession()
-					.write(UIPacket.getDirectionInfo("Effect/Direction7.img/effect/tuto/soul/0", 4000, 0, -100, 1, 0));
-			Thread.sleep(4000);
-		}
-		catch (InterruptedException e)
-		{
-		}
-		NPCScriptManager.getInstance().start(c, 1106000, "tuto003");
-	}
+            MapleRing.makeRing(itemid, chr, eitem.getUniqueId(), eitem1.getUniqueId());
+            MapleRing.makeRing(itemid, getPlayer(), eitem1.getUniqueId(), eitem.getUniqueId());
 
-	public void mihileMove913070050()
-	{
-		try
-		{
-			c.getPlayer().getClient().getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 3, 2));
-			c.getPlayer().getClient().getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 6000));
-			Thread.sleep(5000);
-			c.getPlayer().getClient().getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 3, 0));
-			NPCScriptManager.getInstance().start(c, 1106001, "tuto005");
-		}
-		catch (InterruptedException e)
-		{
-		}
-	}
+            MapleInventoryManipulator.addbyItem(getClient(), item);
+            MapleInventoryManipulator.addbyItem(chr.getClient(), item1);
 
-	public void mihileAssailantSummon()
-	{
-		for (int i = 0; i < 10; i++)
-		{
-			c.getPlayer().getMap().spawnMonster_sSack(MapleLifeProvider.getMonster(9001050), new Point(240, 65), 0);
-		}
-		c.getSession().writeAndFlush(MainPacketCreator.enableActions(c.getPlayer()));
-	}
+            chr.reloadChar();
+            c.getPlayer().reloadChar();
+            sendOk("ÏÑ†ÌÉùÌïòÏã† Î∞òÏßÄÎ•º Ï†úÏûë ÏôÑÎ£å ÌïòÏòÄÏäµÎãàÎã§. Ïù∏Î≤§ÌÜ†Î¶¨Î•º ÌôïÏù∏Ìï¥ Î¥êÏ£ºÏãúÍ∏∏ Î∞îÎûçÎãàÎã§.");
+            chr.dropMessage(5, getPlayer().getName() + "ÎãòÏúºÎ°ú Î∂ÄÌÑ∞ Î∞òÏßÄÍ∞Ä ÎèÑÏ∞© ÌïòÏòÄÏäµÎãàÎã§. Ïù∏Î≤§ÌÜ†Î¶¨Î•º ÌôïÏù∏Ìï¥ Ï£ºÏãúÍ∏∏ Î∞îÎûçÎãàÎã§.");
+        } catch (Exception ex) {
+            sendOk("Î∞òÏßÄÎ•º Ï†úÏûëÌïòÎäîÎç∞ Ïò§Î•òÍ∞Ä Î∞úÏÉù ÌïòÏòÄÏäµÎãàÎã§.");
+        }
+    }
 
-	public List<Triple<Short, String, Integer>> rankList(short[] ranks, String[] names, int[] values)
-	{
-		List<Triple<Short, String, Integer>> list = new LinkedList<Triple<Short, String, Integer>>();
-		if (ranks.length != names.length || names.length != values.length || values.length != ranks.length)
-		{
-			return null;
-		}
-		for (int i = 0; i < ranks.length; i++)
-		{
-			list.add(new Triple<>(ranks[i], names[i], values[i]));
-		}
-		return list;
-	}
+    public void MapiaStart(final MapleCharacter player, int time, final int morningmap, final int citizenmap1, final int citizenmap2, final int citizenmap3, final int citizenmap4, final int citizenmap5, final int citizenmap6, final int mapiamap, final int policemap, final int drmap, final int after, final int night, final int vote, int bating) {
+        String[] job = {"ÏãúÎØº", "ÎßàÌîºÏïÑ", "Í≤ΩÏ∞∞", "ÏùòÏÇ¨", "ÏãúÎØº", "ÏãúÎØº", "ÎßàÌîºÏïÑ", "Í≤ΩÏ∞∞", "ÏãúÎØº", "ÎßàÌîºÏïÑ"};
+        String name = "";
+        String mapia = "";
+        String police = "";
 
-	public boolean partyHaveItem(int itemid, short quantity)
-	{
-		if (getPlayer().getParty() == null)
-		{
-			return false;
-		}
-		for (MaplePartyCharacter chr : getPlayer().getParty().getMembers())
-		{
-			for (ChannelServer channel : ChannelServer.getAllInstances())
-			{
-				MapleCharacter ch = channel.getPlayerStorage().getCharacterById(chr.getId());
-				if (ch != null)
-				{
-					if (!ch.haveItem(itemid, quantity))
-					{
-						return false;
-					}
-				}
-			}
-		}
-		return true;
-	}
+        int playernum = 0;
+        int citizennumber = 0;
 
-	public final boolean scrollItem(final short scroll, final short item)
-	{
-		return InventoryHandler.UseUpgradeScroll((byte) scroll, (byte) item, getClient(), getPlayer());
-	}
+        final MapleMap map = ChannelServer.getInstance(getClient().getChannel()).getMapFactory().getMap(morningmap);
+        for (MapleCharacter chr : player.getMap().getCharacters()) {
+            playernum++;
+        }
+        int[] iNumber = new int[playernum];
+        int i;
 
-	public long currentTimeMillis()
-	{
-		return System.currentTimeMillis();
-	}
+        for (i = 1; i <= iNumber.length; i++) {
+            iNumber[i - 1] = i;
+        }
+        for (i = 0; i < iNumber.length; i++) {
+            int iRandom = (int) (Math.random() * playernum);
+            int t = iNumber[0];
+            iNumber[0] = iNumber[iRandom];
+            iNumber[iRandom] = t;
+        }
+        for (i = 0; i < iNumber.length; i++) {
+            System.out.print(iNumber[i] + ",");
+        }
 
-	/*
-	 * public final int WEAPON_RENTAL = 57463816; public int weaponRentalState() {
-	 * if (c.getPlayer().getIntNoRecord(WEAPON_RENTAL) == 0) { return 0; } return
-	 * (System.currentTimeMillis() / (60 * 1000) -
-	 * c.getPlayer().getIntNoRecord(WEAPON_RENTAL)) >= 15 ? 1 : 2; } public void
-	 * setWeaponRentalUnavailable() {
-	 * c.getPlayer().getQuestNAdd(MapleQuest.getInstance(WEAPON_RENTAL)).
-	 * setCustomData("" + System.currentTimeMillis() / (60 * 1000)); }
-	 */
-	public MapleQuest getQuestById(int questId)
-	{
-		return MapleQuest.getInstance(questId);
-	}
+        int jo = 0;
 
-	public int getEquipLevelById(int itemId)
-	{
-		ItemInformation ii = ItemInformation.getInstance();
-		return ii.getEquipStats(itemId).get("reqLevel").intValue();
-	}
+        map.names = "";
+        map.mbating = bating * playernum;
 
-	public void sendGMBoard(String url)
-	{
-		// c.getSession().writeAndFlush(MainPacketCreator.gmBoard(1, url));
-	}
+        for (MapleCharacter chr : player.getMap().getCharacters()) {
+            chr.warp(morningmap);
+            map.names += chr.getName() + ",";
+            chr.mapiajob = job[iNumber[jo] - 1];
+            if (chr.mapiajob.equals("ÎßàÌîºÏïÑ")) {
+                mapia = mapia + chr.getName() + ",";
+            } else if (chr.mapiajob.equals("Í≤ΩÏ∞∞")) {
+                police = police + chr.getName() + ",";
+            } else if (chr.mapiajob.equals("ÏãúÎØº")) {
+                citizennumber++;
+            }
+            chr.dropMessage(5, "Ïû†Ïãú ÌõÑ ÎßàÌîºÏïÑ Í≤åÏûÑÏù¥ ÏãúÏûëÎê©ÎãàÎã§. Ï¥ù Î∞∞ÌåÖÍ∏àÏùÄ " + (bating * playernum) + "Î©îÏÜå ÏûÖÎãàÎã§.");
+            chr.dropMessage(5, "ÎãπÏã†Ïùò ÏßÅÏóÖÏùÄ " + job[iNumber[jo] - 1] + " ÏûÖÎãàÎã§.");
+            chr.dropMessage(-1, time + "Ï¥à ÌõÑ ÎßàÌîºÏïÑ Í≤åÏûÑÏù¥ ÏãúÏûëÎê©ÎãàÎã§.");
 
-	public void addPendantSlot(int days)
-	{
-		c.getPlayer().getQuestNAdd(MapleQuest.getInstance(GameConstants.PENDANT_SLOT))
-				.setCustomData(String.valueOf(System.currentTimeMillis() + ((long) days * 24 * 60 * 60 * 1000)));
-	}
+            jo++;
+        }
+        final String mapialist = mapia;
+        final String policelist = police;
+        int citizennum = citizennumber;
+        final int playernuma = playernum;
+        final java.util.Timer m_timer = new java.util.Timer();
 
-	public long getCustomMeso()
-	{
-		return c.getPlayer().getLongNoRecord(GameConstants.CUSTOM_BANK);
-	}
+        TimerTask m_task = new TimerTask() {
+            public void run() {
+                for (MapleCharacter chr : player.getMap().getCharacters()) {
+                    if (chr.mapiajob == "ÎßàÌîºÏïÑ") {
+                        chr.isMapiaVote = true;
+                        chr.dropMessage(6, "ÎßàÌîºÏïÑÏù∏ ÎãπÏã† ÎèôÎ£åÎäî " + mapialist + " Îì§Ïù¥ ÏûàÏäµÎãàÎã§. Î∞§Ïù¥ÎêòÎ©¥ Í∞ôÏù¥ ÏùòÎÖºÌïòÏó¨ ÏïîÏÇ¥Ìï† ÏÇ¨ÎûåÏùÑ ÏÑ†ÌÉùÌï¥ Ï£ºÏãúÍ∏∞ Î∞îÎûçÎãàÎã§.");
+                    } else if (chr.mapiajob == "Í≤ΩÏ∞∞") {
+                        chr.isPoliceVote = true;
+                        chr.dropMessage(6, "Í≤ΩÏ∞∞Ïù∏ ÎãπÏã† ÎèôÎ£åÎäî " + policelist + " Îì§Ïù¥ ÏûàÏäµÎãàÎã§. Î∞§Ïù¥ÎêòÎ©¥ ÎßàÌîºÏïÑÍ∞ôÎã§Îäî ÏÇ¨ÎûåÏùÑ ÏßÄÎ™©ÌïòÎ©¥ ÎßàÌîºÏïÑÏù∏ÏßÄ ÏïÑÎãåÏßÄÎ•º Ïïå Ïàò ÏûàÏäµÎãàÎã§.");
+                    } else if (chr.mapiajob == "ÏùòÏÇ¨") {
+                        chr.isDrVote = true;
+                        chr.dropMessage(6, "ÎãπÏã†ÏùÄ ÌïòÎÇòÎ∞ñÏóê ÏóÜÎäî ÏùòÏÇ¨ÏûÖÎãàÎã§. ÎãπÏã†ÏóêÍ≤å Î∂ÄÏó¨Îêú ÏûÑÎ¨¥Îäî ÏãúÎØºÍ≥º Í≤ΩÏ∞∞ÏùÑ ÏÇ¥Î¶¨Îäî Í≤ÉÏûÖÎãàÎã§. Î∞§Ïù¥ÎêòÎ©¥ ÎßàÌîºÏïÑÍ∞Ä ÏßÄÎ™©ÌñàÏùÑÍ≤É Í∞ôÏùÄ ÏÇ¨ÎûåÏùÑ ÏÑ†ÌÉùÌïòÎ©¥ ÏÇ¥Î¶¨Ïã§ Ïàò ÏûàÏäµÎãàÎã§.");
 
-	public void setCustomMeso(long meso)
-	{
-		c.getPlayer().getQuestNAdd(MapleQuest.getInstance(GameConstants.CUSTOM_BANK)).setCustomData(meso + "");
-	}
+                    } else if (chr.mapiajob == "ÏãúÎØº") {
+                        chr.dropMessage(6, "ÎãπÏã†ÏùÄ ÏãúÎØºÏûÖÎãàÎã§. ÎÇÆÏù¥ÎêòÎ©¥ ÎåÄÌôîÎ•º ÌÜµÌï¥ ÎßàÌîºÏïÑÎ•º Ï∞æÏïÑÎÇ¥ Ìà¨ÌëúÎ°ú Ï≤òÌòïÏãúÌÇ§Î©¥ Îê©ÎãàÎã§.");
+                    }
+                    chr.getmapiavote = 0;
+                    chr.voteamount = 0;
+                    chr.getpolicevote = 0;
+                    chr.isDead = false;
+                    chr.isDrVote = true;
+                    chr.isMapiaVote = true;
+                    chr.isPoliceVote = true;
+                    chr.getdrvote = 0;
+                    chr.isVoting = false;
+                }
 
-	public void enter_931060110()
-	{
-		try
-		{
-			c.getSession().writeAndFlush(
-					UIPacket.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/menuUI", 6000, 285, 186, 1, 0));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 900));
-			Thread.sleep(900);
-			c.getSession().writeAndFlush(UIPacket.showInfo("First, click MENU at the bottom of the screen."));
-			c.getSession().writeAndFlush(UIPacket
-					.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/mouseMoveToMenu", 1740, -114, -14, 1, 3));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 1680));
-			Thread.sleep(1680);
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/mouseClick",
-					1440, 246, 196, 1, 3));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 1440));
-			Thread.sleep(1440);
-			c.getSession().writeAndFlush(UIPacket.showInfo("Now, select Go to Farm."));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 600));
-			Thread.sleep(600);
-			c.getSession().writeAndFlush(
-					UIPacket.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/menuOpen", 50000, 285, 186, 1, 2));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 600));
-			Thread.sleep(600);
-			c.getSession().writeAndFlush(UIPacket
-					.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/mouseMoveToMyfarm", 750, 246, 196, 1, 2));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 720));
-			Thread.sleep(720);
-			c.getSession().writeAndFlush(UIPacket
-					.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/menuMouseOver", 50000, 285, 186, 1, 2));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/mouseClick",
-					50000, 246, 166, 1, 3));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 1440));
-			Thread.sleep(1440);
-		}
-		catch (InterruptedException ex)
-		{
-		}
-	}
+                map.broadcastMessage(CWvsContext.serverNotice(1, "", "ÏßÑÌñâÏûê>>ÎÇÆÏù¥ ÎêòÏóàÏäµÎãàÎã§. ÎßàÌîºÏïÑÎ•º Ï∞æÏïÑÎÇ¥ Î™®Îëê Ï≤òÌòïÌïòÎ©¥ ÏãúÎØºÏùò ÏäπÎ¶¨Ïù¥Î©∞, ÎßàÌîºÏïÑÍ∞Ä Í≤ΩÏ∞∞ ÎòêÎäî ÏãúÎØºÏùÑ Î™®Îëê Ï£ΩÏùºÏãú ÎßàÌîºÏïÑÏùò ÏäπÎ¶¨ÏûÖÎãàÎã§.(ÏßÅÏóÖ : ÏãúÎØº,Í≤ΩÏ∞∞,ÎßàÌîºÏïÑ,ÏùòÏÇ¨)"));
 
-	public void enter_931060120()
-	{
-		try
-		{
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/character",
-					120000, -200, 0, 1, 1));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 1200));
-			Thread.sleep(1200);
-			c.getSession().writeAndFlush(UIPacket.showInfo("Hover over any other character..."));
-			c.getSession().writeAndFlush(UIPacket
-					.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/mouseMoveToChar", 1680, -400, -210, 1, 3));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 1650));
-			Thread.sleep(1650);
-			c.getSession().writeAndFlush(
-					UIPacket.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/mouseUp", 600, -190, -30, 1, 3));
-			c.getSession().writeAndFlush(UIPacket.showInfo("Then right-click."));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 540));
-			Thread.sleep(540);
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/mouseClick",
-					1200, -190, -30, 1, 3));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 1200));
-			Thread.sleep(1200);
-			c.getSession().writeAndFlush(UIPacket
-					.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/characterMenu", 50000, -200, 0, 1, 2));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 900));
-			Thread.sleep(900);
-			c.getSession().writeAndFlush(UIPacket.showInfo("When the Character Menu appears, click Go to Farm."));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo(
-					"Effect/CharacterEff.img/farmEnterTuto/mouseMoveToOtherfarm", 1440, -190, -30, 1, 5));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 1380));
-			Thread.sleep(1380);
-			c.getSession().writeAndFlush(UIPacket
-					.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/menuMouseOver", 50000, -200, 0, 1, 4));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo("Effect/CharacterEff.img/farmEnterTuto/mouseClick",
-					60000, -130, 150, 1, 6));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo((byte) 1, 1200));
-			Thread.sleep(1200);
-		}
-		catch (InterruptedException ex)
-		{
-		}
-	}
+                map.playern = playernuma;
+                map.morningmap = morningmap;
 
-	public void np_tuto_0_2()
-	{
-		try
-		{
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo(3, 2));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo(1, 10));
-			Thread.sleep(10);
-			c.getSession().writeAndFlush(UIPacket.directionFacialExpression(5, 3000));
-			c.getSession().writeAndFlush(UIPacket
-					.getDirectionInfo("Effect/DirectionNewPirate.img/newPirate/balloonMsg1/1", 2000, 0, -80, 0, 0));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo(1, 1000));
-			Thread.sleep(1000);
-		}
-		catch (InterruptedException ex)
-		{
-		}
-		NPCScriptManager.getInstance().dispose(c);
-		c.removeClickedNPC();
-		NPCScriptManager.getInstance().start(c, 9270083, "np_tuto_0_3");
-	}
+                map.aftertime = after;
+                map.nighttime = night;
+                map.votetime = vote;
 
-	public static String getMobImg(int mob)
-	{
-		MapleMonster monster = MapleLifeProvider.getMonster(mob);
-		if (monster.getStats().getLink() != 0)
-		{
-			mob = monster.getStats().getLink();
-		}
-		String mobStr = String.valueOf(mob);
-		while (mobStr.length() < 7)
-		{
-			String newStr = "0" + mobStr;
-			mobStr = newStr;
-		}
-		return "#fMob/" + mobStr + ".img/stand/0#";
-	}
-        public void SearchItem(String gomgo) {
+                map.citizenmap1 = citizenmap1;
+                map.citizenmap2 = citizenmap2;
+                map.citizenmap3 = citizenmap3;
+                map.citizenmap4 = citizenmap4;
+                map.citizenmap5 = citizenmap5;
+                map.citizenmap6 = citizenmap6;
+
+                map.MapiaIng = true;
+
+                map.mapiamap = mapiamap;
+                map.policemap = policemap;
+                map.drmap = drmap;
+                m_timer.cancel();
+                map.MapiaMorning(player);
+                map.MapiaChannel = player.getClient().getChannel();
+            }
+        };
+        m_timer.schedule(m_task, (time * 1000));
+    }
+
+    public void resetReactors() {
+        getPlayer().getMap().resetReactors(c);
+    }
+
+    public void genericGuildMessage(int code) {
+        c.getSession().writeAndFlush(CWvsContext.GuildPacket.genericGuildMessage((byte) code));
+    }
+
+    public void disbandGuild() {
+        int gid = c.getPlayer().getGuildId();
+        if (gid <= 0 || c.getPlayer().getGuildRank() != 1) {
+            return;
+        }
+        World.Guild.disbandGuild(gid);
+    }
+
+    public void increaseGuildCapacity(boolean trueMax) {
+        if (c.getPlayer().getMeso() < 500000 && !trueMax) {
+            c.getSession().writeAndFlush(CWvsContext.serverNotice(1, "", "500,000 Î©îÏÜåÍ∞Ä ÌïÑÏöîÌï©ÎãàÎã§."));
+            return;
+        }
+        final int gid = c.getPlayer().getGuildId();
+        if (gid <= 0) {
+            return;
+        }
+        if (World.Guild.increaseGuildCapacity(gid, trueMax)) {
+            if (!trueMax) {
+                c.getPlayer().gainMeso(-500000, true, true);
+            }
+            sendNext("Ï¶ùÍ∞ÄÎêòÏóàÏäµÎãàÎã§.");
+        } else if (!trueMax) {
+            sendNext("Ïù¥ÎØ∏ ÌïúÍ≥ÑÏπòÏûÖÎãàÎã§. (Limit: 100)");
+        } else {
+            sendNext("Ïù¥ÎØ∏ ÌïúÍ≥ÑÏπòÏûÖÎãàÎã§. (Limit: 200)");
+        }
+    }
+
+    public void displayGuildRanks() {
+        c.getSession().writeAndFlush(CWvsContext.GuildPacket.guildRankingRequest());
+    }
+
+    public boolean removePlayerFromInstance() {
+        if (c.getPlayer().getEventInstance() != null) {
+            c.getPlayer().getEventInstance().removePlayer(this.c.getPlayer());
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isPlayerInstance() {
+        if (c.getPlayer().getEventInstance() != null) {
+            return true;
+        }
+        return false;
+    }
+
+    public void changeStat(byte slot, int type, int amount) {
+        Equip sel = (Equip) c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short) slot);
+        switch (type) {
+            case 0:
+                sel.setStr((short) amount);
+                break;
+            case 1:
+                sel.setDex((short) amount);
+                break;
+            case 2:
+                sel.setInt((short) amount);
+                break;
+            case 3:
+                sel.setLuk((short) amount);
+                break;
+            case 4:
+                sel.setHp((short) amount);
+                break;
+            case 5:
+                sel.setMp((short) amount);
+                break;
+            case 6:
+                sel.setWatk((short) amount);
+                break;
+            case 7:
+                sel.setMatk((short) amount);
+                break;
+            case 8:
+                sel.setWdef((short) amount);
+                break;
+            case 9:
+                sel.setMdef((short) amount);
+                break;
+            case 10:
+                sel.setAcc((short) amount);
+                break;
+            case 11:
+                sel.setAvoid((short) amount);
+                break;
+            case 12:
+                sel.setHands((short) amount);
+                break;
+            case 13:
+                sel.setSpeed((short) amount);
+                break;
+            case 14:
+                sel.setJump((short) amount);
+                break;
+            case 15:
+                sel.setUpgradeSlots((byte) amount);
+                break;
+            case 16:
+                sel.setViciousHammer((byte) amount);
+                break;
+            case 17:
+                sel.setLevel((byte) amount);
+                break;
+            case 18:
+                sel.setEnhance((byte) amount);
+                break;
+            case 19:
+                sel.setPotential1(amount);
+                break;
+            case 20:
+                sel.setPotential2(amount);
+                break;
+            case 21:
+                sel.setPotential3(amount);
+                break;
+            case 22:
+                sel.setPotential4(amount);
+                break;
+            case 23:
+                sel.setPotential5(amount);
+                break;
+            case 24:
+                sel.setOwner(getText());
+                break;
+        }
+        c.getPlayer().equipChanged();
+        c.getPlayer().fakeRelog();
+    }
+
+    public String searchCashItem(String t) {
+        Pattern name2Pattern = Pattern.compile("^[Í∞Ä-Ìû£a-zA-Z0-9]*$");
+
+        if (!name2Pattern.matcher(t).matches()) {
+            return "Í≤ÄÏÉâÌï† Ïàò ÏóÜÎäî ÏïÑÏù¥ÌÖúÏûÖÎãàÎã§.";
+        }
+        StringBuilder sb = new StringBuilder();
+
+        for (Pair<Integer, String> item : (Iterable<Pair<Integer, String>>) MapleItemInformationProvider.getInstance().getAllEquips()) {
+            if (((String) item.right).contains(t) && MapleItemInformationProvider.getInstance().isCash(((Integer) item.left).intValue())) {
+                sb.append("#b#L" + item.left + "# #i" + item.left + "##t" + item.left + "##l\r\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    public void changeDamageSkin(int skinnum) {
+        MapleQuest quest = MapleQuest.getInstance(7291);
+        MapleQuestStatus queststatus = new MapleQuestStatus(quest, 1);
+
+        String skinString = String.valueOf(skinnum);
+        queststatus.setCustomData((skinString == null) ? "0" : skinString);
+
+        getPlayer().updateQuest(queststatus, true);
+        getPlayer().dropMessage(5, "Îç∞ÎØ∏ÏßÄ Ïä§ÌÇ®Ïù¥ Î≥ÄÍ≤ΩÎêòÏóàÏäµÎãàÎã§.");
+        getPlayer().getMap().broadcastMessage(getPlayer(), CField.showForeignDamageSkin(getPlayer(), skinnum), false);
+    }
+
+    public void openDuey() {
+        c.getPlayer().setConversation(2);
+        c.getSession().writeAndFlush(CField.sendDuey((byte) 9, null, null));
+    }
+
+    public void sendUI(int op) {
+        c.getSession().writeAndFlush(CField.UIPacket.openUI(op));
+    }
+
+    public void sendRepairWindow() {
+        c.getSession().writeAndFlush(CField.UIPacket.openUIOption(33, this.id));
+    }
+
+    public void sendNameChangeWindow() {
+        c.getSession().writeAndFlush(CField.UIPacket.openUIOption(1110, 4034803));
+    }
+
+    public void sendProfessionWindow() {
+        c.getSession().writeAndFlush(CField.UIPacket.openUI(42));
+    }
+
+    public final int getDojoPoints() {
+        return dojo_getPts();
+    }
+
+    public final int getDojoRecord() {
+        return c.getPlayer().getIntNoRecord(150101);
+    }
+
+    public void setDojoRecord(boolean reset) {
+        if (reset) {
+            c.getPlayer().getQuestNAdd(MapleQuest.getInstance(150101)).setCustomData("0");
+            c.getPlayer().getQuestNAdd(MapleQuest.getInstance(150100)).setCustomData("0");
+        } else {
+            c.getPlayer().getQuestNAdd(MapleQuest.getInstance(150101)).setCustomData(String.valueOf(this.c.getPlayer().getIntRecord(150101) + 1));
+        }
+    }
+
+    public boolean start_DojoAgent(boolean dojo, boolean party) {
+        if (dojo) {
+            return Event_DojoAgent.warpStartDojo(c.getPlayer(), party);
+        }
+        return Event_DojoAgent.warpStartAgent(c.getPlayer(), party);
+    }
+
+    public final short getKegs() {
+        return c.getChannelServer().getFireWorks().getKegsPercentage();
+    }
+
+    public void giveKegs(int kegs) {
+        c.getChannelServer().getFireWorks().giveKegs(c.getPlayer(), kegs);
+    }
+
+    public final short getSunshines() {
+        return c.getChannelServer().getFireWorks().getSunsPercentage();
+    }
+
+    public void addSunshines(int kegs) {
+        this.c.getChannelServer().getFireWorks().giveSuns(this.c.getPlayer(), kegs);
+    }
+
+    public final short getDecorations() {
+        return this.c.getChannelServer().getFireWorks().getDecsPercentage();
+    }
+
+    public void addDecorations(int kegs) {
+        try {
+            this.c.getChannelServer().getFireWorks().giveDecs(this.c.getPlayer(), kegs);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void maxStats() {
+        Map<MapleStat, Long> statup = new EnumMap<>(MapleStat.class);
+
+        (c.getPlayer().getStat()).str = Short.MAX_VALUE;
+        (c.getPlayer().getStat()).dex = Short.MAX_VALUE;
+        (c.getPlayer().getStat()).int_ = Short.MAX_VALUE;
+        (c.getPlayer().getStat()).luk = Short.MAX_VALUE;
+
+        int overrDemon = GameConstants.isDemonSlayer(c.getPlayer().getJob()) ? GameConstants.getMPByJob(c.getPlayer()) : 500000;
+
+        (c.getPlayer().getStat()).maxhp = 500000L;
+        (c.getPlayer().getStat()).maxmp = overrDemon;
+        c.getPlayer().getStat().setHp(500000L, this.c.getPlayer());
+        c.getPlayer().getStat().setMp(overrDemon, this.c.getPlayer());
+
+        statup.put(MapleStat.STR, Long.valueOf(32767L));
+        statup.put(MapleStat.DEX, Long.valueOf(32767L));
+        statup.put(MapleStat.LUK, Long.valueOf(32767L));
+        statup.put(MapleStat.INT, Long.valueOf(32767L));
+        statup.put(MapleStat.HP, Long.valueOf(500000L));
+        statup.put(MapleStat.MAXHP, Long.valueOf(500000L));
+        statup.put(MapleStat.MP, Long.valueOf(overrDemon));
+        statup.put(MapleStat.MAXMP, Long.valueOf(overrDemon));
+
+        c.getPlayer().getStat().recalcLocalStats(c.getPlayer());
+        c.getSession().writeAndFlush(CWvsContext.updatePlayerStats(statup, c.getPlayer()));
+    }
+
+    public boolean getSR(Triple<String, Map<Integer, String>, Long> ma, int sel) {
+        if (((Map) ma.mid).get(Integer.valueOf(sel)) == null || ((String) ((Map) ma.mid).get(Integer.valueOf(sel))).length() <= 0) {
+            dispose();
+            return false;
+        }
+        sendOk((String) ((Map) ma.mid).get(Integer.valueOf(sel)));
+        return true;
+    }
+
+    public String getAllItem() {
+        StringBuilder string = new StringBuilder();
+        for (Item item : this.c.getPlayer().getInventory(MapleInventoryType.EQUIP).list()) {
+            string.append("#L" + item.getUniqueId() + "##i " + item.getItemId() + "#\r\n");
+        }
+        return string.toString();
+    }
+
+    public Equip getEquip(int itemid) {
+        return (Equip) MapleItemInformationProvider.getInstance().getEquipById(itemid);
+    }
+
+    public void setExpiration(Object statsSel, long expire) {
+        if (statsSel instanceof Equip) {
+            ((Equip) statsSel).setExpiration(System.currentTimeMillis() + expire * 24L * 60L * 60L * 1000L);
+        }
+    }
+
+    public void setLock(Object statsSel) {
+        if (statsSel instanceof Equip) {
+            Equip eq = (Equip) statsSel;
+            if (eq.getExpiration() == -1L) {
+                eq.setFlag(eq.getFlag() | ItemFlag.LOCK.getValue());
+            } else {
+                eq.setFlag(eq.getFlag() | ItemFlag.UNTRADEABLE.getValue());
+            }
+        }
+    }
+
+    public boolean addFromDrop(Object statsSel) {
+        if (statsSel instanceof Item) {
+            Item it = (Item) statsSel;
+            return (MapleInventoryManipulator.checkSpace(getClient(), it.getItemId(), it.getQuantity(), it.getOwner()) && MapleInventoryManipulator.addFromDrop(getClient(), it, false));
+        }
+        return false;
+    }
+
+    public boolean replaceItem(int slot, int invType, Object statsSel, int offset, String type) {
+        return replaceItem(slot, invType, statsSel, offset, type, false);
+    }
+
+    public boolean replaceItem(int slot, int invType, Object statsSel, int offset, String type, boolean takeSlot) {
+
+        MapleInventoryType inv = MapleInventoryType.getByType((byte) invType);
+
+        if (inv == null) {
+            return false;
+        }
+
+        Item item = getPlayer().getInventory(inv).getItem((short) slot);
+
+        if (item == null || statsSel instanceof Item) {
+            item = (Item) statsSel;
+        }
+
+        if (offset > 0) {
+            if (inv != MapleInventoryType.EQUIP) {
+                return false;
+            }
+
+            Equip eq = (Equip) item;
+
+            if (takeSlot) {
+                if (eq.getUpgradeSlots() < 1) {
+                    return false;
+                }
+                eq.setUpgradeSlots((byte) (eq.getUpgradeSlots() - 1));
+                if (eq.getExpiration() == -1L) {
+                    eq.setFlag(eq.getFlag() | ItemFlag.LOCK.getValue());
+                } else {
+                    eq.setFlag(eq.getFlag() | ItemFlag.UNTRADEABLE.getValue());
+                }
+            }
+            if (type.equalsIgnoreCase("Slots")) {
+                eq.setUpgradeSlots((byte) (eq.getUpgradeSlots() + offset));
+                eq.setViciousHammer((byte) (eq.getViciousHammer() + offset));
+            } else if (type.equalsIgnoreCase("Level")) {
+                eq.setLevel((byte) (eq.getLevel() + offset));
+            } else if (type.equalsIgnoreCase("Hammer")) {
+                eq.setViciousHammer((byte) (eq.getViciousHammer() + offset));
+            } else if (type.equalsIgnoreCase("STR")) {
+                eq.setStr((short) (eq.getStr() + offset));
+            } else if (type.equalsIgnoreCase("DEX")) {
+                eq.setDex((short) (eq.getDex() + offset));
+            } else if (type.equalsIgnoreCase("INT")) {
+                eq.setInt((short) (eq.getInt() + offset));
+            } else if (type.equalsIgnoreCase("LUK")) {
+                eq.setLuk((short) (eq.getLuk() + offset));
+            } else if (type.equalsIgnoreCase("HP")) {
+                eq.setHp((short) (eq.getHp() + offset));
+            } else if (type.equalsIgnoreCase("MP")) {
+                eq.setMp((short) (eq.getMp() + offset));
+            } else if (type.equalsIgnoreCase("WATK")) {
+                eq.setWatk((short) (eq.getWatk() + offset));
+            } else if (type.equalsIgnoreCase("MATK")) {
+                eq.setMatk((short) (eq.getMatk() + offset));
+            } else if (type.equalsIgnoreCase("WDEF")) {
+                eq.setWdef((short) (eq.getWdef() + offset));
+            } else if (type.equalsIgnoreCase("MDEF")) {
+                eq.setMdef((short) (eq.getMdef() + offset));
+            } else if (type.equalsIgnoreCase("ACC")) {
+                eq.setAcc((short) (eq.getAcc() + offset));
+            } else if (type.equalsIgnoreCase("Avoid")) {
+                eq.setAvoid((short) (eq.getAvoid() + offset));
+            } else if (type.equalsIgnoreCase("Hands")) {
+                eq.setHands((short) (eq.getHands() + offset));
+            } else if (type.equalsIgnoreCase("Speed")) {
+                eq.setSpeed((short) (eq.getSpeed() + offset));
+            } else if (type.equalsIgnoreCase("Jump")) {
+                eq.setJump((short) (eq.getJump() + offset));
+            } else if (type.equalsIgnoreCase("ItemEXP")) {
+                eq.setItemEXP(eq.getItemEXP() + offset);
+            } else if (type.equalsIgnoreCase("Expiration")) {
+                eq.setExpiration(eq.getExpiration() + offset);
+            } else if (type.equalsIgnoreCase("Flag")) {
+                eq.setFlag(eq.getFlag() + offset);
+            }
+            item = eq.copy();
+        }
+        MapleInventoryManipulator.removeFromSlot(getClient(), inv, (short) slot, item.getQuantity(), false);
+        return MapleInventoryManipulator.addFromDrop(getClient(), item, false);
+    }
+
+    public boolean replaceItem(int slot, int invType, Object statsSel, int upgradeSlots) {
+        return replaceItem(slot, invType, statsSel, upgradeSlots, "Slots");
+    }
+
+    public boolean isCash(int itemId) {
+        return MapleItemInformationProvider.getInstance().isCash(itemId);
+    }
+
+    public int getTotalStat(int itemId) {
+        return MapleItemInformationProvider.getInstance().getTotalStat((Equip) MapleItemInformationProvider.getInstance().getEquipById(itemId));
+    }
+
+    public int getReqLevel(int itemId) {
+        return MapleItemInformationProvider.getInstance().getReqLevel(itemId);
+    }
+
+    public SecondaryStatEffect getEffect(int buff) {
+        return MapleItemInformationProvider.getInstance().getItemEffect(buff);
+    }
+
+    public void giveBuff(int skillid) {
+
+        SkillFactory.getSkill(skillid).getEffect(1).applyTo(this.c.getPlayer());
+    }
+
+    public void buffGuild(int buff, int duration, String msg) {
+        MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+        if (ii.getItemEffect(buff) != null && getPlayer().getGuildId() > 0) {
+            SecondaryStatEffect mse = ii.getItemEffect(buff);
+            for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters().values()) {
+                    if (chr.getGuildId() == getPlayer().getGuildId()) {
+                        mse.applyTo(chr, chr, true, chr.getTruePosition(), duration, (byte) 0, true);
+                        chr.dropMessage(5, "Your guild has gotten a " + msg + " buff.");
+                    }
+                }
+            }
+        }
+    }
+
+    public long getRemainPremium(int accid) {
+        Connection con = null;
+        ResultSet rs = null;
+        PreparedStatement ps = null;
+
+        long ret = 0L;
+
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT * FROM premium WHERE accid = ?");
+            ps.setInt(1, accid);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                ret = rs.getLong("period");
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Exception exception) {
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (Exception exception) {
+                }
+            }
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (Exception exception) {
+                }
+            }
+        }
+        return ret;
+    }
+
+    public boolean existPremium(int aci) {
+        Connection con = null;
+        ResultSet rs = null;
+        PreparedStatement ps = null;
+
+        boolean ret = false;
+
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT * FROM premium WHERE accid = ?");
+            ps.setInt(1, aci);
+            rs = ps.executeQuery();
+            ret = rs.next();
+
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Exception exception) {
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (Exception exception) {
+                }
+            }
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (Exception exception) {
+                }
+            }
+        }
+        return ret;
+    }
+
+    public void gainAllAccountPremium(int v3, int v4) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        ArrayList<Integer> chrs = new ArrayList<>();
+
+        Date adate = new Date();
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT * FROM accounts");
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                chrs.add(Integer.valueOf(rs.getInt("id")));
+            }
+            rs.close();
+            ps.close();
+
+            for (int i = 0; i < chrs.size(); i++) {
+                if (existPremium(((Integer) chrs.get(i)).intValue())) {
+                    if (getRemainPremium(((Integer) chrs.get(i)).intValue()) > adate.getTime()) {
+                        ps = con.prepareStatement("UPDATE premium SET period = ? WHERE accid = ?");
+                        ps.setLong(1, getRemainPremium(((Integer) chrs.get(i)).intValue()) + (v3 * 24 * 60 * 60 * 1000));
+                        ps.setInt(2, ((Integer) chrs.get(i)).intValue());
+                        ps.executeUpdate();
+                        ps.close();
+                    } else {
+                        ps = con.prepareStatement("UPDATE premium SET period = ? and `name` = ? and `buff` = ? WHERE accid = ?");
+                        ps.setLong(1, adate.getTime() + (v3 * 24 * 60 * 60 * 1000));
+                        ps.setString(2, "ÏùºÎ∞ò");
+                        ps.setInt(3, 80001535);
+                        ps.setInt(4, ((Integer) chrs.get(i)).intValue());
+                        ps.executeUpdate();
+                        ps.close();
+                    }
+                } else {
+                    ps = con.prepareStatement("INSERT INTO premium(accid, name, buff, period) VALUES (?, ?, ?, ?)");
+                    ps.setInt(1, ((Integer) chrs.get(i)).intValue());
+                    ps.setString(2, "ÏùºÎ∞ò");
+                    ps.setInt(3, 80001535);
+                    ps.setLong(4, adate.getTime() + (v3 * 24 * 60 * 60 * 1000));
+                    ps.executeUpdate();
+                    ps.close();
+                }
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Exception exception) {
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (Exception exception) {
+                }
+            }
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (Exception exception) {
+                }
+            }
+        }
+    }
+
+    public void gainAccountPremium(String acc, int v3, boolean v4) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Date adate = new Date();
+
+        int accid = 0;
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT * FROM accounts WHERE name = ?");
+            ps.setString(1, acc);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                accid = rs.getInt("id");
+            }
+
+            rs.close();
+            ps.close();
+
+            if (existPremium(accid)) {
+                if (getRemainPremium(accid) > adate.getTime()) {
+                    ps = con.prepareStatement("UPDATE premium SET period = ? WHERE accid = ?");
+                    if (v4) {
+                        ps.setLong(1, getRemainPremium(accid) + (v3 * 24 * 60 * 60 * 1000));
+                    } else {
+                        ps.setLong(1, getRemainPremium(accid) - (v3 * 24 * 60 * 60 * 1000));
+                    }
+                    ps.setInt(2, accid);
+                    ps.executeUpdate();
+                    ps.close();
+                } else if (v4) {
+                    ps = con.prepareStatement("UPDATE premium SET period = ? and `name` = ? and `buff` = ? WHERE accid = ?");
+                    ps.setLong(1, adate.getTime() + (v3 * 24 * 60 * 60 * 1000));
+                    ps.setString(2, "ÏùºÎ∞ò");
+                    ps.setInt(3, 80001535);
+                    ps.setInt(4, accid);
+                    ps.executeUpdate();
+                    ps.close();
+                }
+            } else if (v4) {
+                ps = con.prepareStatement("INSERT INTO premium(accid, name, buff, period) VALUES (?, ?, ?, ?)");
+                ps.setInt(1, accid);
+                ps.setString(2, "ÏùºÎ∞ò");
+                ps.setInt(3, 80001535);
+                ps.setLong(4, adate.getTime() + (v3 * 24 * 60 * 60 * 1000));
+                ps.executeUpdate();
+                ps.close();
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Exception exception) { }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (Exception exception) { }
+            }
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (Exception exception) { }
+            }
+        }
+    }
+
+    public boolean createAlliance(String alliancename) {
+        MapleParty pt = this.c.getPlayer().getParty();
+        MapleCharacter otherChar = this.c.getChannelServer().getPlayerStorage().getCharacterById(pt.getMemberByIndex(1).getId());
+
+        if (otherChar == null || otherChar.getId() == this.c.getPlayer().getId()) {
+            return false;
+        }
+        try {
+            return World.Alliance.createAlliance(alliancename, this.c.getPlayer().getId(), otherChar.getId(), this.c.getPlayer().getGuildId(), otherChar.getGuildId());
+        } catch (Exception re) {
+            re.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean addCapacityToAlliance() {
+        try {
+            MapleGuild gs = World.Guild.getGuild(this.c.getPlayer().getGuildId());
+            if (gs != null && this.c.getPlayer().getGuildRank() == 1 && this.c.getPlayer().getAllianceRank() == 1 && World.Alliance.getAllianceLeader(gs.getAllianceId()) == this.c.getPlayer().getId() && World.Alliance.changeAllianceCapacity(gs.getAllianceId())) {
+                gainMeso(-10000000L);
+                return true;
+            }
+        } catch (Exception re) {
+            re.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean disbandAlliance() {
+        try {
+            MapleGuild gs = World.Guild.getGuild(this.c.getPlayer().getGuildId());
+            if (gs != null && this.c.getPlayer().getGuildRank() == 1 && this.c.getPlayer().getAllianceRank() == 1 && World.Alliance.getAllianceLeader(gs.getAllianceId()) == this.c.getPlayer().getId() && World.Alliance.disbandAlliance(gs.getAllianceId())) {
+                return true;
+            }
+        } catch (Exception re) {
+            re.printStackTrace();
+        }
+        return false;
+    }
+
+    public byte getLastMsg() {
+        return this.lastMsg;
+    }
+
+    public final void setLastMsg(byte last) {
+        this.lastMsg = last;
+    }
+
+    public final void maxAllSkills() {
+        HashMap<Skill, SkillEntry> sa = new HashMap<>();
+        for (Skill skil : SkillFactory.getAllSkills()) {
+            if (GameConstants.isApplicableSkill(skil.getId()) && skil.getId() < 90000000) {
+                sa.put(skil, new SkillEntry((byte) skil.getMaxLevel(), (byte) skil.getMaxLevel(), SkillFactory.getDefaultSExpiry(skil)));
+            }
+        }
+        getPlayer().changeSkillsLevel(sa);
+    }
+
+    public final void resetStats(int str, int dex, int z, int luk) {
+        this.c.getPlayer().resetStats(str, dex, z, luk);
+    }
+
+    public final boolean dropItem(int slot, int invType, int quantity) {
+        MapleInventoryType inv = MapleInventoryType.getByType((byte) invType);
+        if (inv == null) {
+            return false;
+        }
+        return MapleInventoryManipulator.drop(this.c, inv, (short) slot, (short) quantity, true);
+    }
+
+    public final void setQuestRecord(Object ch, int questid, String data) {
+        ((MapleCharacter) ch).getQuestNAdd(MapleQuest.getInstance(questid)).setCustomData(data);
+    }
+
+    public final void doWeddingEffect(Object ch) {
+        final MapleCharacter chr = (MapleCharacter) ch;
+        final MapleCharacter player = getPlayer();
+        getMap().broadcastMessage(CWvsContext.yellowChat(player.getName() + ", do you take " + chr.getName() + " as your wife and promise to stay beside her through all downtimes, crashes, and lags?"));
+        Timer.CloneTimer.getInstance().schedule(new Runnable() {
+            public void run() {
+                if (chr == null || player == null) {
+                    NPCConversationManager.this.warpMap(680000500, 0);
+                } else {
+                    chr.getMap().broadcastMessage(CWvsContext.yellowChat(chr.getName() + ", do you take " + player.getName() + " as your husband and promise to stay beside him through all downtimes, crashes, and lags?"));
+                }
+            }
+        }, 10000L);
+        Timer.CloneTimer.getInstance().schedule(new Runnable() {
+            public void run() {
+                if (chr == null || player == null) {
+                    if (player != null) {
+                        NPCConversationManager.this.setQuestRecord(player, 160001, "3");
+                        NPCConversationManager.this.setQuestRecord(player, 160002, "0");
+                    } else if (chr != null) {
+                        NPCConversationManager.this.setQuestRecord(chr, 160001, "3");
+                        NPCConversationManager.this.setQuestRecord(chr, 160002, "0");
+                    }
+                    NPCConversationManager.this.warpMap(680000500, 0);
+                } else {
+                    NPCConversationManager.this.setQuestRecord(player, 160001, "2");
+                    NPCConversationManager.this.setQuestRecord(chr, 160001, "2");
+                    NPCConversationManager.this.sendNPCText(player.getName() + " and " + chr.getName() + ", I wish you two all the best on your " + chr.getClient().getChannelServer().getServerName() + " journey together!", 9201002);
+                    chr.getMap().startExtendedMapEffect("You may now kiss the bride, " + player.getName() + "!", 5120006);
+                    if (chr.getGuildId() > 0) {
+                        World.Guild.guildPacket(chr.getGuildId(), CWvsContext.sendMarriage(false, chr.getName()));
+                    }
+                    if (player.getGuildId() > 0) {
+                        World.Guild.guildPacket(player.getGuildId(), CWvsContext.sendMarriage(false, player.getName()));
+                    }
+                }
+            }
+        },20000L);
+    }
+
+    public void putKey(int key, int type, int action) {
+        getPlayer().changeKeybinding(key, (byte) type, action);
+        getClient().getSession().writeAndFlush(CField.getKeymap(getPlayer().getKeyLayout()));
+    }
+
+    public void logDonator(String log, int previous_points) {
+        StringBuilder logg = new StringBuilder();
+
+        logg.append(MapleCharacterUtil.makeMapleReadable(getPlayer().getName()));
+        logg.append(" [CID: ").append(getPlayer().getId()).append("] ");
+        logg.append(" [Account: ").append(MapleCharacterUtil.makeMapleReadable(getClient().getAccountName())).append("] ");
+        logg.append(log);
+        logg.append(" [Previous: " + previous_points + "] [Now: " + getPlayer().getPoints() + "]");
+
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("INSERT INTO donorlog VALUES(DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?)");
+            ps.setString(1, MapleCharacterUtil.makeMapleReadable(getClient().getAccountName()));
+            ps.setInt(2, getClient().getAccID());
+            ps.setString(3, MapleCharacterUtil.makeMapleReadable(getPlayer().getName()));
+            ps.setInt(4, getPlayer().getId());
+            ps.setString(5, log);
+            ps.setString(6, FileoutputUtil.CurrentReadable_Time());
+            ps.setInt(7, previous_points);
+            ps.setInt(8, getPlayer().getPoints());
+            ps.executeUpdate();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+        FileoutputUtil.log("Log_Donator.rtf", logg.toString());
+    }
+
+    public void doRing(String name, int itemid) {
+        PlayersHandler.DoRing(getClient(), name, itemid);
+    }
+
+    public int getNaturalStats(int itemid, String it) {
+        Map<String, Integer> eqStats = MapleItemInformationProvider.getInstance().getEquipStats(itemid);
+        if (eqStats != null && eqStats.containsKey(it)) {
+            return ((Integer) eqStats.get(it)).intValue();
+        }
+        return 0;
+    }
+
+    public boolean isEligibleName(String t) {
+        return (MapleCharacterUtil.canCreateChar(t, getPlayer().isGM()) && (!LoginInformationProvider.getInstance().isForbiddenName(t) || getPlayer().isGM()));
+    }
+
+    public String checkDrop(int mobId) {
+        List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
+        if (ranks != null && ranks.size() > 0) {
+            int num = 0, itemId = 0, ch = 0;
+            StringBuilder name = new StringBuilder();
+            for (int i = 0; i < ranks.size(); i++) {
+                MonsterDropEntry de = ranks.get(i);
+                if (de.chance > 0 && (de.questid <= 0 || (de.questid > 0 && MapleQuest.getInstance(de.questid).getName().length() > 0))) {
+                    itemId = de.itemId;
+                    if (num == 0) {
+                        name.append("Drops for #o" + mobId + "#\r\n");
+                        name.append("--------------------------------------\r\n");
+                    }
+                    String namez = "#z" + itemId + "#";
+
+                    if (itemId == 0) {
+                        itemId = 4031041;
+                        namez = (de.Minimum * getClient().getChannelServer().getMesoRate()) + " to " + (de.Maximum * getClient().getChannelServer().getMesoRate()) + " meso";
+                    }
+                    ch = de.chance * getClient().getChannelServer().getDropRate();
+                    name.append((num + 1) + ") #v" + itemId + "#" + namez + " - " + (Integer.valueOf((ch >= 999999) ? 1000000 : ch).doubleValue() / 10000.0D) + "% chance. " + ((de.questid > 0 && MapleQuest.getInstance(de.questid).getName().length() > 0) ? ("Requires quest " + MapleQuest.getInstance(de.questid).getName() + " to be started.") : "") + "\r\n");
+                    num++;
+                }
+            }
+            if (name.length() > 0) {
+                return name.toString();
+            }
+        }
+        return "No drops was returned.";
+    }
+
+    public String getLeftPadded(String in, char padchar, int length) {
+        return StringUtil.getLeftPaddedStr(in, padchar, length);
+    }
+
+    public void handleDivorce() {
+        if (getPlayer().getMarriageId() <= 0) {
+            sendNext("Please make sure you have a marriage.");
+            return;
+        }
+        int chz = World.Find.findChannel(getPlayer().getMarriageId());
+        if (chz == -1) {
+            Connection con = null;
+            PreparedStatement ps = null;
+            ResultSet rs = null;
+            try {
+                con = DatabaseConnection.getConnection();
+                ps = con.prepareStatement("UPDATE queststatus SET customData = ? WHERE characterid = ? AND (quest = ? OR quest = ?)");
+                ps.setString(1, "0");
+                ps.setInt(2, getPlayer().getMarriageId());
+                ps.setInt(3, 160001);
+                ps.setInt(4, 160002);
+                ps.executeUpdate();
+                ps.close();
+                ps = con.prepareStatement("UPDATE characters SET marriageid = ? WHERE id = ?");
+                ps.setInt(1, 0);
+                ps.setInt(2, getPlayer().getMarriageId());
+                ps.executeUpdate();
+                ps.close();
+                con.close();
+            } catch (SQLException e) {
+                outputFileError(e);
+                return;
+            } finally {
+                try {
+                    if (con != null) {
+                        con.close();
+                    }
+                    if (ps != null) {
+                        ps.close();
+                    }
+                    if (rs != null) {
+                        rs.close();
+                    }
+                } catch (SQLException se) {
+                    se.printStackTrace();
+                }
+            }
+            setQuestRecord(getPlayer(), 160001, "0");
+            setQuestRecord(getPlayer(), 160002, "0");
+            getPlayer().setMarriageId(0);
+            sendNext("You have been successfully divorced...");
+            return;
+        }
+        if (chz < -1) {
+            sendNext("Please make sure your partner is logged on.");
+            return;
+        }
+        MapleCharacter cPlayer = ChannelServer.getInstance(chz).getPlayerStorage().getCharacterById(getPlayer().getMarriageId());
+
+        if (cPlayer != null) {
+            cPlayer.dropMessage(1, "Your partner has divorced you.");
+            cPlayer.setMarriageId(0);
+            setQuestRecord(cPlayer, 160001, "0");
+            setQuestRecord(getPlayer(), 160001, "0");
+            setQuestRecord(cPlayer, 160002, "0");
+            setQuestRecord(getPlayer(), 160002, "0");
+            getPlayer().setMarriageId(0);
+            sendNext("You have been successfully divorced...");
+        } else {
+            sendNext("An error occurred...");
+        }
+    }
+
+    public String getReadableMillis(long startMillis, long endMillis) {
+        return StringUtil.getReadableMillis(startMillis, endMillis);
+    }
+
+    public void sendUltimateExplorer() {
+        getClient().getSession().writeAndFlush(CWvsContext.ultimateExplorer());
+    }
+
+    public void sendPendant(boolean b) {
+        this.c.getSession().writeAndFlush(CWvsContext.pendantSlot(b));
+    }
+
+    public int getCompensation(String id) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT * FROM compensationlog_confirmed WHERE chrname = ?");
+            ps.setString(1, id);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("value");
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", e);
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+        return 0;
+    }
+
+    public boolean deleteCompensation(String id) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("DELETE FROM compensationlog_confirmed WHERE chrname = ?");
+            ps.setString(1, id);
+            ps.executeUpdate();
+            ps.close();
+            con.close();
+            return true;
+        } catch (SQLException e) {
+            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", e);
+            return false;
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+    }
+
+    public void gainAPS(int gain) {
+        getPlayer().gainAPS(gain);
+    }
+
+    public void forceCompleteQuest(MapleCharacter chr, int idd) {
+        MapleQuest.getInstance(idd).forceComplete(chr, getNpc());
+    }
+
+    public void setInnerStats(MapleCharacter chr, int line) {
+        InnerSkillValueHolder isvh = InnerAbillity.getInstance().renewSkill(0, false);
+        chr.getInnerSkills().add(isvh);
+        chr.changeSkillLevel(SkillFactory.getSkill(isvh.getSkillId()), isvh.getSkillLevel(), isvh.getSkillLevel());
+        chr.getClient().getSession().writeAndFlush(CField.updateInnerPotential((byte) line, isvh.getSkillId(), isvh.getSkillLevel(), isvh.getRank()));
+    }
+
+    public void setInnerStats(int line) {
+        InnerSkillValueHolder isvh = InnerAbillity.getInstance().renewSkill(0, false);
+        this.c.getPlayer().getInnerSkills().add(isvh);
+        this.c.getPlayer().changeSkillLevel(SkillFactory.getSkill(isvh.getSkillId()), isvh.getSkillLevel(), isvh.getSkillLevel());
+        this.c.getSession().writeAndFlush(CField.updateInnerPotential((byte) line, isvh.getSkillId(), isvh.getSkillLevel(), isvh.getRank()));
+    }
+
+    public void openAuctionUI() {
+        this.c.getSession().writeAndFlush(CField.UIPacket.openUI(161));
+    }
+
+    public void gainSponserItem(int item, String name, short allstat, short damage, byte upgradeslot) {
+        if (GameConstants.isEquip(item)) {
+            Equip Item = (Equip) MapleItemInformationProvider.getInstance().getEquipById(item);
+            Item.setOwner(name);
+            Item.setStr(allstat);
+            Item.setDex(allstat);
+            Item.setInt(allstat);
+            Item.setLuk(allstat);
+            Item.setWatk(damage);
+            Item.setMatk(damage);
+            Item.setUpgradeSlots(upgradeslot);
+            MapleInventoryManipulator.addFromDrop(this.c, (Item) Item, false);
+        } else {
+            gainItem(item, allstat, damage);
+        }
+    }
+
+    public void askAvatar(String text, List<Integer> args) {
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getNPCTalkStyle(this.id, text, args));
+        this.lastMsg = 9;
+    }
+
+    public void SearchItem(String text, int type) {
         NPCConversationManager cm = this;
-        if (gomgo.getBytes().length < 4) {
-            cm.sendOk("∞ÀªˆæÓ¥¬ 2±€¿⁄ ¿ÃªÛ¿ÃæÓæﬂ «’¥œ¥Ÿ.");
+        if ((text.getBytes()).length < 4) {
+            cm.sendOk("Í≤ÄÏÉâÏñ¥Îäî ÎëêÍ∏ÄÏûê Ïù¥ÏÉÅÏúºÎ°ú Ìï¥Ï£ºÏÑ∏Ïöî.");
             cm.dispose();
             return;
         }
-        c.send(UIPacket.greenShowInfo(gomgo + "(¿∏)∑Œ ∞Àªˆ¡ﬂ¿‘¥œ¥Ÿ. ¿·Ω√∏∏ ±‚¥Ÿ∑¡¡÷ººø‰."));
+        if (text.contains("Ìó§Ïñ¥") || text.contains("ÏñºÍµ¥")) {
+            cm.sendOk("Ìó§Ïñ¥, ÏñºÍµ¥ Îã®Ïñ¥Îäî ÏÉùÎûµÌïòÍ≥† Í≤ÄÏÉâÌï¥Ï£ºÏÑ∏Ïöî.");
+            cm.dispose();
+            return;
+        }
+        String kk = "";
         String chat = "";
-        ItemInformation ii = ItemInformation.getInstance();
-        int g = 0;
-        List<String> retItems = new ArrayList<String>();
-        for (Pair<Integer, String> itemPair : ItemInformation.getInstance().getAllEquips()) {
-            if (itemPair.getRight().toLowerCase().contains(gomgo.toLowerCase())) {
-                if (ii.isCash(itemPair.getLeft())) {
-                    if (itemPair.getLeft() / 100000 >= 1) {
-                        chat += "#L" + itemPair.getLeft() + "# #i" + itemPair.getLeft() + "# #fs14##b" + itemPair.getRight() + "#fs12##k#l\r\n";
-                        g++;
-                    }
+        String nchat = "";
+        MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+        int i = 0;
+        for (Pair<Integer, String> item : (Iterable<Pair<Integer, String>>) ii.getAllEquips()) {
+            if (((String) item.getRight()).toLowerCase().contains(text.toLowerCase())) {
+                String color = "#b";
+                String isuse = "";
+
+                if (cm.getPlayer().getCashWishList().contains(item.getLeft())) {
+                    color = "#Cgray#";
+                    isuse = " (ÏÑ†ÌÉùÎêú Ìï≠Î™©)";
+                }
+                if (type == 1 && ii.isCash(((Integer) item.getLeft()).intValue()) && ((Integer) item.getLeft()).intValue() >= 1000000 && ((Integer) item.getLeft()).intValue() / 1000000 == 1) {
+                    chat = chat + "\r\n" + color + "#L" + item.getLeft() + "##i" + item.getLeft() + " ##z" + item.getLeft() + "#" + isuse;
+                    i++;
+                    continue;
+
+                }
+                if (type == 0 && ((Integer) item.getLeft()).intValue() / 10000 >= 2 && ((Integer) item.getLeft()).intValue() / 10000 < 3) {
+                    chat = chat + "\r\n" + color + "#L" + item.getLeft() + "##i" + item.getLeft() + " ##z" + item.getLeft() + "#" + isuse;
+                    i++;
+                    continue;
+
+                }
+                if (type == 2 && ((Integer) item.getLeft()).intValue() / 10000 >= 3 && ((Integer) item.getLeft()).intValue() / 10000 <= 5) {
+                    chat = chat + "\r\n" + color + "#L" + item.getLeft() + "##i" + item.getLeft() + " ##z" + item.getLeft() + "#" + isuse;
+                    i++;
                 }
             }
         }
-        if (g != 0) {
-            cm.sendSimple(chat);
+        if (i != 0) {
+            kk = kk + "Ï¥ù " + i + "Í∞ú Í≤ÄÏÉâÎêòÏóàÏäµÎãàÎã§. Ï∂îÍ∞Ä ÌïòÏã§ Ìï≠Î™©ÏùÑ ÏÑ†ÌÉùÌï¥Ï£ºÏÑ∏Ïöî.";
+            kk = kk + "\r\n#L0#Ìï≠Î™© ÏÑ†ÌÉùÏùÑ ÎßàÏπ©ÎãàÎã§.  \r\n#L1#Ìï≠Î™©ÏùÑ Ïû¨Í≤ÄÏÉâÌï©ÎãàÎã§.";
+            nchat = kk + chat;
+            cm.sendSimple(nchat);
         } else {
-            chat = "πﬂ∞ﬂµ» æ∆¿Ã≈€¿Ã æ¯Ω¿¥œ¥Ÿ.";
-            cm.sendOk(chat);
+            kk = kk + "Í≤ÄÏÉâÎêú ÏïÑÏù¥ÌÖúÏù¥ ÏóÜÏäµÎãàÎã§.";
+            cm.sendOk(kk);
             cm.dispose();
         }
     }
 
-	public void showAdvanturerBoatScene()
-	{
-		try
-		{
-			c.getSession().writeAndFlush(UIPacket.getDirectionStatus(true));
-			c.getSession().writeAndFlush(UIPacket.IntroEnableUI(1));
-			c.getSession().writeAndFlush(MainPacketCreator.playSound("advStory/whistle"));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo(1, 208));
-			Thread.sleep(208);
-			c.getSession().writeAndFlush(UIPacket.showWZEffect("Effect/Direction3.img/adventureStory/Scene2"));
-			Thread.sleep(3000);
-		}
-		catch (InterruptedException ex)
-		{
-		}
-		NPCScriptManager.getInstance().dispose(c);
-		c.removeClickedNPC();
-		NPCScriptManager.getInstance().start(c, 10306, "ExplorerTut07");
-	}
-
-	public void showMapleLeafScene()
-	{
-		try
-		{
-			c.getSession().writeAndFlush(UIPacket.getDirectionStatus(true));
-			c.getSession().writeAndFlush(UIPacket.IntroEnableUI(1));
-			c.getSession().writeAndFlush(MainPacketCreator.showEnterEffect("adventureStory/mapleLeaf/0"));
-			c.getSession().writeAndFlush(UIPacket.getDirectionInfo(1, 1800));
-			Thread.sleep(1800);
-		}
-		catch (InterruptedException ex)
-		{
-		}
-		c.getSession().writeAndFlush(UIPacket.IntroEnableUI(0));
-		NPCScriptManager.getInstance().dispose(c);
-		c.removeClickedNPC();
-		NPCScriptManager.getInstance().start(c, 10306, "ExplorerTut08");
-	}
-
-	public final void UnlockHonor()
-	{
-		// c.getPlayer().HonorUnlock();
-		c.getPlayer().dropMessage(5, "Slot 1 Inner potential opened.");
-	}
-
-	public final void UnlockHonor2()
-	{
-		// c.getPlayer().HonorUnlock2();
-		c.getPlayer().dropMessage(5, "Slot 2 Inner potential opened.");
-	}
-
-	public final void UnlockHonor3()
-	{
-		// c.getPlayer().HonorUnlock3();
-		c.getPlayer().dropMessage(5, "Slot 3 Inner potential opened.");
-	}
-
-	public int AverageLevel(MapleCharacter chr)
-	{
-		int a = 0;
-		for (final MapleCharacter partymem : chr.getClient().getChannelServer().getPartyMembers(chr.getParty()))
-		{
-			a += partymem.getLevel();
-		}
-		return (a / chr.getParty().getMembers().size());
-	}
-
-	public void startTime()
-	{
-		getPlayer().time = System.currentTimeMillis();
-	}
-
-	public int getTime()
-	{
-		return (int) ((System.currentTimeMillis() - getPlayer().time) / 1000);
-	}
-
-	public void openAuction()
-	{
-		c.getSession().writeAndFlush(UIPacket.OpenUI((byte) 0xA1));
-	}
-
-	public void HyperSkillMax()
-	{
-		MapleData data = MapleDataProviderFactory.getDataProvider(MapleDataProviderFactory.fileInWZPath("Skill.wz"))
-				.getData(StringUtil.getLeftPaddedStr("" + c.getPlayer().getJob(), '0', 3) + ".img");
-		final ISkill skills = null;
-		byte maxLevel = 0;
-		for (MapleData skill : data)
-		{
-			if (skill != null)
-			{
-				for (MapleData skillId : skill.getChildren())
-				{
-					if (!skillId.getName().equals("icon"))
-					{
-						maxLevel = (byte) MapleDataTool.getIntConvert("maxLevel", skillId.getChildByPath("common"), 0);
-						if (MapleDataTool.getIntConvert("invisible", skillId, 0) == 0
-								&& MapleDataTool.getIntConvert("reqLev", skillId, 0) > 0)
-						{ // Ω∫≈≥√¢ø° æ»∫∏¿Ã¥¬ Ω∫≈≥¿∫ ø√∏Æ¡ˆæ ¿Ω
-							if (c.getPlayer().getLevel() >= MapleDataTool.getIntConvert("reqLev", skillId, 0))
-							{
-								c.getPlayer().changeSkillLevel(
-										SkillFactory.getSkill(Integer.parseInt(skillId.getName())), maxLevel,
-										SkillFactory.getSkill(Integer.parseInt(skillId.getName())).isFourthJob()
-												? maxLevel
-												: 0);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-    public void startDamageMeter() {
-        resetMap(120000102);
-        final OverrideMonsterStats overrideStats = new OverrideMonsterStats(Long.MAX_VALUE, 1, 0, false);
-        MapleMonster mob = MapleLifeProvider.getMonster(1210102);
-        mob.setHp(Long.MAX_VALUE);
-        mob.setOverrideStats(overrideStats);
-        mob.setScale(300);
-        c.getChannelServer().getMapFactory().getMap(120000102).spawnMonsterOnGroundBelow(mob, new Point(6, 150));
-        warp(120000102);
-        c.getPlayer().setDamageMeter(0);
-        c.getSession().writeAndFlush(MainPacketCreator.getClock(35));
-        final int cRand = Randomizer.nextInt();
-        c.getPlayer().setWarpRand(cRand);
-
-        MapTimer.getInstance().schedule(new Runnable() {
-            @Override
-            public void run() {
-                if (cRand == c.getPlayer().getWarpRand()) {
-                    int id = getDamageMeterRankerId();
-                    initDamageMeter(c.getPlayer().getId(), c.getPlayer().getName(), c.getPlayer().getDamageMeter());
-                    c.getPlayer().dropMessage(5, "¥©¿˚ µ•πÃ¡ˆ : " + c.getPlayer().getDamageMeter() + " ±‚∑œ¿Ã ¿˙¿Â µ«æ˙Ω¿¥œ¥Ÿ.");
-                    c.getPlayer().setDamageMeter(0);
-                    c.getPlayer().setWarpRand(-1);
-                    warp(100000000);
-                    if (isDamageMeterRanker(c.getPlayer().getId())) {
-                        if (id != -1) {
-                            for (ChannelServer cs : ChannelServer.getAllInstances()) {
-                                for (MapleCharacter chr : cs.getPlayerStorage().getAllCharacters()) {
-                                    if (chr.getId() == id) {
-                                        //chr.removeAllEquip(1142187, false);
-                                        //chr.dropMessage(5, "ZI¡∏ µÙ∑Æ1µÓ ¿⁄∞›¿Ã π⁄≈ªµ«æÓ, ƒ™»£∞° »∏ºˆµ«æ˙Ω¿¥œ¥Ÿ.");
-                                    }
-                                }
-                            }
-                        }
-                        WorldBroadcasting.broadcastMessage(MainPacketCreator.OnAddPopupSay(9000036, 3000, "#b" + c.getPlayer().getName() + "#k¥‘¿Ã ªı∑ŒøÓ #eµÙ∑Æ πÃ≈Õ±‚ 1¿ß#k∞° µ«æ˙Ω¿¥œ¥Ÿ.", ""));
-                        //gainItemAllStat(1142187, (short) 1, (short) 100, (short) 30);
-                    }
-                }
-            }
-		}, 35 * 1000);
+    public void sendPacket(String args) {
+        this.c.getSession().writeAndFlush(PacketHelper.sendPacket(args));
     }
 
-    void initDamageMeter(int cid, String name, long damage) {
+    public void enableMatrix() {
+        MapleQuest quest = MapleQuest.getInstance(1465);
+        MapleQuestStatus qs = this.c.getPlayer().getQuest(quest);
+
+        if (quest != null && qs.getStatus() != 2) {
+            qs.setStatus((byte) 2);
+            this.c.getPlayer().updateQuest(this.c.getPlayer().getQuest(quest), true);
+        }
+    }
+
+    public void gainCorebit(int g) {
+        getPlayer().setKeyValue(1477, "count", String.valueOf(getPlayer().getKeyValue(1477, "count") + g));
+    }
+
+    public long getCorebit() {
+        return getPlayer().getKeyValue(1477, "count");
+    }
+
+    public void setDeathcount(byte de) {
+        c.getPlayer().setDeathCount(de);
+        c.getSession().writeAndFlush(CField.getDeathCount(de));
+    }
+
+    public void UserSoulHandle(int selection) {
+        for (List<Pair<Integer, MapleCharacter>> souls : (Iterable<List<Pair<Integer, MapleCharacter>>>) this.c.getChannelServer().getSoulmatch()) {
+            this.c.getPlayer().dropMessageGM(6, "1");
+            if (souls.size() == 1 && ((Integer) ((Pair) souls.get(0)).left).intValue() == 0 && selection == 0) {
+                souls.add(new Pair(Integer.valueOf(selection), this.c.getPlayer()));
+                this.c.getPlayer().dropMessageGM(6, "2 : " + souls.size());
+                this.c.getSession().writeAndFlush(CWvsContext.onUserSoulMatching(selection, souls));
+                return;
+            }
+        }
+        this.c.getPlayer().dropMessageGM(6, "3");
+        List<Pair<Integer, MapleCharacter>> chrs = new ArrayList<>();
+        chrs.add(new Pair(Integer.valueOf(selection), this.c.getPlayer()));
+        this.c.getSession().writeAndFlush(CWvsContext.onUserSoulMatching(selection, chrs));
+        if (selection == 0) {
+            this.c.getPlayer().dropMessageGM(6, "4");
+            this.c.getChannelServer().getSoulmatch().add(chrs);
+        }
+    }
+
+    public void startExpRate(int hour) {
+        this.c.getSession().writeAndFlush(CField.getClock(hour * 60 * 60));
+
+        ExpRating();
+
+        Timer.MapTimer.getInstance().schedule(new Runnable() {
+            public void run() {
+                NPCConversationManager.this.warp(1000000);
+            }
+        }, (hour * 60 * 60 * 1000));
+    }
+
+    public void ExpRating() {
+        Timer.BuffTimer.getInstance().schedule(new Runnable() {
+            public void run() {
+                if (NPCConversationManager.this.c.getPlayer().getMapId() == 925080000) {
+                    NPCConversationManager.this.c.getPlayer().gainExp(GameConstants.getExpNeededForLevel(NPCConversationManager.this.c.getPlayer().getLevel()) / 100L, true, false, false);
+                    NPCConversationManager.this.ExpRating();
+                } else {
+                    NPCConversationManager.this.stopExpRate();
+                }
+            }
+        }, 6000L);
+    }
+
+    public void stopExpRate() {
+        c.getSession().writeAndFlush(CField.getClock(-1));
+    }
+
+    public int getFrozenMobCount() {
+        return getPlayer().getLinkMobCount();
+    }
+
+    public void addFrozenMobCount(int a1) {
+        int val = (getFrozenMobCount() + a1 > 9999) ? 9999 : (getFrozenMobCount() + a1);
+
+        getPlayer().setLinkMobCount(val);
+        getClient().getSession().writeAndFlush(SLFCGPacket.FrozenLinkMobCount(val));
+        getClient().getSession().writeAndFlush(SLFCGPacket.OnYellowDlg(1052230, 3500, "#face1# Î™¨Ïä§ÌÑ∞ÏàòÎ•º Ï∂©Ï†ÑÌñàÏñ¥!", ""));
+    }
+
+    public long getStarDustCoin(int type) {
+        return getPlayer().getStarDustCoin(type);
+    }
+
+    public void addStarDustCoin(int type, int a) {
+        getPlayer().AddStarDustCoin(type, a);
+    }
+
+    public void openWeddingPresent(int type, int gender) {
+        MarriageDataEntry dataEntry = getMarriageAgent().getDataEntry();
+
+        if (dataEntry != null) {
+            if (type == 1) {
+                List<String> wishes;
+                c.getPlayer().setWeddingGive(gender);
+
+                if (gender == 0) {
+                    wishes = dataEntry.getGroomWishList();
+                } else {
+                    wishes = dataEntry.getBrideWishList();
+                }
+                c.getSession().writeAndFlush(CWvsContext.showWeddingWishGiveDialog(wishes));
+
+            } else if (type == 2) {
+                List<Item> gifts;
+                if (gender == 0) {
+                    gifts = dataEntry.getGroomPresentList();
+                } else {
+                    gifts = dataEntry.getBridePresentList();
+                }
+                c.getSession().writeAndFlush(CWvsContext.showWeddingWishRecvDialog(gifts));
+            }
+        }
+    }
+
+    public void ShowDreamBreakerRanking() {
+        c.getSession().writeAndFlush(SLFCGPacket.DreamBreakerRanking(this.c.getPlayer().getName()));
+    }
+
+    public void gainDonationSkill(int skillid) {
+        if (c.getPlayer().getKeyValue(201910, "DonationSkill") < 0) {
+            c.getPlayer().setKeyValue(201910, "DonationSkill", "0");
+        }
+
+        MapleDonationSkill dskill = MapleDonationSkill.getBySkillId(skillid);
+        if (dskill != null && (c.getPlayer().getKeyValue(201910, "DonationSkill") & dskill.getValue()) == 0) {
+            int data = (int) c.getPlayer().getKeyValue(201910, "DonationSkill");
+            data |= dskill.getValue();
+            c.getPlayer().setKeyValue(201910, "DonationSkill", data + "");
+            SkillFactory.getSkill(skillid).getEffect(SkillFactory.getSkill(skillid).getMaxLevel()).applyTo(c.getPlayer(), 0);
+        }
+    }
+
+    public boolean hasDonationSkill(int skillid) {
+        if (c.getPlayer().getKeyValue(201910, "DonationSkill") < 0) {
+            c.getPlayer().setKeyValue(201910, "DonationSkill", "0");
+        }
+
+        MapleDonationSkill dskill = MapleDonationSkill.getBySkillId(skillid);
+        if (dskill == null) {
+            return false;
+        } else if ((c.getPlayer().getKeyValue(201910, "DonationSkill") & dskill.getValue()) == 0) {
+            return false;
+        }
+        return true;
+    }
+
+    public String getItemNameById(int itemid) {
+        String itemname = "";
+        for (Pair<Integer, String> itemPair : (Iterable<Pair<Integer, String>>) MapleItemInformationProvider.getInstance().getAllItems()) {
+            if (((Integer) itemPair.getLeft()).intValue() == itemid) {
+                itemname = (String) itemPair.getRight();
+            }
+        }
+        return itemname;
+    }
+
+    public long getFWolfMeso() {
+        if (this.c.getPlayer().getFWolfAttackCount() > 15) {
+            long BaseMeso = 10000000L;
+            long FWolfMeso = 0L;
+
+            if (this.c.getPlayer().getFWolfDamage() >= 900000000000L) {
+                FWolfMeso = BaseMeso * 100L;
+            } else {
+                float ratio = (float) (900000000000L / this.c.getPlayer().getFWolfDamage() * 100L);
+
+                FWolfMeso = (long) ((float) BaseMeso * ratio);
+            }
+            return FWolfMeso;
+        }
+        return (100000 * this.c.getPlayer().getFWolfAttackCount());
+    }
+
+    public long getFWolfEXP() {
+        long expneed = GameConstants.getExpNeededForLevel(this.c.getPlayer().getLevel());
+        long exp = 0L;
+
+        if (this.c.getPlayer().getFWolfDamage() >= 37500000000000L) {
+            exp = (long) (expneed * 0.25D);
+        } else if (this.c.getPlayer().getFWolfDamage() >= 6250000000000L) {
+            exp = (long) (expneed * 0.2D);
+        } else if (this.c.getPlayer().getFWolfDamage() >= 625000000000L) {
+            exp = (long) (expneed * 0.15D);
+        } else {
+            exp = (long) (expneed * 0.1D);
+        }
+        if (this.c.getPlayer().isFWolfKiller()) {
+            exp = (long) (expneed * 0.5D);
+        }
+        return exp;
+    }
+
+    public void showDimentionMirror() {
+        c.getSession().writeAndFlush(CField.dimentionMirror(ServerConstants.mirrors));
+    }
+
+    public void warpNettPyramid(boolean hard) {
+        MapleNettPyramid.warpNettPyramid(this.c.getPlayer(), hard);
+    }
+
+
+    public void startDamageMeter() {
+        c.getPlayer().setDamageMeter(0);
+        MapleMap map = c.getChannelServer().getMapFactory().getMap(120000102);
+        map.killAllMonsters(false);
+        warp(120000102);
+        c.getSession().writeAndFlush(CField.getClock(30));
+        c.getSession().writeAndFlush(SLFCGPacket.OnYellowDlg(9063152, 3000, "20Ï¥àÏóê ÌóàÏàòÏïÑÎπÑÍ∞Ä ÏÜåÌôòÎêòÍ≥† Ï∏°Ï†ïÏù¥ ÏãúÏûëÎê©ÎãàÎã§.", ""));
+
+        MapleMonster mob = MapleLifeFactory.getMonster(9305653);
+        Timer.MapTimer.getInstance().schedule(new Runnable() {
+            @Override
+            public void run() {
+                map.spawnMonsterOnGroundBelow(mob, new Point(-140, 150));
+            }
+        }, 5 * 1000);
+        Timer.MapTimer.getInstance().schedule(new Runnable() {
+            @Override
+            public void run() {
+                c.getPlayer().dropMessage(5, "ÎàÑÏ†Å Îç∞ÎØ∏ÏßÄ : " + c.getPlayer().getDamageMeter());
+                updateDamageMeter(c.getPlayer(), c.getPlayer().getDamageMeter());
+                warp(123456788);
+            }
+        }, 25 * 1000);
+    }
+
+    public static void updateDamageMeter(MapleCharacter chr, long damage) {
         try {
-            Connection con = MYSQL.getConnection();
-            PreparedStatement ps = con.prepareStatement("DELETE FROM damagerank WHERE cid = ?");
-            ps.setInt(1, cid);
+            Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement("DELETE FROM damagemeter WHERE cid = ?");
+            ps.setInt(1, chr.getId());
             ps.executeUpdate();
             ps.close();
-            ps = con.prepareStatement("INSERT INTO damagerank(cid, name, damage) VALUES (?, ?, ?)");
-            ps.setInt(1, cid);
-            ps.setString(2, name);
+            ps = con.prepareStatement("INSERT INTO damagemeter(cid, name, damage) VALUES (?, ?, ?)");
+            ps.setInt(1, chr.getId());
+            ps.setString(2, chr.getName());
             ps.setLong(3, damage);
             ps.executeUpdate();
             ps.close();
             con.close();
+            chr.setDamageMeter(0);
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
     }
 
-    public String DamageMeterRank() {
-        String text = "#b";
+    public String getDamageMeterRank(int limit) {
+        String text = "#fnÎÇòÎàîÍ≥†Îîï Extrabold##fs13# ";
         try {
-            Connection con = MYSQL.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM damagerank ORDER BY damage DESC LIMIT 10");
+            Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM damagemeter ORDER BY damage DESC LIMIT " + limit);
             ResultSet rs = ps.executeQuery();
             int i = 1;
             while (rs.next()) {
-                text += "#r#e" + (i != 10 ? "0" : "") + i + "#n#b¿ß #r¥–≥◊¿”#b " + rs.getString("name") + " #r¥©¿˚ µ•πÃ¡ˆ#b " + Comma(rs.getLong("damage")) + "\r\n";
+                text += (i != 10 ? " " : "") + i + "ÏúÑ " + rs.getString("name") + " #r" + Comma(rs.getLong("damage")) + "#e\r\n";
                 i++;
             }
             rs.close();
@@ -3641,7 +3852,30 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
             ex.printStackTrace();
         }
         if (text.equals("#b")) {
-            text = "#ræ∆¡˜±Ó¡ˆ µÙ∑Æ πÃ≈Õ±‚∏¶ ∞ªΩ≈«— ¿Ø¿˙∞° æ¯Ω¿¥œ¥Ÿ.";
+            text = "#rÏïÑÏßÅÍπåÏßÄ ÎîúÎüâ ÎØ∏ÌÑ∞Í∏∞Î•º Í∞±Ïã†Ìïú Ïú†Ï†ÄÍ∞Ä ÏóÜÏäµÎãàÎã§.";
+        }
+        return text;
+    }
+
+    public String DamageMeterRank() {
+        String text = "#b";
+        try {
+            Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM damagemeter ORDER BY damage DESC LIMIT 10");
+            ResultSet rs = ps.executeQuery();
+            int i = 1;
+            while (rs.next()) {
+                text += "#r#e" + (i != 10 ? "0" : "") + i + "#n#bÏúÑ #rÎãâÎÑ§ÏûÑ#b " + rs.getString("name") + " #rÎàÑÏ†Å Îç∞ÎØ∏ÏßÄ#b " + Comma(rs.getLong("damage")) + "\r\n";
+                i++;
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        if (text.equals("#b")) {
+            text = "#rÏïÑÏßÅÍπåÏßÄ ÎîúÎüâ ÎØ∏ÌÑ∞Í∏∞Î•º Í∞±Ïã†Ìïú Ïú†Ï†ÄÍ∞Ä ÏóÜÏäµÎãàÎã§.";
         }
         return text;
     }
@@ -3649,8 +3883,8 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
     public boolean isDamageMeterRanker(int cid) {
         boolean value = false;
         try {
-            Connection con = MYSQL.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM damagerank ORDER BY damage DESC LIMIT 1");
+            Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM damagemeter ORDER BY damage DESC LIMIT 1");
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 if (rs.getInt("cid") == cid) {
@@ -3666,11 +3900,24 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         return value;
     }
 
+
+    public String Comma(long r) {
+        String re = "";
+        for (int i = String.valueOf(r).length(); i >= 1; i--) {
+            if (i != 1 && i != String.valueOf(r).length() && i % 3 == 0) {
+                re += ",";
+            }
+            re += String.valueOf(r).charAt(i - 1);
+
+        }
+        return new StringBuilder().append(re).reverse().toString();
+    }
+
     public int getDamageMeterRankerId() {
         int value = -1;
         try {
-            Connection con = MYSQL.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM damagerank ORDER BY damage DESC LIMIT 1");
+            Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM damagemeter ORDER BY damage DESC LIMIT 1");
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 value = rs.getInt("cid");
@@ -3684,750 +3931,606 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         return value;
     }
 
-	public void gainItemAllStat(int itemid, short quantity, short allstat)
-	{
-		gainItemAllStat(itemid, quantity, allstat, (short) -1);
-	}
-
-	public void gainItemAllStat(int itemid, short quantity, short allstat, short wmtk)
-	{
-		Equip equip = new Equip(itemid, quantity, (byte) 0);
-		equip.setStr(allstat);
-		equip.setDex(allstat);
-		equip.setInt(allstat);
-		equip.setLuk(allstat);
-		if (wmtk != -1)
-		{
-			equip.setWatk(wmtk);
-			equip.setMatk(wmtk);
-		}
-		InventoryManipulator.addFromDrop(c, equip, true);
-	}
-
-	public void gainItemAllStat(int itemid, short quantity, short allstat, short wmtk, int up)
-	{
-		Equip equip = new Equip(itemid, quantity, (byte) 0);
-		equip.setStr(allstat);
-		equip.setDex(allstat);
-		equip.setInt(allstat);
-		equip.setLuk(allstat);
-		equip.setUpgradeSlots((byte) up);
-		if (wmtk != -1)
-		{
-			equip.setWatk(wmtk);
-			equip.setMatk(wmtk);
-		}
-		InventoryManipulator.addFromDrop(c, equip, true);
-	}
-
-	public void gainPCTime(long t)
-	{
-		getPlayer().gainPT(System.currentTimeMillis() + (t * 1000));
-	}
-
-	public void gainItemAllStat(int itemid, short quantity, short allstat, short wmtk, byte ups, byte level)
-	{
-		Equip equip = new Equip(itemid, quantity, (byte) 0);
-		equip.setStr(allstat);
-		equip.setDex(allstat);
-		equip.setInt(allstat);
-		equip.setLuk(allstat);
-		if (ups != -1)
-		{
-			equip.setUpgradeSlots(ups);
-		}
-		if (wmtk != -1)
-		{
-			equip.setWatk(wmtk);
-			equip.setMatk(wmtk);
-		}
-		if (level != -1)
-		{
-			equip.setItemLevel((byte) (equip.getItemLevel() - level));
-		}
-		InventoryManipulator.addFromDrop(c, equip, true);
-	}
-
-	public void gainItemAllStat(int itemid, short quantity, short allstat, short wmtk, byte ups, byte level, byte ign,
-			byte boss)
-	{
-		Equip equip = new Equip(itemid, quantity, (byte) 0);
-		equip.setStr(allstat);
-		equip.setDex(allstat);
-		equip.setInt(allstat);
-		equip.setLuk(allstat);
-		if (ign != -1)
-		{
-			equip.setIgnoreWdef(ign);
-		}
-		if (boss != -1)
-		{
-			equip.setBossDamage(boss);
-		}
-		if (ups != -1)
-		{
-			equip.setUpgradeSlots(ups);
-		}
-		if (wmtk != -1)
-		{
-			equip.setWatk(wmtk);
-			equip.setMatk(wmtk);
-		}
-		if (level != -1)
-		{
-			equip.setItemLevel((byte) (equip.getItemLevel() - level));
-		}
-		InventoryManipulator.addFromDrop(c, equip, true);
-	}
-
-	public boolean isNamedTimeOver()
-	{
-		String[] ret = Named.namedTime.replaceAll("∫–", "").replaceAll("√ ", "").split(" ");
-		int v1 = Integer.parseInt(ret[0]) * (1000 * 60);
-		int v2 = Integer.parseInt(ret[1]) * 1000;
-		return (v1 + v2) <= 40000;
-	}
-
-    public void installNamed(int RC, int seletion)
-    {
-        if (isNamedTimeOver())
-        {
-            sendOk("¿Ãπ¯ »∏¬˜ø° πË∆√ «“ ºˆ ¿÷¥¬ Ω√∞£¿ª √ ∞˙ «œø¥Ω¿¥œ¥Ÿ.");
-            dispose();
-            return;
-        }
-        if (getPlayer().getMapId() != 10000 && RC < 10000)
-        {
-            sendOk("10000¿Ã«œ »ƒø¯∆˜¿Œ∆Æ¥¬ πË∆√¿Ã ∫“∞°¥…«’¥œ¥Ÿ.");
-            dispose();
-            return;
-        }
-        Named.install_named_char(getPlayer().getId(), 0, 0, (int) (RC * (seletion == 0 || seletion == 1 ? 1.9 : seletion == 2 || seletion == 3 || seletion == 4 || seletion == 5 ? 1.9 : seletion == 6 || seletion == 7 || seletion == 8 || seletion == 9 ? 3.6 : 0)), seletion, Named.nextDate + "-" + Named.nextTime);
-        sendOk("πË∆√¿ª øœ∑· «œø¥Ω¿¥œ¥Ÿ. ¡¡¿∫ ∞·∞˙∞° ≥™ø¿∏È ¡¡∞⁄≥◊ø‰");
-        loseRC(RC);
-        dispose();
+    public final String getDiscord() {
+        return c.getDiscord();
     }
 
-	public String Comma(long r)
-	{
-		if (true)
-		{
-			return String.valueOf(r);
-		}
-		String re = "";
-		for (int i = String.valueOf(r).length(); i >= 1; i--)
-		{
-			if (i != 1 && i % 3 == 1)
-			{
-				re += ",";
-			}
-			re += String.valueOf(r).charAt(i - 1);
-
-		}
-		return new StringBuilder().append(re).reverse().toString();
-	}
-
-	public void setJagure(int mobid)
-	{
-		getPlayer().setKeyValue2("CapturedJaguar", mobid);
-		getPlayer().send(MainPacketCreator.updateJaguar(getPlayer()));
-	}
-
-	public int getConnect()
-	{
-		return WorldConnected.getConnectedi();
-	}
-
-	public void snedPacket(short header, String hex)
-	{
-		WritingPacket p = new WritingPacket();
-		p.writeShort(header);
-		p.write(HexTool.getByteArrayFromHexString(hex));
-		c.getSession().writeAndFlush(p.getPacket());
-	}
-
-	public String getCashEquipList()
-	{
-		String text = "";
-		for (IItem item : getPlayer().getInventory(MapleInventoryType.EQUIPPED).list())
-		{
-			if (ItemInformation.getInstance().getEquipStats(item.getItemId()).get("cash") > 0)
-			{
-				text += "#L" + item.getPosition() + "# #i" + item.getItemId() + "# #t" + item.getItemId() + "##l\r\n";
-			}
-		}
-		return text;
-	}
-
-	public void renewCashPotential(short pos)
-	{
-		Equip item = (Equip) getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem(pos);
-		if (item != null)
-		{
-			if (item.getState() != 0)
-			{
-				item.renewPotential();
-			}
-			else
-			{
-				item.setState((byte) 1);
-			}
-			if (item.getState() == 1)
-			{ // ∑πæÓ
-				int rand = Randomizer.nextInt(100);
-				if (rand < 5)
-				{ // ø°«»
-					item.setState((byte) 18);
-				}
-				else if (rand < 3)
-				{ // ¿Ø¥œ≈©
-					item.setState((byte) 19);
-				}
-				else
-				{
-					item.setState((byte) 17);
-				}
-			}
-			else
-			{
-				item.setState((byte) (item.getState() + 16));
-			}
-			int level = item.getState() - 16;
-			int temp = level;
-			int a = 0;
-			while (temp > 1)
-			{
-				if (temp > 1)
-				{
-					--temp;
-					++a;
-				}
-			}
-			item.setPotential1(potential(level, true, item.getItemId()));
-			item.setPotential2(potential(level, false, item.getItemId()));
-			getPlayer().getMap().broadcastMessage(MainPacketCreator.showCubeEffect(getPlayer().getId(), 2430091));
-			getPlayer().forceReAddItem(item, MapleInventoryType.EQUIPPED);
-		}
-	}
-
-	public String getHairName(int code)
-	{
-		return ItemInformation.getInstance().getName(code);
-	}
-
-	public int getManneHair(int slot)
-	{
-		String qd = c.getPlayer().getInfoQuest(26544);
-		int hair = Integer.parseInt(qd.split("h" + slot + "=")[1].split(";")[0]);
-		return hair;
-	}
-
-	public void updateManne(int slot, boolean update)
-	{
-		String qd = c.getPlayer().getInfoQuest(26544);
-		String data = "h" + slot + "=" + c.getPlayer().getHair();
-		int hair = Integer.parseInt(qd.split("h" + slot + "=")[1].split(";")[0]);
-		if (update)
-		{
-			qd = qd.replaceAll("h" + slot + "=" + hair, data);
-		}
-		final MapleQuestStatus oldStatus = c.getPlayer().getQuest(MapleQuest.getInstance(26544));
-		final MapleQuestStatus newStatus = new MapleQuestStatus(MapleQuest.getInstance(26544), (byte) 1, 0);
-		newStatus.setCompletionTime(oldStatus.getCompletionTime());
-		newStatus.setForfeited(oldStatus.getForfeited());
-		c.getPlayer().updateQuest(newStatus);
-		c.getPlayer().updateInfoQuest(26544, qd);
-		c.sendPacket(MainPacketCreator.OnMannequinResult(slot, update));
-		c.sendPacket(MainPacketCreator.SkillUseResult((byte) 0));
-		c.sendPacket(MainPacketCreator.resetActions(c.getPlayer()));
-	}
-
-	public void resetMannequine()
-	{
-		c.sendPacket(MainPacketCreator.OnMannequinResult(c.getPlayer().selMannequineSlot, false));
-	}
-
-	public void sendTalk(String text, byte type, byte lastMsg, byte p, int npcidd, boolean prev, boolean next,
-			int seconds)
-	{
-
-		if (this.lastMsg > -1)
-		{
-			return;
-		}
-		NPCTalk t = new NPCTalk(type, id, lastMsg);
-		t.setText(text);
-		t.setParam(p);
-		t.setNpcIDD(npcidd);
-		t.setPrev(prev);
-		t.setNext(next);
-		t.setSeconds(seconds);
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		this.lastMsg = lastMsg;
-	}
-
-	public void sendTalk(String text, byte type, byte lastMsg, byte p, byte color, int npcidd, boolean prev,
-			boolean next, int seconds)
-	{
-
-		if (this.lastMsg > -1)
-		{
-			return;
-		}
-		NPCTalk t = new NPCTalk(type, id, lastMsg, p, color);
-		t.setText(text);
-		t.setNpcIDD(npcidd);
-		t.setPrev(prev);
-		t.setNext(next);
-		t.setSeconds(seconds);
-		c.getSession().writeAndFlush(MainPacketCreator.getNPCTalk(t));
-		this.lastMsg = lastMsg;
-	}
-
-	public void zeroWeaponUpgrade()
-	{
-		IEquip beta = (IEquip) c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short) -10);
-		IEquip alpha;
-		int betatype = -10;
-		int alphatype = -11;
-		alpha = (IEquip) c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short) -11);
-		Equip nalphatype = (Equip) alpha;
-		Equip nbetatype = (Equip) beta;
-		nbetatype.setItemId(nbetatype.getItemId() + 1);
-		nalphatype.setItemId(nalphatype.getItemId() + 1);
-		if (nbetatype.getItemId() == 1562001)
-		{
-			nalphatype.setWatk((short) 100);
-
-			nbetatype.setWatk((short) 102);
-			nbetatype.setWdef((short) 80);
-			nbetatype.setMdef((short) 35);
-			nbetatype.addUpgradeSlots((byte) 7);
-		}
-		else if (nbetatype.getItemId() == 1562002)
-		{
-			nalphatype.addWatk((short) 3); // 103
-
-			nbetatype.addWatk((short) 3); // 105
-			nbetatype.addWdef((short) 10); // 90
-			nbetatype.addMdef((short) 5); // 40
-		}
-		else if (nbetatype.getItemId() == 1562003)
-		{
-			nalphatype.addWatk((short) 2); // 105
-
-			nbetatype.addWatk((short) 2); // 107
-			nbetatype.addWdef((short) 10); // 100
-			nbetatype.addMdef((short) 5); // 45
-		}
-		else if (nbetatype.getItemId() == 1562004)
-		{
-			nalphatype.addWatk((short) 7); // 112
-
-			nbetatype.addWatk((short) 7); // 114
-			nbetatype.addWdef((short) 10); // 110
-			nbetatype.addMdef((short) 5); // 50
-		}
-		else if (nbetatype.getItemId() == 1562005)
-		{
-			nalphatype.addStr((short) 8);
-			nalphatype.addDex((short) 4);
-			nalphatype.addWatk((short) 5); // 117
-			nalphatype.addAcc((short) 50); // 50
-			nalphatype.addUpgradeSlots((byte) 1);
-
-			nbetatype.addStr((short) 8);
-			nbetatype.addDex((short) 4);
-			nbetatype.addWatk((short) 7); // 121
-			nbetatype.addWdef((short) 10); // 120
-			nbetatype.addMdef((short) 5); // 55
-			nbetatype.addAcc((short) 50); // 50
-			nbetatype.addUpgradeSlots((byte) 1);
-		}
-		else if (nbetatype.getItemId() == 1562006)
-		{
-			nalphatype.addStr((short) 27); // 35
-			nalphatype.addDex((short) 16); // 20
-			nalphatype.addWatk((short) 18); // 135
-			nalphatype.addAcc((short) 50); // 100
-
-			nbetatype.addStr((short) 27); // 35
-			nbetatype.addDex((short) 16); // 20
-			nbetatype.addWatk((short) 18); // 139
-			nbetatype.addWdef((short) 10); // 130
-			nbetatype.addMdef((short) 5); // 60
-			nbetatype.addAcc((short) 50); // 100
-		}
-		else if (nbetatype.getItemId() == 1562007)
-		{
-			nalphatype.addStr((short) 5); // 40
-			nalphatype.addDex((short) 20); // 40
-			nalphatype.addWatk((short) 34); // 169
-			nalphatype.addAcc((short) 20); // 120
-			nalphatype.addBossDamage((byte) 30); // 30
-			nalphatype.addIgnoreWdef((short) 10); // 10
-
-			nbetatype.addStr((short) 5); // 40
-			nbetatype.addDex((short) 20); // 40
-			nbetatype.addWatk((short) 34); // 174
-			nbetatype.addWdef((short) 20); // 150
-			nbetatype.addMdef((short) 10); // 70
-			nbetatype.addAcc((short) 20); // 120
-			nbetatype.addBossDamage((byte) 30); // 30
-			nbetatype.addIgnoreWdef((short) 10); // 10
-		}
-		c.send(ZeroSkill.WeaponLevelUp());
-		c.send(MainPacketCreator.addInventorySlot(MapleInventoryType.EQUIP, nalphatype));
-		c.send(MainPacketCreator.addInventorySlot(MapleInventoryType.EQUIP, nbetatype));
-	}
-
-	public void setInnerAbility(int level)
-	{
-		if (level >= 30)
-		{
-			InnerSkillValueHolder isvh = InnerAbillity.getInstance().renewSkill(0, -1);
-			c.getPlayer().getInnerSkills().add(isvh);
-			c.getPlayer().changeSkillLevel(SkillFactory.getSkill(isvh.getSkillId()), isvh.getSkillLevel(),
-					isvh.getSkillLevel());
-		}
-		else if (level >= 60)
-		{
-			InnerSkillValueHolder isvh = InnerAbillity.getInstance().renewSkill(Randomizer.rand(0, 2), -1);
-			c.getPlayer().getInnerSkills().add(isvh);
-			c.getPlayer().changeSkillLevel(SkillFactory.getSkill(isvh.getSkillId()), isvh.getSkillLevel(),
-					isvh.getSkillLevel());
-		}
-		else if (level >= 100)
-		{
-			InnerSkillValueHolder isvh = InnerAbillity.getInstance().renewSkill(Randomizer.rand(1, 3), -1);
-			c.getPlayer().getInnerSkills().add(isvh);
-			c.getPlayer().changeSkillLevel(SkillFactory.getSkill(isvh.getSkillId()), isvh.getSkillLevel(),
-					isvh.getSkillLevel());
-		}
-	}
-
-	public void setInnerStats()
-	{
-		c.getPlayer().innerLevelUp();
-	}
-        
-	public String searchCashItem(String t)
-	{
-		String ret = "";
-		for (Pair<Integer, String> item : ItemInformation.getInstance().getAllEquips())
-		{
-			if (item.right.contains(t))
-			{
-				if (ItemInformation.getInstance().isCash(item.left))
-				{
-					ret += "#b#L" + item.left + "# #i" + item.left + "##t" + item.left + "##l\r\n";
-				}
-			}
-		}
-		return ret;
-	}
-
-	public void setDeathCount(int i)
-	{
-		c.getPlayer().bossDeathCount = i;
-		c.sendPacket(MainPacketCreator.getDeathCount(c.getPlayer().bossDeathCount));
-	}
-
-	public long parseLong(String t)
-	{
-		return t == null ? -1 : Long.parseLong(t);
-	}
-
-	public String updateEquipStat(byte pos, int nextE)
-	{
-		Equip eq = (Equip) getPlayer().getInventory(MapleInventoryType.EQUIP).getItem(pos);
-		String t = "√ ø˘ ∞≠»≠∑Œ ∫Ø»≠µ» Ω∫≈» ¿‘¥œ¥Ÿ.\r\n#i" + eq.getItemId() + "##b#t" + eq.getItemId() + "##k (#b" + nextE
-				+ "∞≠#k)\r\n\r\n";
-		if (eq.getStr() > 0)
-		{
-			t += "STR : #e" + eq.getStr() + "#n -> ";
-			eq.setStr((short) (eq.getStr() + Randomizer.rand(10, 20)));
-			t += "#r#e" + eq.getStr() + "#n#k\r\n";
-		}
-		if (eq.getDex() > 0)
-		{
-			t += "DEX : #e" + eq.getDex() + "#n -> ";
-			eq.setDex((short) (eq.getDex() + Randomizer.rand(10, 20)));
-			t += "#r#e" + eq.getDex() + "#n#k\r\n";
-		}
-		if (eq.getInt() > 0)
-		{
-			t += "INT : #e" + eq.getInt() + "#n -> ";
-			eq.setInt((short) (eq.getInt() + Randomizer.rand(10, 20)));
-			t += "#r#e" + eq.getInt() + "#n#k\r\n";
-		}
-		if (eq.getLuk() > 0)
-		{
-			t += "LUK : #e" + eq.getLuk() + "#n -> ";
-			eq.setLuk((short) (eq.getLuk() + Randomizer.rand(10, 20)));
-			t += "#r#e" + eq.getLuk() + "#n#k\r\n";
-		}
-		if (eq.getWatk() > 0)
-		{
-			t += "∞¯∞›∑¬ : #e" + eq.getWatk() + "#n -> ";
-			eq.setWatk((short) (eq.getWatk() + Randomizer.rand(10, 20)));
-			t += "#r#e" + eq.getWatk() + "#n#k\r\n";
-		}
-		if (eq.getMatk() > 0)
-		{
-			t += "∏∂∑¬ : #e" + eq.getMatk() + "#n -> ";
-			eq.setMatk((short) (eq.getMatk() + Randomizer.rand(10, 20)));
-			t += "#r#e" + eq.getMatk() + "#n#k\r\n";
-		}
-		if (eq.getHp() > 0)
-		{
-			t += "HP : #e" + eq.getHp() + "#n -> ";
-			eq.setHp((short) (eq.getHp() + Randomizer.rand(10, 20)));
-			t += "#r#e" + eq.getHp() + "#n#k\r\n";
-		}
-		if (eq.getMp() > 0)
-		{
-			t += "MP : #e" + eq.getMp() + "#n -> ";
-			eq.setMp((short) (eq.getMp() + Randomizer.rand(10, 20)));
-			t += "#r#e" + eq.getMp() + "#n#k\r\n";
-		}
-		eq.setOwner(nextE + "∞≠");
-		getPlayer().forceReAddItem(eq, MapleInventoryType.EQUIP);
-		return t;
-	}
-    public void moneyBuff(int skillid) {
-        String value[] = {
-            "rc_shot",
-            "stance",
-            "holysymbol",
-            "SharpEyes",
-            "PartyBooster",
-            "ShadowPartner",
-            "TrifleWorm",
-            "MagicArrow",
-            "noir",
-            "bling",
-            "kinesis"
-        };
-
-        int moneybuff[][] = {
-            {5321054, 70000},
-            {80001140, 10000},
-            {2311003, 30000},
-            {3121002, 30000},
-            {5121009, 30000},
-            {4331002, 30000},
-            {13101022, 20000},
-            {3100010, 20000},
-            {24120002, 20000},
-            {24100003, 20000},
-            {142110011, 20000}};
-        if (getPlayer().getRC() < moneybuff[skillid][1]) {
-            getClient().getSession().writeAndFlush(UIPacket.greenShowInfo("º±≈√«œΩ≈ [" + SkillFactory.getSkillName(moneybuff[skillid][0]) + "] πˆ«¡¥¬ »ƒø¯∆˜¿Œ∆Æ∞° ∫Œ¡∑«œø© ±∏∏≈ «œΩ« ºˆ æ¯Ω¿¥œ¥Ÿ..."));
-            dispose();
-            return;
-        }
-        if (getPlayer().getKeyValue(value[skillid]) != null) {
-            getClient().getSession().writeAndFlush(UIPacket.greenShowInfo("º±≈√«œΩ≈ [" + SkillFactory.getSkillName(moneybuff[skillid][0]) + "] πˆ«¡¥¬ ¿ÃπÃ ±∏∏≈«œø© ±∏∏≈ «œΩ« ºˆ æ¯Ω¿¥œ¥Ÿ..."));
-            dispose();
-            return;
-        }
-        getPlayer().setKeyValue(value[skillid], "ture");
-        getPlayer().gainRC(moneybuff[skillid][1]);
-        getPlayer().unlockMaxDamage();
-        getClient().getSession().writeAndFlush(UIPacket.greenShowInfo("º±≈√«œΩ≈ [" + SkillFactory.getSkillName(moneybuff[skillid][0]) + "] πˆ«¡∏¶ ±∏∏≈ øœ∑· «œø¥Ω¿¥œ¥Ÿ.."));
-        dispose();
-    }  
-
-	public String getEnhance(String t)
-	{
-		return !t.contains("∞≠") ? "0∞≠" : t;
-	}
-
-	public int getEnhanceI(String t)
-	{
-		return Integer.parseInt(getEnhance(t).replaceAll("∞≠", ""));
-	}
-
-	public void BuyPET(int Petitem)
-	{
-		int uniqueid = Petitem;
-		Item itemr = new Item(Petitem, (short) 1, (short) 1, (short) 0);
-		itemr.setExpiration(2475606994921L);
-		final MaplePet pet = MaplePet.createPet(Petitem, itemr.getExpiration());
-		itemr.setPet(pet);
-		itemr.setUniqueId(pet.getUniqueId());
-		InventoryManipulator.addbyItem(c, itemr);
-		InventoryManipulator.addFromDrop(getClient(), itemr, false);
-	}
-
-	public int getAndroidGender()
-	{
-		int itemid = c.getPlayer().getAndroid().getItemId();
-		return ItemInformation.getInstance().getAndroidBasicSettings(ItemInformation.getInstance().getAndroid(itemid))
-				.getGender();
-	}
-
-	public int getConnectedPlayers()
-	{
-		int n = 0;
-		for (ChannelServer cserv : ChannelServer.getAllInstances())
-		{
-			for (MapleCharacter name : cserv.getPlayerStorage().getAllCharacters())
-			{
-				n++;
-			}
-		}
-		return n;
+    public void Entertuto(boolean black) {
+        Entertuto(black, true, false);
     }
-            public void CollectivelyShop(int shopid, int npcid) {
-        int shoplist[] = {
-            // ∏µÁ ¡˜æ˜ ªÛ¡° Ω√¿€
 
-            10021, // ¿¸ªÁ - ∏¿⁄ ªÛ¡°
-            10018, // ¿¸ªÁ - ªÛ¿« ªÛ¡°
-            10017, // ¿¸ªÁ - «œ¿« ªÛ¡°
-            10016, // ¿¸ªÁ - Ω≈πﬂ ªÛ¡°
-            10019, // ¿¸ªÁ - ¿¸Ω≈ ªÛ¡°
-            10020, // ¿¸ªÁ - ¿Â∞© ªÛ¡°
-            10022, // ¿¸ªÁ - πÊ∆– ªÛ¡°
-
-            3000136, // ¿¸ªÁ - µ•Ω∫∆‰∂Ûµµ ªÛ¡°
-            10023, // ¿¸ªÁ - «—º’ µµ≥¢ ªÛ¡°
-            10024, // ¿¸ªÁ - µŒº’ µµ≥¢ ªÛ¡°
-            10025, // ¿¸ªÁ - «—º’ µ–±‚ ªÛ¡°
-            10026, // ¿¸ªÁ - µŒº’ µ–±‚ ªÛ¡°
-            10027, // ¿¸ªÁ - «—º’∞À ªÛ¡°
-            10028, // ¿¸ªÁ - µŒº’∞À ªÛ¡°
-            10029, // ¿¸ªÁ - √¢
-            10030, // ¿¸ªÁ - ∆˙æœ
-
-            10003, // π˝ªÁ - ∏¿⁄ ªÛ¡°
-            10001, // π˝ªÁ - ¿¸Ω≈ ªÛ¡° 
-            10123, // π˝ªÁ - ªÛ¿« ªÛ¡°
-            12124, // π˝ªÁ - «œ¿« ªÛ¡°
-            10000, // π˝ªÁ - Ω≈πﬂ ªÛ¡°
-            10002, // π˝ªÁ - ¿Â∞© ªÛ¡°
-            10004, // π˝ªÁ - πÊ∆– ªÛ¡°
-
-            3000137, // π˝ªÁ - ª˛¿Ã¥◊ ∑ŒµÂ ªÛ¡°
-            10125, // π˝ªÁ - µÂ∑°∞Ô ¿Â∫Ò ªÛ¡°
-            10005, // π˝ªÁ - øœµÂ
-            10006, // π˝ªÁ - Ω∫≈¬«¡
-
-            10034, // ±√ºˆ - ∏¿⁄ ªÛ¡°
-            10121, // ±√ºˆ - ªÛ¿« ªÛ¡°
-            10122, // ±√ºˆ - «œ¿« ªÛ¡°
-            10032, // ±√ºˆ - ¿¸Ω≈ ªÛ¡°
-            10031, // ±√ºˆ - Ω≈πﬂ ªÛ¡°
-            10033, // ±√ºˆ - ¿Â∞© ªÛ¡°
-
-            10035, // ±√ºˆ - »∞ ªÛ¡°
-            10036, // ±√ºˆ - ºÆ±√ ªÛ¡°
-            10108, // ±√ºˆ - µ‡æÛ±√ ªÛ¡°
-            10110, // ±√ºˆ - ∏∂π˝»≠ªÏ ªÛ¡°
-            10037, // ±√ºˆ - »≠ªÏ ªÛ¡°
-
-            10012, // µµ¿˚ - ∏¿⁄ ªÛ¡°
-            10008, // µµ¿˚ - ªÛ¿« ªÛ¡°
-            10009, // µµ¿˚ - «œ¿« ªÛ¡°
-            10010, // µµ¿˚ - ¿¸Ω≈ ªÛ¡°
-            10007, // µµ¿˚ - Ω≈πﬂ ªÛ¡°
-            10011, // µµ¿˚ - ¿Â∞© ªÛ¡°
-            10013, // µµ¿˚ - πÊ∆– ªÛ¡°
-
-            3000135, // µµ¿˚ - ø°≥ ¡ˆº“µÂ ªÛ¡°
-            10014, // µµ¿˚ - ¥‹∞À ªÛ¡°
-            10015, // µµ¿˚ - æ∆¥Î ªÛ¡°
-            10106, // µµ¿˚ - ∫Ì∑π¿ÃµÂ ªÛ¡°
-            10109, // µµ¿˚ - ƒ…¿Œ ªÛ¡°
-            2003, // µµ¿˚ - ƒ´µÂ ªÛ¡°
-            10038, // µµ¿˚ - «•√¢ ªÛ¡°
-
-            10090, // «ÿ¿˚ - ∏¿⁄ªÛ¡°
-            10091, // «ÿ¿˚ - ¿¸Ω≈ªÛ¡°
-            10093, // «ÿ¿˚ - Ω≈πﬂªÛ¡°
-            10092, // «ÿ¿˚ - ¿Â∞©ªÛ¡°
-
-            10087, // «ÿ¿˚ - ≥ ≈¨ªÛ¡°
-            10088, // «ÿ¿˚ - √—ªÛ¡°
-            10107, // «ÿ¿˚ - «⁄µÂƒ≥≥ÌªÛ¡°
-            11100, // «ÿ¿˚ - º“øÔΩ¥≈ÕªÛ¡°
-            10089, // «ÿ¿˚ - ∫º∏¥ªÛ¡°
-
-            // ∏µÁ ¡˜æ˜ ªÛ¡° ¡æ∑·
-
-            // ºº∆Æ æ∆¿Ã≈€ ªÛ¡° Ω√¿€
-
-            1401004, // ≈€∆‰Ω∫∆Æ ªÛ¡°
-            9250028, // ø©¡¶ ªÛ¡°
-            2040000, // ≈∏¿œ∑±∆Æ ªÛ¡°
-            9250027, // ∑Á≈∏∫ÒΩ∫ ªÛ¡°
-            1201002, // æ€º÷∑¶Ω∫ ªÛ¡°
-
-            9999999, // æ∆ƒ…¿Œ π´±‚ ªÛ¡°
-            9999998, // æ∆ƒ…¿Œ πÊæÓ±∏ ªÛ¡°
-
-            // ºº∆Æ æ∆¿Ã≈€ ªÛ¡° ¡æ∑·
-
-            // ∞¯øÎ ªÛ¡° Ω√¿€
-
-            2232100, // º“∫Ò ªÛ¡°
-            8000, // æ«ºº ªÛ¡° - æÛ±º ¿ÂΩƒ
-            8001, // æ«ºº ªÛ¡° - ¥´¿ÂΩƒ
-            8002, // æ«ºº ªÛ¡° - ∆Ê¥¯∆Æ
-            8003, // æ«ºº ªÛ¡° - ∞ﬂ¿Â
-            8004, // æ«ºº ªÛ¡° - π›¡ˆ
-            8005, // æ«ºº ªÛ¡° - πÓ¡ˆ
-            9110005, // ¿«¿⁄ ªÛ¡°
-
-            444446, // ∫Ì∑°Ω∫≈Õ π´±‚ªÛ¡°
-        };
-        openShop(shoplist[shopid]);
-        dispose();
+    public void Entertuto(boolean black, boolean effect) {
+        Entertuto(black, effect, false);
     }
-        
-    public void StartBingoGame() {
-        if (c.getPlayer().getMapId() != 922290000) {
-            c.getPlayer().changeMap(c.getChannelServer().getMapFactory().getMap(922290000), c.getChannelServer().getMapFactory().getMap(922290000).getPortal(0));
+
+    public void Entertuto(boolean black, boolean effect, boolean blackflame) {
+        this.c.send(CField.UIPacket.getDirectionStatus(true));
+        this.c.send(SLFCGPacket.SetIngameDirectionMode(true, blackflame, false, false));
+        if (effect) {
+            Timer.EtcTimer.getInstance().schedule(() -> this.c.getSession().writeAndFlush(CField.showSpineScreen(false, false, false, "Effect/Direction18.img/effect/adele/spine/etc/7/skeleton", "new", 0, true, "00")), 1000L);
+        }
+        Timer.EtcTimer.getInstance().schedule(() -> {
+            if (black) {
+                this.c.send(SLFCGPacket.MakeBlind(1, 255, 0, 0, 0, 1000, 0));
+            } else {
+                this.c.send(SLFCGPacket.MakeBlind(1, 200, 0, 0, 0, 1000, 0));
+            }
+        }, effect ? 4300L : 1000L);
+        Timer.EtcTimer.getInstance().schedule(() -> {
+            if (effect) {
+                this.c.send(CField.showSpineScreen(false, true, false, "Effect/Direction18.img/effect/adele/spine/etc/5/skeleton", "new", 0, true, "5"));
+                this.c.send(CField.showSpineScreen(false, true, false, "Effect/Direction18.img/effect/adele/spine/etc/6/skeleton", "new", 0, true, "6"));
+            }
+            this.c.send(SLFCGPacket.InGameDirectionEvent("", 1, 1000));
+        }, effect ? 5000L : 1000L);
+    }
+
+
+    public void Endtuto() {
+        Endtuto(true);
+    }
+
+    public void Endtuto(boolean effect) {
+        if (effect) {
+            this.c.send(CField.endscreen("5"));
+            this.c.send(CField.endscreen("6"));
+            this.c.getSession().writeAndFlush(CField.showSpineScreen(false, false, false, "Effect/Direction18.img/effect/adele/spine/etc/7/skeleton", "new", 0, true, "00"));
+        }
+        Timer.EtcTimer.getInstance().schedule(() -> this.c.send(SLFCGPacket.MakeBlind(1, 0, 0, 0, 0, 1300, 0)), effect ? 3500L : 1000L);
+        Timer.EtcTimer.getInstance().schedule(() -> {
+            this.c.send(CField.UIPacket.getDirectionStatus(false));
+            this.c.send(SLFCGPacket.SetIngameDirectionMode(false, false, false, false));
+        }, effect ? 5000L : 2000L);
+    }
+
+
+    public void sendScreenText(String str, boolean newwrite) {
+        c.send(SLFCGPacket.InGameDirectionEvent(str, new int[]{12, (newwrite == true) ? 1 : 0}));
+    }
+
+    public void EnterMonsterPark(int mapid) {
+        int count = 0;
+
+        for (int i = mapid; i < mapid + 500; i += 100) {
+            count += this.c.getChannelServer().getMapFactory().getMap(i).getNumSpawnPoints();
+        }
+        c.getPlayer().setMparkcount(count);
+    }
+
+    public void moru(Equip item, Equip item2) {
+        if (item.getMoru() != 0) {
+            item2.setMoru(item.getMoru());
+        } else {
+            String lol = Integer.valueOf(item.getItemId()).toString();
+            String ss = lol.substring(3, 7);
+            item2.setMoru(Integer.parseInt(ss));
+        }
+        c.getSession().writeAndFlush(CWvsContext.InventoryPacket.getFusionAnvil(true, 5062400, 2028093));
+        c.getSession().writeAndFlush(CWvsContext.InventoryPacket.updateEquipSlot((Item) item2));
+    }
+
+    public String EqpItem() {
+        String info = "";
+        int i = 0;
+
+        for (Item item : this.c.getPlayer().getInventory(MapleInventoryType.EQUIPPED)) {
+            Equip Eqp = (Equip) item;
+            if (Eqp != null) {
+                if (Eqp.getMoru() > 0) {
+                    int itemid = Eqp.getItemId() / 10000 * 10000 + Eqp.getMoru();
+                    info = info + "#L" + Eqp.getItemId() + "# #i" + Eqp.getItemId() + "#  [ #i" + itemid + "# ]  #t" + Eqp.getItemId() + "# #r(Î™®Î£®)#k#b\r\n";
+                }
+                i++;
+            }
+        }
+        return info;
+    }
+
+    public void sendJobIlust(int type, boolean lumi) {
+        if (this.lastMsg > -1) {
             return;
         }
-        if (c.getPlayer().getMap().getCharacters().size() < 5) {
-            c.getSession().writeAndFlush(MainPacketCreator.OnAddPopupSay(9000267, 3000, "#face1#∫˘∞Ì ¿ÃøÎΩ√ √÷º“ 5∏Ì¿Ã « ø‰«œ¥Ÿ±∏YO!", ""));
-            return;
+        this.c.getSession().writeAndFlush(CField.NPCPacket.getIlust(this.id, type, lumi));
+    }
+
+    public boolean checkDayItem(String s, int type) {
+        MapleCharacter chr = this.c.getPlayer();
+        KoreaCalendar kc = new KoreaCalendar();
+        String today = (kc.getYeal() % 100) + "/" + kc.getMonths() + "/" + kc.getDays();
+
+        if (type == 0) {
+            chr.addKV(s, today);
+            return true;
         }
-        c.getPlayer().getMap().broadcastMessage(MainPacketCreator.getClock(30));
-        MapTimer.getInstance().schedule(new Runnable() {
-            @Override
-            public void run() {
-                for (MapleCharacter chr : c.getPlayer().getMap().getCharacters()) {
-                    if (chr != null) {
-                        chr.changeMap(922290100, 0);
+        if (type == 1) {
+            if (chr.getV(s) != null) {
+                String[] array = chr.getV(s).split("/");
+                Calendar clear = new GregorianCalendar(Integer.parseInt("20" + array[0]), Integer.parseInt(array[1]) - 1, Integer.parseInt(array[2]));
+                Calendar ocal = Calendar.getInstance();
+                int yeal = clear.get(1), days = clear.get(5), day = ocal.get(7), day2 = clear.get(7), maxday = clear.getMaximum(5), month = clear.get(2);
+                int check = (day2 == 5) ? 7 : ((day2 == 6) ? 6 : ((day2 == 7) ? 5 : 0));
+
+                if (check == 0) {
+                    for (int i = day2; i < 5; i++) {
+                        check++;
+                    }
+                }
+                int afterday = days + check;
+                if (afterday > maxday) {
+                    afterday -= maxday;
+                    month++;
+                }
+                if (month > 12) {
+                    yeal++;
+                    month = 1;
+                }
+                Calendar after = new GregorianCalendar(yeal, month, afterday);
+                if (after.getTimeInMillis() > System.currentTimeMillis()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public long ExpPocket(int type) {
+        long t = 0L;
+        long time = (System.currentTimeMillis() - Long.parseLong(this.c.getCustomData(247, "lastTime"))) / 1000L;
+        if (time > 43200L) {
+            time = 43200L;
+        }
+        long gainexp = time / 10L * GameConstants.ExpPocket(this.c.getPlayer().getLevel());
+        if (type == 1) {
+            t = time;
+        } else {
+            t = gainexp;
+        }
+        return t;
+    }
+
+    public void SelectQuest(String quest, int quest1, int quest2, int count) {
+        List<Integer> QuestList = new ArrayList<>();
+        List<Integer> SelectQuest = new ArrayList<>();
+
+        for (int i = quest1; i < quest2; i++) {
+            QuestList.add(Integer.valueOf(i));
+        }
+
+        while (SelectQuest.size() < count) {
+            int questid = ((Integer) QuestList.get(Randomizer.rand(0, QuestList.size() - 1))).intValue();
+            boolean no = false;
+
+            switch (questid) {
+                case 35566:
+                case 35567:
+                case 35568:
+                case 35569:
+                case 35583:
+                case 35584:
+                case 35585:
+                case 35586:
+                case 35587:
+                case 35588:
+                case 35589:
+                case 39109:
+                case 39110:
+                case 39120:
+                case 39128:
+                case 39129:
+                case 39130:
+                case 39137:
+                case 39138:
+                case 39139:
+                case 39140:
+                    no = true;
+                    break;
+                default:
+                    no = false;
+                    break;
+            }
+
+            while (SelectQuest.contains(Integer.valueOf(questid)) || no) {
+                questid = ((Integer) QuestList.get(Randomizer.rand(0, QuestList.size() - 1))).intValue();
+                switch (questid) {
+                    case 35566:
+                    case 35567:
+                    case 35568:
+                    case 35569:
+                    case 35583:
+                    case 35584:
+                    case 35585:
+                    case 35586:
+                    case 35587:
+                    case 35588:
+                    case 35589:
+                    case 39109:
+                    case 39110:
+                    case 39120:
+                    case 39128:
+                    case 39129:
+                    case 39130:
+                    case 39137:
+                    case 39138:
+                    case 39139:
+                    case 39140:
+                        no = true;
+                        continue;
+                }
+                no = false;
+            }
+            SelectQuest.add(Integer.valueOf(questid));
+        }
+        String q = "";
+        for (int j = 0; j < SelectQuest.size(); j++) {
+            q = q + SelectQuest.get(j) + "";
+            if (j != SelectQuest.size() - 1) {
+                q = q + ",";
+            }
+        }
+        c.getPlayer().addKV(quest, q);
+    }
+
+    public int ReplaceQuest(String quest, int quest1, int quest2, int anotherquest) {
+        List<Integer> QuestList = new ArrayList<>();
+        List<Integer> SelectQuest = new ArrayList<>();
+        List<Integer> MyQuest = new ArrayList<>();
+
+        for (int i = quest1; i < quest2; i++) {
+            QuestList.add(Integer.valueOf(i));
+        }
+
+        String[] KeyValue = this.c.getPlayer().getV(quest).split(",");
+        int j;
+
+        for (j = 0; j < KeyValue.length; j++) {
+            MyQuest.add(Integer.valueOf(Integer.parseInt(KeyValue[j])));
+        }
+
+        for (j = 0; j < KeyValue.length; j++) {
+            if (Integer.parseInt(KeyValue[j]) != anotherquest) {
+                SelectQuest.add(Integer.valueOf(Integer.parseInt(KeyValue[j])));
+            }
+        }
+        int questid = ((Integer) QuestList.get(Randomizer.rand(0, QuestList.size() - 1))).intValue();
+        while (true) {
+            questid = ((Integer) QuestList.get(Randomizer.rand(0, QuestList.size() - 1))).intValue();
+            boolean no = false;
+            switch (questid) {
+                case 35566:
+                case 35567:
+                case 35568:
+                case 35569:
+                case 35583:
+                case 35584:
+                case 35585:
+                case 35586:
+                case 35587:
+                case 35588:
+                case 35589:
+                case 39109:
+                case 39110:
+                case 39120:
+                case 39128:
+                case 39129:
+                case 39130:
+                case 39137:
+                case 39138:
+                case 39139:
+                case 39140:
+                    no = true;
+                    break;
+                default:
+                    no = false;
+                    break;
+            }
+            if (questid != anotherquest && !SelectQuest.contains(Integer.valueOf(questid)) && !no) {
+                SelectQuest.add(Integer.valueOf(questid));
+                String q = "";
+                for (int k = 0; k < SelectQuest.size(); k++) {
+                    q = q + SelectQuest.get(k) + "";
+                    if (k != SelectQuest.size() - 1) {
+                        q = q + ",";
+                    }
+                }
+                c.getPlayer().addKV(quest, q);
+                return questid;
+            }
+        }
+    }
+
+    public void cancelSkillsbuff() {
+        for (Pair<SecondaryStat, SecondaryStatValueHolder> data : (Iterable<Pair<SecondaryStat, SecondaryStatValueHolder>>) this.c.getPlayer().getEffects()) {
+            SecondaryStatValueHolder mbsvh = (SecondaryStatValueHolder) data.right;
+            if (SkillFactory.getSkill(mbsvh.effect.getSourceId()) != null && mbsvh.effect.getSourceId() != 80002282 && mbsvh.effect.getSourceId() != 2321055) {
+                this.c.getPlayer().cancelEffect(mbsvh.effect, Arrays.asList(new SecondaryStat[]{(SecondaryStat) data.left}));
+            }
+        }
+    }
+
+    public void getJobName() {
+
+    }
+
+    public void sendPQRanking(byte type) {
+        List<String> info = new ArrayList<>();
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            if (type == 0) {
+                con = DatabaseConnection.getConnection();
+                ps = con.prepareStatement("SELECT * FROM characters WHERE gm = 0 ORDER BY level DESC LIMIT 100");
+                rs = ps.executeQuery();
+
+                while (rs.next()) {
+                    info.add(
+                            rs.getString("name") + "," +
+                                    "Î†àÎ≤® / " + rs.getString("level") + "," +
+                                    "Í≥ÑÏäπ Î†àÎ≤® / " + rs.getString("fame") + "," +
+                                    "(" + GameConstants.getJobNameById(Integer.parseInt(rs.getString("job"))) + ")"
+                    );
+                }
+            }
+            ps.close();
+            con.close();
+            rs.close();
+        } catch (SQLException e) {
+            System.err.println("Error while unbanning" + e);
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+        c.getSession().writeAndFlush(CField.PartyRankingInfo(info));
+    }
+    public void StarForceEnchant25(Equip equip) {
+        Equip nEquip = (Equip) equip;
+        Equip zeroEquip = null;
+        if (GameConstants.isAlphaWeapon(nEquip.getItemId())) {
+            zeroEquip = (Equip) c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short) -10);
+        } else if (GameConstants.isBetaWeapon(nEquip.getItemId())) {
+            zeroEquip = (Equip) c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short) -11);
+        }
+
+        int maxEnhance, max = GameConstants.isStarForceScroll(2049372);
+        boolean isSuperiol = ((MapleItemInformationProvider.getInstance().isSuperial(nEquip.getItemId())).left != null);
+        int reqLevel = getReqLevel(nEquip.getItemId());
+        if (reqLevel < 95) {
+            maxEnhance = isSuperiol ? 3 : 5;
+        } else if (reqLevel <= 107) {
+            maxEnhance = isSuperiol ? 5 : 8;
+        } else if (reqLevel <= 119) {
+            maxEnhance = isSuperiol ? 8 : 10;
+        } else if (reqLevel <= 129) {
+            maxEnhance = isSuperiol ? 10 : 15;
+        } else if (reqLevel <= 139) {
+            maxEnhance = isSuperiol ? 12 : 20;
+        } else {
+            maxEnhance = isSuperiol ? 15 : 25;
+        }
+
+        if (maxEnhance < max) {
+            max = maxEnhance;
+        }
+
+        while (nEquip.getEnhance() < max) {
+            StarForceStats starForceStats = EquipmentEnchant.starForceStats(nEquip);
+            nEquip.setEnchantBuff((short) 0);
+            nEquip.setEnhance((byte) (nEquip.getEnhance() + 1));
+            for (Pair<EnchantFlag, Integer> stat : starForceStats.getStats()) {
+                if (EnchantFlag.Watk.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantWatk((short) (nEquip.getEnchantWatk() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantWatk((short) (zeroEquip.getEnchantWatk() + ((Integer) stat.right).intValue()));
+                    }
+                }
+                if (EnchantFlag.Matk.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantMatk((short) (nEquip.getEnchantMatk() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantMatk((short) (zeroEquip.getEnchantMatk() + ((Integer) stat.right).intValue()));
+                    }
+                }
+                if (EnchantFlag.Str.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantStr((short) (nEquip.getEnchantStr() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantStr((short) (zeroEquip.getEnchantStr() + ((Integer) stat.right).intValue()));
+                    }
+                }
+                if (EnchantFlag.Dex.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantDex((short) (nEquip.getEnchantDex() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantDex((short) (zeroEquip.getEnchantDex() + ((Integer) stat.right).intValue()));
+                    }
+                }
+                if (EnchantFlag.Int.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantInt((short) (nEquip.getEnchantInt() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantInt((short) (zeroEquip.getEnchantInt() + ((Integer) stat.right).intValue()));
+                    }
+                }
+                if (EnchantFlag.Luk.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantLuk((short) (nEquip.getEnchantLuk() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantLuk((short) (zeroEquip.getEnchantLuk() + ((Integer) stat.right).intValue()));
+                    }
+                }
+                if (EnchantFlag.Wdef.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantWdef((short) (nEquip.getEnchantWdef() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantWdef((short) (zeroEquip.getEnchantWdef() + ((Integer) stat.right).intValue()));
+                    }
+                }
+                if (EnchantFlag.Mdef.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantMdef((short) (nEquip.getEnchantMdef() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantMdef((short) (zeroEquip.getEnchantMdef() + ((Integer) stat.right).intValue()));
+                    }
+                }
+                if (EnchantFlag.Hp.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantHp((short) (nEquip.getEnchantHp() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantHp((short) (zeroEquip.getEnchantHp() + ((Integer) stat.right).intValue()));
+                    }
+                }
+                if (EnchantFlag.Mp.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantMp((short) (nEquip.getEnchantMp() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantMp((short) (zeroEquip.getEnchantMp() + ((Integer) stat.right).intValue()));
+                    }
+                }
+                if (EnchantFlag.Acc.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantAcc((short) (nEquip.getEnchantAcc() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantAcc((short) (zeroEquip.getEnchantAcc() + ((Integer) stat.right).intValue()));
+                    }
+                }
+                if (EnchantFlag.Avoid.check(((EnchantFlag) stat.left).getValue())) {
+                    nEquip.setEnchantAvoid((short) (nEquip.getEnchantAvoid() + ((Integer) stat.right).intValue()));
+                    if (zeroEquip != null) {
+                        zeroEquip.setEnchantAvoid((short) (zeroEquip.getEnchantAvoid() + ((Integer) stat.right).intValue()));
                     }
                 }
             }
-        }, 30 * 1000);
-        MapTimer.getInstance().schedule(new Runnable() {
-            @Override
-            public void run() {
-                if (c.getPlayer().getMapId() == 922290100) {
-                    BingoGame bingo = new BingoGame(c.getPlayer().getMap().getCharacters());
-                    for (MapleCharacter chr : c.getPlayer().getMap().getCharacters()) {
-                        if (chr != null) {
-                            chr.setBingoGame(bingo);
-                            chr.getClient().getSession().writeAndFlush(MainPacketCreator.musicChange("BgmEvent/dolphin_night"));
-                            chr.getClient().getSession().writeAndFlush(MainPacketCreator.playSE("multiBingo/start"));
-                            chr.getClient().getSession().writeAndFlush(MainPacketCreator.showMapEffect("Gstar/start"));
-                        }
-                    }
-                }
-            }
-        }, 40 * 1000);
-        MapTimer.getInstance().schedule(new Runnable() {
-            @Override
-            public void run() {
-                c.getPlayer().getBingoGame().StartGame();
-            }
-        }, 42 * 1000);
+        }
+
+        EquipmentEnchant.checkEquipmentStats(c.getPlayer().getClient(), nEquip);
+
+        if (zeroEquip != null) {
+            EquipmentEnchant.checkEquipmentStats(c.getPlayer().getClient(), zeroEquip);
+        }
+
+        c.getPlayer().forceReAddItem(nEquip, MapleInventoryType.getByType((byte) 1));
+
+        if (zeroEquip != null) {
+            c.getPlayer().forceReAddItem(zeroEquip, MapleInventoryType.getByType((byte) 1));
+        }
     }
+
+    public String World_boss_team_check(int charid) {
+        String teamname = null;
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT * FROM world_boss_team WHERE characterid = ?");
+            ps.setInt(1, charid);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                teamname = rs.getString("teamname");
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", e);
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+        return teamname;
+    }
+
+    public void World_boss_team_insert(int teamid, String teamname, int accid, int charid, String charname) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("INSERT INTO world_boss_team(teamid, teamname, accid, characterid, charname) VALUES (?, ?, ?, ?, ?)");
+            ps.setInt(1, teamid);
+            ps.setString(2, teamname);
+            ps.setInt(3, accid);
+            ps.setInt(4, charid);
+            ps.setString(5, charname);
+            ps.executeUpdate();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", e);
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+    }
+
+    public void World_boss_team_update(int teamid, String teamname, int accid, int charid, String charname) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("UPDATE world_boss_team SET teamid = ?, teamname = ? where accid = ? and characterid = ? and charname = ?");
+            ps.setInt(1, teamid);
+            ps.setString(2, teamname);
+            ps.setInt(3, accid);
+            ps.setInt(4, charid);
+            ps.setString(5, charname);
+            ps.executeUpdate();
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", e);
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+    }
+    
+    
+public void StartDailyQuest(int qnum, int mobid, int mobcount){
+        this.c.getPlayer().updateInfoQuest(qnum,
+                "mobid="+ mobid+
+                ";mobcount=" + mobcount +
+                ";info=1"+
+                ";qcount=0"+
+                ";mobkill=0");
+        this.c.getPlayer().saveToDB(false, false);
+    }
+
 }

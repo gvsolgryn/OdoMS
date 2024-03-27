@@ -1,69 +1,96 @@
 package server.life;
 
-import java.awt.Point;
-import java.io.File;
+import database.DatabaseConnection;
+import tools.Pair;
+
+import java.awt.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import provider.MapleData;
-import provider.MapleDataProvider;
-import provider.MapleDataProviderFactory;
-import provider.MapleDataTool;
-import tools.Pair;
-
 public class MobSkillFactory {
-
-    private static Map<Pair<Integer, Integer>, MobSkill> mobSkills = new HashMap<Pair<Integer, Integer>, MobSkill>();
-    private static MapleDataProvider dataSource = MapleDataProviderFactory.getDataProvider(new File("wz/Skill.wz/MobSkill"));
-
-    public static MobSkill getMobSkill(int skillId, int level) {
-        MobSkill ret = mobSkills.get(new Pair<Integer, Integer>(Integer.valueOf(skillId), Integer.valueOf(level)));
-        if (ret != null) {
-            return ret;
-        }
-
-        final MapleData skillData = dataSource.getData(skillId + ".img").getChildByPath("level/" + level);
-        if (skillData != null) {
-            List<Integer> toSummon = new ArrayList<Integer>();
-            for (int i = 0; i > -1; i++) {
-                if (skillData.getChildByPath(String.valueOf(i)) == null) {
-                    break;
-                }
-                toSummon.add(Integer.valueOf(MapleDataTool.getInt(skillData.getChildByPath(String.valueOf(i)), 0)));
-            }
-            final MapleData ltd = skillData.getChildByPath("lt");
-            Point lt = null;
-            Point rb = null;
-            if (ltd != null) {
-                lt = (Point) ltd.getData();
-                rb = (Point) skillData.getChildByPath("rb").getData();
-            }
-            ret = new MobSkill(skillId, level);
-            ret.addSummons(toSummon);
-            ret.setCoolTime(MapleDataTool.getInt("interval", skillData, 0) * 1000);
-            ret.setDuration(MapleDataTool.getInt("time", skillData, 0) * 1000);
-            ret.setHp(MapleDataTool.getInt("hp", skillData, 100));
-            ret.setMpCon(MapleDataTool.getInt(skillData.getChildByPath("mpCon"), 0));
-            ret.setSpawnEffect(MapleDataTool.getInt("summonEffect", skillData, 0));
-            ret.setX(MapleDataTool.getInt("x", skillData, 1));
-            ret.setY(MapleDataTool.getInt("y", skillData, 1));
-            ret.setProp(MapleDataTool.getInt("prop", skillData, 100) / 100);
-            ret.setLimit((short) MapleDataTool.getInt("limit", skillData, 0));
-            ret.setLtRb(lt, rb);
-            ret.setSkillAfter(MapleDataTool.getInt("skillAfter", skillData, 0));
-            if (skillId == 201) {
-
-                int i = 0;
-                int mId = -1;
-                while ((mId = MapleDataTool.getInt(String.valueOf(i), skillData, -1)) != -1) {
-                    ret.addMonster(mId);
-                    i++;
-                }
-            }
-            mobSkills.put(new Pair<Integer, Integer>(Integer.valueOf(skillId), Integer.valueOf(level)), ret);
-        }
-        return ret;
-    }
+  private final Map<Pair<Integer, Integer>, MobSkill> mobSkillCache = new HashMap<>();
+  
+  private static final MobSkillFactory instance = new MobSkillFactory();
+  
+  public MobSkillFactory() {
+    initialize();
+  }
+  
+  public static MobSkillFactory getInstance() {
+    return instance;
+  }
+  
+  public static MobSkill getMobSkill(int skillId, int level) {
+    return instance.mobSkillCache.get(new Pair<>(Integer.valueOf(skillId), Integer.valueOf(level)));
+  }
+  
+  private void initialize() {
+    Connection con = null;
+    PreparedStatement ps = null;
+    ResultSet rs = null;
+    try {
+      con = DatabaseConnection.getConnection();
+      ps = con.prepareStatement("SELECT * FROM wz_mobskilldata");
+      rs = ps.executeQuery();
+      while (rs.next())
+        this.mobSkillCache.put(new Pair<>(Integer.valueOf(rs.getInt("skillid")), Integer.valueOf(rs.getInt("level"))), get(rs)); 
+      rs.close();
+      ps.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        if (con != null)
+          con.close(); 
+        if (ps != null)
+          ps.close(); 
+        if (rs != null)
+          rs.close(); 
+      } catch (SQLException se) {
+        se.printStackTrace();
+      } 
+    } 
+  }
+  
+  private MobSkill get(ResultSet rs) throws SQLException {
+    List<Integer> toSummon = new ArrayList<>();
+    String[] summs = rs.getString("summons").split(", ");
+    if (summs.length <= 0 && rs.getString("summons").length() > 0)
+      toSummon.add(Integer.valueOf(Integer.parseInt(rs.getString("summons")))); 
+    for (String s : summs) {
+      if (s.length() > 0)
+        toSummon.add(Integer.valueOf(Integer.parseInt(s))); 
+    } 
+    Point lt = null;
+    Point rb = null;
+    if (rs.getInt("ltx") != 0 || rs.getInt("lty") != 0 || rs.getInt("rbx") != 0 || rs.getInt("rby") != 0) {
+      lt = new Point(rs.getInt("ltx"), rs.getInt("lty"));
+      rb = new Point(rs.getInt("rbx"), rs.getInt("rby"));
+    } 
+    MobSkill ret = new MobSkill(rs.getInt("skillid"), rs.getInt("level"));
+    ret.addSummons(toSummon);
+    ret.setInterval(Math.max(5000, rs.getInt("interval") * 1000));
+    ret.setDuration((rs.getInt("time") * 1000));
+    ret.setHp((rs.getInt("hp") == 0) ? 100 : rs.getInt("hp"));
+    ret.setMpCon(rs.getInt("mpcon"));
+    ret.setSpawnEffect(rs.getInt("spawneffect"));
+    ret.setX(rs.getInt("x"));
+    ret.setY(rs.getInt("y"));
+    ret.setProp(rs.getInt("prop") / 100.0F);
+    ret.setLimit((short)rs.getInt("limit"));
+    ret.setOnce((rs.getByte("once") > 0));
+    ret.setMobGroup((rs.getByte("ismobgroup") > 0));
+    ret.setLtRb(lt, rb);
+    ret.setOtherSkillID(rs.getInt("otherSkillID"));
+    ret.setOtherSkillLev(rs.getInt("otherSkillLev"));
+    ret.setSkillAfter(rs.getInt("skillAfter"));
+    ret.setForce(rs.getInt("forced"));
+    return ret;
+  }
 }

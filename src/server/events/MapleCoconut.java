@@ -1,235 +1,220 @@
 package server.events;
 
+import client.MapleCharacter;
+import server.Timer;
+import tools.packet.CField;
+import tools.packet.CWvsContext;
+
 import java.util.LinkedList;
 import java.util.List;
 
-import client.MapleCharacter;
-import tools.Timer.EventTimer;
-
 public class MapleCoconut extends MapleEvent {
-
-    private List<MapleCoconuts> coconuts = new LinkedList<>();
-    private int[] coconutscore = new int[2];
-    private int countBombing = 0;
-    private int countFalling = 0;
-    private int countStopped = 0;
-
-    public MapleCoconut(final int channel, final MapleEventType type) {
-        super(channel, type);
+  private List<MapleCoconuts> coconuts = new LinkedList<>();
+  
+  private int[] coconutscore = new int[2];
+  
+  private int countBombing = 0;
+  
+  private int countFalling = 0;
+  
+  private int countStopped = 0;
+  
+  public MapleCoconut(int channel, MapleEventType type) {
+    super(channel, type);
+  }
+  
+  public void finished(MapleCharacter chr) {}
+  
+  public void reset() {
+    super.reset();
+    resetCoconutScore();
+  }
+  
+  public void unreset() {
+    super.unreset();
+    resetCoconutScore();
+    setHittable(false);
+  }
+  
+  public void onMapLoad(MapleCharacter chr) {
+    super.onMapLoad(chr);
+  }
+  
+  public MapleCoconuts getCoconut(int id) {
+    if (id >= this.coconuts.size())
+      return null; 
+    return this.coconuts.get(id);
+  }
+  
+  public List<MapleCoconuts> getAllCoconuts() {
+    return this.coconuts;
+  }
+  
+  public void setHittable(boolean hittable) {
+    for (MapleCoconuts nut : this.coconuts)
+      nut.setHittable(hittable); 
+  }
+  
+  public int getBombings() {
+    return this.countBombing;
+  }
+  
+  public void bombCoconut() {
+    this.countBombing--;
+  }
+  
+  public int getFalling() {
+    return this.countFalling;
+  }
+  
+  public void fallCoconut() {
+    this.countFalling--;
+  }
+  
+  public int getStopped() {
+    return this.countStopped;
+  }
+  
+  public void stopCoconut() {
+    this.countStopped--;
+  }
+  
+  public int[] getCoconutScore() {
+    return this.coconutscore;
+  }
+  
+  public int getMapleScore() {
+    return this.coconutscore[0];
+  }
+  
+  public int getStoryScore() {
+    return this.coconutscore[1];
+  }
+  
+  public void addMapleScore() {
+    this.coconutscore[0] = this.coconutscore[0] + 1;
+  }
+  
+  public void addStoryScore() {
+    this.coconutscore[1] = this.coconutscore[1] + 1;
+  }
+  
+  public void resetCoconutScore() {
+    this.coconutscore[0] = 0;
+    this.coconutscore[1] = 0;
+    this.countBombing = 80;
+    this.countFalling = 401;
+    this.countStopped = 20;
+    this.coconuts.clear();
+    for (int i = 0; i < 506; i++)
+      this.coconuts.add(new MapleCoconuts()); 
+  }
+  
+  public void startEvent() {
+    reset();
+    setHittable(true);
+    getMap(0).broadcastMessage(CWvsContext.serverNotice(5, "", "The event has started!!"));
+    getMap(0).broadcastMessage(CField.getClock(300));
+    Timer.EventTimer.getInstance().schedule(new Runnable() {
+          public void run() {
+            if (MapleCoconut.this.getMapleScore() == MapleCoconut.this.getStoryScore()) {
+              MapleCoconut.this.bonusTime();
+            } else {
+              for (MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
+                if (chr.getTeam() == ((MapleCoconut.this.getMapleScore() > MapleCoconut.this.getStoryScore()) ? 0 : 1)) {
+                  chr.getClient().getSession().writeAndFlush(CField.showEffect("event/coconut/victory"));
+                  chr.getClient().getSession().writeAndFlush(CField.playSound("Coconut/Victory"));
+                  continue;
+                } 
+                chr.getClient().getSession().writeAndFlush(CField.showEffect("event/coconut/lose"));
+                chr.getClient().getSession().writeAndFlush(CField.playSound("Coconut/Failed"));
+              } 
+              MapleCoconut.this.warpOut();
+            } 
+          }
+        },  300000L);
+  }
+  
+  public void bonusTime() {
+    getMap(0).broadcastMessage(CField.getClock(60));
+    Timer.EventTimer.getInstance().schedule(new Runnable() {
+          public void run() {
+            if (MapleCoconut.this.getMapleScore() == MapleCoconut.this.getStoryScore()) {
+              for (MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
+                chr.getClient().getSession().writeAndFlush(CField.showEffect("event/coconut/lose"));
+                chr.getClient().getSession().writeAndFlush(CField.playSound("Coconut/Failed"));
+              } 
+              MapleCoconut.this.warpOut();
+            } else {
+              for (MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
+                if (chr.getTeam() == ((MapleCoconut.this.getMapleScore() > MapleCoconut.this.getStoryScore()) ? 0 : 1)) {
+                  chr.getClient().getSession().writeAndFlush(CField.showEffect("event/coconut/victory"));
+                  chr.getClient().getSession().writeAndFlush(CField.playSound("Coconut/Victory"));
+                  continue;
+                } 
+                chr.getClient().getSession().writeAndFlush(CField.showEffect("event/coconut/lose"));
+                chr.getClient().getSession().writeAndFlush(CField.playSound("Coconut/Failed"));
+              } 
+              MapleCoconut.this.warpOut();
+            } 
+          }
+        },  60000L);
+  }
+  
+  public void warpOut() {
+    setHittable(false);
+    Timer.EventTimer.getInstance().schedule(new Runnable() {
+          public void run() {
+            for (MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
+              if ((MapleCoconut.this.getMapleScore() > MapleCoconut.this.getStoryScore() && chr.getTeam() == 0) || (MapleCoconut.this.getStoryScore() > MapleCoconut.this.getMapleScore() && chr.getTeam() == 1))
+                MapleEvent.givePrize(chr); 
+              MapleCoconut.this.warpBack(chr);
+            } 
+            MapleCoconut.this.unreset();
+          }
+        },  10000L);
+  }
+  
+  public static class MapleCoconuts {
+    private int hits = 0;
+    
+    private boolean hittable = false;
+    
+    private boolean stopped = false;
+    
+    private long hittime = System.currentTimeMillis();
+    
+    public void hit() {
+      this.hittime = System.currentTimeMillis() + 1000L;
+      this.hits++;
     }
-
-    @Override
-    public void finished(MapleCharacter chr) {
+    
+    public int getHits() {
+      return this.hits;
     }
-
-    @Override
-    public void reset() {
-        super.reset();
-        resetCoconutScore();
+    
+    public void resetHits() {
+      this.hits = 0;
     }
-
-    @Override
-    public void unreset() {
-        super.unreset();
-        resetCoconutScore();
-        setHittable(false);
+    
+    public boolean isHittable() {
+      return this.hittable;
     }
-
-    @Override
-    public void onMapLoad(MapleCharacter chr) {
-        super.onMapLoad(chr);
-        // chr.getClient().getSession().writeAndFlush(CField.coconutScore(getCoconutScore()));
-    }
-
-    public MapleCoconuts getCoconut(int id) {
-        if (id >= coconuts.size()) {
-            return null;
-        }
-        return coconuts.get(id);
-    }
-
-    public List<MapleCoconuts> getAllCoconuts() {
-        return coconuts;
-    }
-
+    
     public void setHittable(boolean hittable) {
-        for (MapleCoconuts nut : coconuts) {
-            nut.setHittable(hittable);
-        }
+      this.hittable = hittable;
     }
-
-    public int getBombings() {
-        return countBombing;
+    
+    public boolean isStopped() {
+      return this.stopped;
     }
-
-    public void bombCoconut() {
-        countBombing--;
+    
+    public void setStopped(boolean stopped) {
+      this.stopped = stopped;
     }
-
-    public int getFalling() {
-        return countFalling;
+    
+    public long getHitTime() {
+      return this.hittime;
     }
-
-    public void fallCoconut() {
-        countFalling--;
-    }
-
-    public int getStopped() {
-        return countStopped;
-    }
-
-    public void stopCoconut() {
-        countStopped--;
-    }
-
-    public int[] getCoconutScore() { // coconut event
-        return coconutscore;
-    }
-
-    public int getMapleScore() { // Team Maple, coconut event
-        return coconutscore[0];
-    }
-
-    public int getStoryScore() { // Team Story, coconut event
-        return coconutscore[1];
-    }
-
-    public void addMapleScore() { // Team Maple, coconut event
-        coconutscore[0]++;
-    }
-
-    public void addStoryScore() { // Team Story, coconut event
-        coconutscore[1]++;
-    }
-
-    public void resetCoconutScore() {
-        coconutscore[0] = 0;
-        coconutscore[1] = 0;
-        countBombing = 80;
-        countFalling = 401;
-        countStopped = 20;
-        coconuts.clear();
-        for (int i = 0; i < 506; i++) {
-            coconuts.add(new MapleCoconuts());
-        }
-    }
-
-    @Override
-    public void startEvent() {
-        reset();
-        setHittable(true);
-        // getMap(0).broadcastMessage(CWvsContext.broadcastMsg(5, "The event has
-        // started!!"));
-        // getMap(0).broadcastMessage(CField.hitCoconut(true, 0, 0));
-        // getMap(0).broadcastMessage(CField.getClock(300));
-
-        EventTimer.getInstance().schedule(new Runnable() {
-
-            @Override
-            public void run() {
-                if (getMapleScore() == getStoryScore()) {
-                    bonusTime();
-                } else {
-                    for (MapleCharacter chr : getMap(0).getCharacters()) {
-                        if (chr.getTeam() == (getMapleScore() > getStoryScore() ? 0 : 1)) {
-                            // chr.getClient().getSession().writeAndFlush(CField.showMapEffect("event/coconut/victory"));
-                            // chr.getClient().getSession().writeAndFlush(CField.playSound("Coconut/Victory"));
-                        } else {
-                            // chr.getClient().getSession().writeAndFlush(CField.showMapEffect("event/coconut/lose"));
-                            // chr.getClient().getSession().writeAndFlush(CField.playSound("Coconut/Failed"));
-                        }
-                    }
-                    warpOut();
-                }
-            }
-        }, 300000);
-    }
-
-    public void bonusTime() {
-        // getMap(0).broadcastMessage(CField.getClock(60));
-        EventTimer.getInstance().schedule(new Runnable() {
-
-            @Override
-            public void run() {
-                if (getMapleScore() == getStoryScore()) {
-                    for (MapleCharacter chr : getMap(0).getCharacters()) {
-                        // chr.getClient().getSession().writeAndFlush(CField.showMapEffect("event/coconut/lose"));
-                        // chr.getClient().getSession().writeAndFlush(CField.playSound("Coconut/Failed"));
-                    }
-                    warpOut();
-                } else {
-                    for (MapleCharacter chr : getMap(0).getCharacters()) {
-                        if (chr.getTeam() == (getMapleScore() > getStoryScore() ? 0 : 1)) {
-                            // chr.getClient().getSession().writeAndFlush(CField.showMapEffect("event/coconut/victory"));
-                            // chr.getClient().getSession().writeAndFlush(CField.playSound("Coconut/Victory"));
-                        } else {
-                            // chr.getClient().getSession().writeAndFlush(CField.showMapEffect("event/coconut/lose"));
-                            // chr.getClient().getSession().writeAndFlush(CField.playSound("Coconut/Failed"));
-                        }
-                    }
-                    warpOut();
-                }
-            }
-        }, 60000);
-
-    }
-
-    public void warpOut() {
-        setHittable(false);
-        EventTimer.getInstance().schedule(new Runnable() {
-
-            @Override
-            public void run() {
-                for (MapleCharacter chr : getMap(0).getCharacters()) {
-                    if ((getMapleScore() > getStoryScore() && chr.getTeam() == 0)
-                            || (getStoryScore() > getMapleScore() && chr.getTeam() == 1)) {
-                        givePrize(chr);
-                    }
-                    warpBack(chr);
-                }
-                unreset();
-            }
-        }, 10000);
-    }
-
-    public static class MapleCoconuts {
-
-        private int hits = 0;
-        private boolean hittable = false;
-        private boolean stopped = false;
-        private long hittime = System.currentTimeMillis();
-
-        public void hit() {
-            this.hittime = System.currentTimeMillis() + 1000; // test
-            hits++;
-        }
-
-        public int getHits() {
-            return hits;
-        }
-
-        public void resetHits() {
-            hits = 0;
-        }
-
-        public boolean isHittable() {
-            return hittable;
-        }
-
-        public void setHittable(boolean hittable) {
-            this.hittable = hittable;
-        }
-
-        public boolean isStopped() {
-            return stopped;
-        }
-
-        public void setStopped(boolean stopped) {
-            this.stopped = stopped;
-        }
-
-        public long getHitTime() {
-            return hittime;
-        }
-    }
+  }
 }

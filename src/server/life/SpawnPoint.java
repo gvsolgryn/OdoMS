@@ -1,89 +1,116 @@
 package server.life;
 
-import java.awt.Point;
+import server.maps.MapleMap;
+import tools.packet.CWvsContext;
+
+import java.awt.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import packet.creators.MainPacketCreator;
-import server.maps.MapleMap;
-
 public class SpawnPoint extends Spawns {
-
-    private MapleMonster monster;
-    private Point pos;
-    private long nextPossibleSpawn;
-    private int mobTime;
-    private AtomicInteger spawnedMonsters = new AtomicInteger(0);
-    private boolean immobile;
-    private String msg;
-    private int level = -1;
-
-    public SpawnPoint(final MapleMonster monster, final Point pos, final int mobTime, final String msg) {
-        this.monster = monster;
-        this.pos = pos;
-        this.mobTime = mobTime * 1000;
-        this.msg = msg;
-        this.immobile = !monster.getStats().getMobile();
-        this.nextPossibleSpawn = System.currentTimeMillis();
-    }
-
-    @Override
-    public final MapleMonster getMonster() {
-        return monster;
-    }
-
-    public int getMobTime() {
-        return mobTime;
-    }
-
-    @Override
-    public final boolean shouldSpawn() {
-        if (mobTime < 0) {
-            return false;
-        }
-        // regular spawnpoints should spawn a maximum of 3 monsters; immobile
-        // spawnpoints or spawnpoints with mobtime a
-        // maximum of 1
-        if (((mobTime != 0 || immobile) && spawnedMonsters.get() > 0) || spawnedMonsters.get() > 1) {
-            return false;
-        }
-        return nextPossibleSpawn <= System.currentTimeMillis();
-    }
-
-    public final void setLevel(int c) {
-        this.level = c;
-    }
-
-    @Override
-    public final MapleMonster spawnMonster(final MapleMap map) {
-        final MapleMonster mob = new MapleMonster(monster);
-        mob.setPosition(pos);
-        mob.setCy(pos.y);
-        mob.setRx0(pos.x - 50);
-        mob.setRx1(pos.x + 50);
-        if (level > -1) {
-            mob.changeLevel(level);
-        }
-        if (map.getChangeableMobOrigin() != null) {
-            mob.changeableMob(map.getChangeableMobOrigin());
-        }
-        spawnedMonsters.incrementAndGet();
-        mob.addListener(new MonsterListener() {
-
-            @Override
-            public void monsterKilled() {
-                nextPossibleSpawn = System.currentTimeMillis();
-
-                if (mobTime > 0) {
-                    nextPossibleSpawn += mobTime;
-                }
-                spawnedMonsters.decrementAndGet();
-            }
+  private MapleMonsterStats monster;
+  
+  private Point pos;
+  
+  private long nextPossibleSpawn;
+  
+  private int mobTime;
+  
+  private int carnival = -1;
+  
+  private int fh;
+  
+  private int f;
+  
+  private int id;
+  
+  private int level = -1;
+  
+  private AtomicInteger spawnedMonsters = new AtomicInteger(0);
+  
+  private String msg;
+  
+  private byte carnivalTeam;
+  
+  public SpawnPoint(MapleMonster monster, Point pos, int mobTime, byte carnivalTeam, String msg) {
+    this.monster = monster.getStats();
+    this.pos = pos;
+    this.id = monster.getId();
+    this.fh = monster.getFh();
+    this.f = monster.getF();
+    this.mobTime = (mobTime < 0) ? -1 : (mobTime * 1000);
+    this.carnivalTeam = carnivalTeam;
+    this.msg = msg;
+    this.nextPossibleSpawn = System.currentTimeMillis();
+  }
+  
+  public final void setCarnival(int c) {
+    this.carnival = c;
+  }
+  
+  public final void setLevel(int c) {
+    this.level = c;
+  }
+  
+  public final int getF() {
+    return this.f;
+  }
+  
+  public final int getFh() {
+    return this.fh;
+  }
+  
+  public final Point getPosition() {
+    return this.pos;
+  }
+  
+  public final MapleMonsterStats getMonster() {
+    return this.monster;
+  }
+  
+  public final byte getCarnivalTeam() {
+    return this.carnivalTeam;
+  }
+  
+  public final int getCarnivalId() {
+    return this.carnival;
+  }
+  
+  public final boolean shouldSpawn(long time) {
+    if (this.mobTime < 0)
+      return false; 
+    if (((this.mobTime != 0 || !this.monster.getMobile()) && this.spawnedMonsters.get() > 0) || this.spawnedMonsters.get() > 1)
+      return false; 
+    return (this.nextPossibleSpawn <= time);
+  }
+  
+  public final MapleMonster spawnMonster(MapleMap map) {
+    MapleMonster mob = new MapleMonster(this.id, this.monster);
+    mob.setPosition(this.pos);
+    mob.setCy(this.pos.y);
+    mob.setRx0(this.pos.x);
+    mob.setRx1(this.pos.x);
+    mob.setFh(this.fh);
+    mob.setF(this.f);
+    mob.setCarnivalTeam(this.carnivalTeam);
+    if (this.level > -1)
+      mob.changeLevel(this.level); 
+    this.spawnedMonsters.incrementAndGet();
+    mob.addListener(new MonsterListener() {
+          public void monsterKilled() {
+            SpawnPoint.this.nextPossibleSpawn = System.currentTimeMillis();
+            if (SpawnPoint.this.mobTime > 0)
+              SpawnPoint.this.nextPossibleSpawn = SpawnPoint.this.nextPossibleSpawn + SpawnPoint.this.mobTime; 
+            SpawnPoint.this.spawnedMonsters.decrementAndGet();
+          }
         });
-        map.spawnMonster(mob, -2);
-
-        if (msg != null) {
-            map.broadcastMessage(MainPacketCreator.serverNotice(6, msg));
-        }
-        return mob;
-    }
+    map.getRealSpawns().add(mob);
+    map.spawnMonster(mob, -2);
+    if (this.msg != null)
+      map.broadcastMessage(CWvsContext.serverNotice(6, "", this.msg)); 
+    return mob;
+  }
+  
+  public final int getMobTime() {
+    return this.mobTime;
+  }
 }

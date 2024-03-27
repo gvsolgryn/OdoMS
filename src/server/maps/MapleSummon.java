@@ -1,177 +1,131 @@
 package server.maps;
 
-import java.awt.Point;
-import java.lang.ref.WeakReference;
-
 import client.MapleCharacter;
 import client.MapleClient;
-import client.skills.SkillFactory;
-import client.skills.SkillStatEffect;
 import constants.GameConstants;
-import packet.creators.MainPacketCreator;
+import server.SecondaryStatEffect;
+import tools.packet.CField;
 
-public class MapleSummon extends AnimatedHinaMapObjectExtend {
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
-    private final MapleCharacter owner;
-    private final WeakReference<MapleCharacter> ownerchr;
-    private int skillLevel;
-    private int skill;
+public class MapleSummon extends AnimatedMapleMapObject {
+
+    private MapleCharacter owner;
+
+    private final int skillLevel;
+
+    private MapleMap map;
+
+    private byte rltype;
+
     private int hp;
-    private int maelstromid;
+
+    private int duration;
+
+    private int skill;
+
+    private boolean changedMap = false;
+
+    private boolean controlCrystal = false;
+
+    private boolean noapply = false;
+
+    private boolean SpecialSkill = false;
+
     private SummonMovementType movementType;
+
+    private int lastSummonTickCount;
+
+    private int energy = 0;
+
+    public int mechAddAttackCount = 0;
+
+    public int debuffshell;
+
     private byte Summon_tickResetCount;
-    private long endTime;
-    public long startTime;
 
-    public MapleSummon(final MapleCharacter owner, final SkillStatEffect skill, final Point pos,
-            final SummonMovementType movementType, long startTime) {
-        this(owner, skill.getSourceId(), skill.getLevel(), pos, movementType, startTime);
+    private byte changePositionCount = 0;
+
+    private long Server_ClientSummonTickDiff;
+
+    private long startTime;
+
+    private long lastAttackTime;
+
+    private List<Integer> magicSkills = new ArrayList<>();
+
+    private List<Boolean> crystalSkills = new ArrayList<>();
+
+    public MapleSummon(MapleCharacter owner, SecondaryStatEffect skill, Point pos, SummonMovementType movementType) {
+        this(owner, skill.getSourceId(), pos, movementType, (byte) 0, skill.getDuration());
     }
 
-    public MapleSummon(final MapleCharacter owner, final int skill, final Point pos,
-            final SummonMovementType movementType, long startTime) {
-        super();
+    public MapleSummon(MapleCharacter owner, SecondaryStatEffect skill, Point pos, SummonMovementType movementType, byte rltype) {
+        this(owner, skill.getSourceId(), pos, movementType, rltype, skill.getDuration());
+    }
+
+    public MapleSummon(MapleCharacter owner, int sourceid, Point pos, SummonMovementType movementType, byte rltype, int duration) {
         this.owner = owner;
-        this.ownerchr = new WeakReference<MapleCharacter>(owner);
-        this.skill = skill;
+        this.skill = sourceid;
+        this.map = owner.getMap();
+        this.skillLevel = owner.getTotalSkillLevel(GameConstants.getLinkedSkill(this.skill));
+        this.rltype = rltype;
         this.movementType = movementType;
-        this.skillLevel = owner.getSummonLinkSkillLevel(SkillFactory.getSkill(GameConstants.getLinkedAttackSkill(skill)));
-        this.endTime = startTime + SkillFactory.getSkill(skill).getEffect(skillLevel).getDuration();
-        this.startTime = startTime;
-        if (skillLevel == 0) {
-            return;
-        }
+        this.duration = duration;
         setPosition(pos);
-        Summon_tickResetCount = 0;
-    }
-
-    public MapleSummon(MapleCharacter owner, int skill, int duration, Point pos, SummonMovementType movementType,
-            long startTime) {
-        this.owner = owner;
-        this.ownerchr = new WeakReference<MapleCharacter>(owner);
-        this.skill = skill;
-        int lkk = 0;
-        if (owner.getSummonLinkSkillLevel(SkillFactory.getSkill(GameConstants.getLinkedAttackSkill(skill))) > 0) {
-            lkk = owner.getSummonLinkSkillLevel(SkillFactory.getSkill(GameConstants.getLinkedAttackSkill(skill)));
+        if (!isPuppet()) {
+            this.lastSummonTickCount = 0;
+            this.Summon_tickResetCount = 0;
+            this.Server_ClientSummonTickDiff = 0L;
+            this.lastAttackTime = 0L;
         }
-        this.skillLevel = (byte) lkk;
-        this.movementType = movementType;
-        this.startTime = startTime;
-        this.endTime = startTime + duration;
-        setPosition(pos);
-    }
-
-    @Override
-    public final void sendSpawnData(final MapleClient client) {
-        client.getSession().writeAndFlush(MainPacketCreator.spawnSummon(MapleSummon.this, skillLevel, false));
-    }
-
-    @Override
-    public final void sendDestroyData(final MapleClient client) {
-        client.getSession().writeAndFlush(MainPacketCreator.removeSummon(this, true));
-    }
-
-    public final void removeSummon(final MapleMap map, final boolean animation) {
-        map.broadcastMessage(MainPacketCreator.removeSummon(this, animation));
-        map.removeMapObject(this);
-        if (getOwner() != null) {
-            getOwner().removeVisibleMapObject(this);
-            getOwner().removeSummon(getObjectId());
+        if (sourceid == 152101000 || sourceid == 400021073 || sourceid == 164121008) {
+            this.controlCrystal = true;
+            if (sourceid == 152101000) {
+                this.energy = owner.CrystalCharge;
+            }
         }
     }
 
-    public final void updateSummon(final MapleMap map, boolean remove) {
-        if (remove) {
-            map.broadcastMessage(MainPacketCreator.removeSummon(this, true));
-        } else {
-            map.broadcastMessage(MainPacketCreator.spawnSummon(MapleSummon.this, skillLevel, false));
-        }
+    public final void sendSpawnData(MapleClient client) {
     }
 
-    public final void removeSummon(final MapleMap map) {
-        removeSummon(map, true);
+    public final void sendDestroyData(MapleClient client) {
+        client.getSession().writeAndFlush(CField.SummonPacket.removeSummon(this, false));
+    }
+
+    public final void updateMap(MapleMap map) {
+        this.map = map;
     }
 
     public final int getSkill() {
-        return skill;
+        return this.skill;
     }
 
-    public int BEFORE_SKILL = 0;
-    public int BEFORE_LEVEL = 0;
-
-    public final void setSkill(int skill, int skilllevel) {
-        BEFORE_SKILL = this.skill;
-        this.skill = skill;
-        BEFORE_LEVEL = this.skillLevel;
-        this.skillLevel = skilllevel;
+    public final void setSkill(int skillid) {
+        this.skill = skillid;
     }
 
     public final int getHP() {
-        return hp;
+        return this.hp;
     }
 
-    public final void addHP(final int delta) {
+    public final int getSummonRLType() {
+        return this.rltype;
+    }
+
+    public final void addHP(int delta) {
         this.hp += delta;
     }
 
-    public final MapleCharacter getOwnerChr() {
-        return ownerchr.get();
-    }
-
     public final SummonMovementType getMovementType() {
-        return movementType;
+        return this.movementType;
     }
 
-    public final boolean isStaticSummon() {
-        return SkillFactory.getSkill(getSkill()).getEffect(1).isStaticSummon();
-    }
-
-    public final boolean isSummon() {
-        switch (skill) {
-            case 12111004:
-            case 1301013: // beholder
-            case 2321003:
-            case 2121005:
-            case 35111011:
-            case 2221005:
-            case 2211011:
-            case 5211001: // Pirate octopus summon
-            case 5211002:
-            case 5220002: // wrath of the octopi
-            case 4341006: // 더미 이펙트
-            case 61111002: // 페트리 파이드
-            case 61111220:
-            case 3221014:
-            case 22171052: // 서먼 오닉스드래곤
-            case 13111004:
-            case 11001004:
-            case 12001004:
-            case 13001004:
-            case 14001005:
-            case 35111005:
-            case 15001004:
-            case 35121011:
-            case 35121009: // 로보 팩토리
-            case 35121010:
-            case 14000027: // 쉐도우 배트
-            case 4111007:
-            case 4211007:
-
-                return true;
-        }
-        return false;
-    }
-
-    public final boolean isRemovableSummon() {
-        switch (skill) {
-            case 35111002:
-                return true;
-        }
-        return false;
-    }
-
-    public final boolean isAngel() {
-        return GameConstants.isAngel(this.skill);
+    public final void setMovementType(SummonMovementType type) {
+        this.movementType = type;
     }
 
     public final boolean isPuppet() {
@@ -190,95 +144,270 @@ public class MapleSummon extends AnimatedHinaMapObjectExtend {
         return isAngel();
     }
 
-    public final int getSummonType() {
-        if (((this.skill != 33111003) && (this.skill != 3120012) && (this.skill != 3220012) && (isPuppet()))
-                || (this.skill == 33101008) || (this.skill == 35111002) || (this.skill == 35111008)
-                || (this.skill == 35120002) || (this.skill == 400011005) || (this.skill == 400031007) || (this.skill == 400051011)) {
-            return 0;
+    public final boolean isAngel() {
+        return GameConstants.isAngel(this.skill);
+    }
+
+    public final boolean isMultiAttack() {
+        if (this.skill != 35111002 && this.skill != 35121003 && this.skill != 61111002 && this.skill != 61111220 && (isGaviota() || this.skill == 33101008 || this.skill >= 35000000) && this.skill != 35111009 && this.skill != 35111010 && this.skill != 35111001) {
+            return false;
         }
-        switch (skill) {
-            case 152101008:
-                return 1;
-            case 35121010:
-            case 14000027:
-            case 14111024:
-                return 0;
-            case 1301013:
-            case 36121014:
-                return 2;
-            case 23111008:
-            case 23111009:
-            case 23111010:
-            case 35111001:
-            case 35111009:
-            case 35111010:
-                return 3;
-            case 35121009:
-                return 5;
-            case 400041038:
-                return 13;
-            case 400051009:
-                return 15;
-            case 35121003:
-                return 7;
-            case 152001003:
-            case 152101000:
-            case 400051017:
-            case 152121006:
-                return 7;
-            case 33101010:
-            case 33001011:
-                return 10;
-            case 5221022:
-                return 12;
-            case 400051038:
-            case 400051052:
-            case 400051053:
-            case 400021073:
-            case 400051046:
-            case 400021071:
-                return 17;
-        }
-        return 1;
+        return true;
     }
 
     public final boolean isGaviota() {
-        return skill == 5211002;
+        return (this.skill == 5211002);
+    }
+
+    public final boolean isBeholder() {
+        return (this.skill == 1301013);
     }
 
     public final int getSkillLevel() {
-        return skillLevel;
+        return this.skillLevel;
     }
 
-    @Override
+    public final int getSummonType() {
+        if (this.isAngel()) {
+            return 2;
+        }
+        if (this.skill != 33111003 && this.skill != 3120012 && this.skill != 3220012 && this.isPuppet()) {
+            return 0;
+        }
+        switch (this.skill) {
+            case 3211019:
+            case 5221029:
+            case 14111024:
+            case 14121054:
+            case 14121055:
+            case 14121056:
+            case 33101008:
+            case 35111002:
+            case 131001025:
+            case 151100002:
+            case 154110010:
+            case 164121006:
+            case 400021092:
+            case 400051017: {
+                return 0;
+            }
+            case 36121014:
+            case 80001722:
+            case 400021032: {
+                return 2;
+            }
+            case 36121002: {
+                return 3;
+            }
+            case 154121041: // 1.2.373 ++
+            case 164111007: {
+                return 5;
+            }
+            case 35121009: {
+                return 6;
+            }
+            case 12120013:
+            case 25121133:
+            case 32001014:
+            case 32100010:
+            case 32110017:
+            case 32120019:
+            case 35121003:
+            case 152001003:
+            case 152101000:
+            case 400001013:
+            case 400011077:
+            case 400011078:
+            case 400021068:
+            case 400041052: {
+                return 7;
+            }
+            case 5201013:
+            case 5201014:
+            case 5210016:
+            case 5210017:
+            case 5210018: {
+                return 10;
+            }
+            case 5201012:
+            case 33001009:
+            case 33001011:
+            case 33001013:
+            case 33001014: {
+                return 11;
+            }
+            case 5211019:
+            case 5220023:
+            case 5220024:
+            case 5220025:
+            case 5221022: {
+                return 12;
+            }
+            case 400041038: {
+                return 13;
+            }
+            case 400051009: {
+                return 15;
+            }
+            case 400021047:
+            case 400021063: {
+                return 16;
+            }
+            case 5210015:
+            case 162101003:
+
+            case 162101006:
+            case 162121012:
+            case 400001040:
+            case 400021071:
+            case 400021073:
+            case 400031051:
+            case 400051046:
+            case 400051068: {
+                return 17;
+            }
+            case 162121015:
+            case 400041044:
+            case 400031047:
+            case 400051038:
+            case 400051052:
+            case 400051053: {
+                return 18;
+            }
+            default: {
+                return 1;
+            }
+        }
+    }
+    
     public final MapleMapObjectType getType() {
         return MapleMapObjectType.SUMMON;
     }
 
-    public final void CheckSummonAttackFrequency(final MapleCharacter chr, final int tickcount) {
-        Summon_tickResetCount++;
-        if (Summon_tickResetCount > 4) {
-            Summon_tickResetCount = 0;
+    public final boolean isChangedMap() {
+        return this.changedMap;
+    }
+
+    public final void setChangedMap(boolean cm) {
+        this.changedMap = cm;
+    }
+
+    public final void removeSummon(MapleMap map, boolean changechannel) {
+        removeSummon(map, true, changechannel);
+    }
+
+    public final void removeSummon(MapleMap map, boolean animation, boolean changechannel) {
+        map.broadcastMessage(CField.SummonPacket.removeSummon(this, animation));
+        map.removeMapObject(this);
+        if (!changechannel) {
+            getOwner().removeVisibleMapObject(this);
+            getOwner().removeSummon(this);
         }
     }
 
-    public final MapleCharacter getOwner() {
-        return owner;
+    public final void removeSummon(MapleMap map, boolean animation, boolean changechannel, MapleCharacter chr) {
+        removeSummon(map, animation, changechannel);
+        if (chr.SummonChakriStack < 0) {
+            chr.SummonChakriStack = 0;
+        } else {
+            chr.SummonChakriStack -= 1;
+        }
     }
 
-    public final int getMaelstromId() {
-        return maelstromid;
+    public int getDuration() {
+        return this.duration;
     }
 
-    public final void setMaelstromId(int maelstromid) {
-        this.maelstromid = maelstromid;
+    public void setDuration(int duration) {
+        this.duration = duration;
     }
 
-    public long getEndTime() {
-        return endTime;
+    public MapleCharacter getOwner() {
+        return this.owner;
     }
 
-    public void setEndTime(long i) {
-        endTime = i;
+    public void setOwner(MapleCharacter owner) {
+        this.owner = owner;
+    }
+
+    public int getEnergy() {
+        return this.energy;
+    }
+
+    public void setEnergy(int energy) {
+        this.energy = energy;
+        this.owner.setSkillCustomInfo(152101000, energy, 0L);
+    }
+
+    public List<Integer> getMagicSkills() {
+        return this.magicSkills;
+    }
+
+    public void setMagicSkills(List<Integer> magicSkills) {
+        this.magicSkills = magicSkills;
+    }
+
+    public boolean isControlCrystal() {
+        return this.controlCrystal;
+    }
+
+    public void setControlCrystal(boolean controlCrystal) {
+        this.controlCrystal = controlCrystal;
+    }
+
+    public List<Boolean> getCrystalSkills() {
+        return this.crystalSkills;
+    }
+
+    public void setCrystalSkills(List<Boolean> crystalSkills) {
+        this.crystalSkills = crystalSkills;
+    }
+
+    public boolean isNoapply() {
+        return this.noapply;
+    }
+
+    public void SetNoapply(boolean noapply) {
+        this.noapply = noapply;
+    }
+
+    public byte getChangePositionCount() {
+        return this.changePositionCount;
+    }
+
+    public void setChangePositionCount(byte changePositionCount) {
+        this.changePositionCount = changePositionCount;
+    }
+
+    public int getDebuffshell() {
+        return this.debuffshell;
+    }
+
+    public void setDebuffshell(int debuffshell) {
+        this.debuffshell = debuffshell;
+    }
+
+    public boolean isSpecialSkill() {
+        return this.SpecialSkill;
+    }
+
+    public void setSpecialSkill(boolean SpecialSkill) {
+        this.SpecialSkill = SpecialSkill;
+    }
+
+    public long getLastAttackTime() {
+        return this.lastAttackTime;
+    }
+
+    public void setLastAttackTime(long lastAttackTime) {
+        this.lastAttackTime = lastAttackTime;
+    }
+
+    public long getStartTime() {
+        return this.startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
     }
 }

@@ -1,74 +1,74 @@
 package client;
 
+import tools.Pair;
+import tools.data.MaplePacketLittleEndianWriter;
+
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import database.MYSQL;
-import packet.transfer.write.WritingPacket;
-
-public class MapleKeyLayout {
-
-    private boolean changed = false;
-    private final Map<Integer, MapleKeyBinding> keymap = new HashMap<>();
-
-    public final Map<Integer, MapleKeyBinding> Layout() {
-        changed = true;
-        return keymap;
+public class MapleKeyLayout implements Serializable {
+  private static final long serialVersionUID = 9179541993413738569L;
+  
+  private boolean changed = false;
+  
+  private Map<Integer, Pair<Byte, Integer>> keymap;
+  
+  public MapleKeyLayout() {
+    this.keymap = new HashMap<>();
+  }
+  
+  public MapleKeyLayout(Map<Integer, Pair<Byte, Integer>> keys) {
+    this.keymap = keys;
+  }
+  
+  public final Map<Integer, Pair<Byte, Integer>> Layout() {
+    this.changed = true;
+    return this.keymap;
+  }
+  
+  public final void unchanged() {
+    this.changed = false;
+  }
+  
+  public final void writeData(MaplePacketLittleEndianWriter mplew) {
+    for (int x = 0; x < 89; x++) {
+      Pair<Byte, Integer> binding = this.keymap.get(Integer.valueOf(x));
+      if (binding != null) {
+        mplew.write(((Byte)binding.getLeft()).byteValue());
+        mplew.writeInt(((Integer)binding.getRight()).intValue());
+      } else {
+        mplew.write(0);
+        mplew.writeInt(0);
+      } 
     }
-
-    public final void writeData(final WritingPacket mplew) {
-        MapleKeyBinding binding;
-
-        mplew.write(keymap.isEmpty() ? 1 : 0);
-
-        if (!keymap.isEmpty()) {
-            for (int i = 0; i < 89; i++) {
-                binding = keymap.get(i);
-                if (binding != null) {
-                    mplew.write(binding.getType());
-                    mplew.writeInt(binding.getAction());
-                } else {
-                    mplew.write(0);
-                    mplew.writeInt(0);
-                }
-            }
-        }
-    }
-
-    public final void saveKeys(final int charid) throws SQLException {
-        if (!changed || keymap.size() == 0) {
-            return;
-        }
-        Connection con = MYSQL.getConnection();
-
-        PreparedStatement ps = con.prepareStatement("DELETE FROM keymap WHERE characterid = ?");
-        ps.setInt(1, charid);
-        ps.execute();
-        ps.close();
-
-        boolean first = true;
-        StringBuilder query = new StringBuilder();
-
-        for (Entry<Integer, MapleKeyBinding> keybinding : keymap.entrySet()) {
-            if (first) {
-                first = false;
-                query.append("INSERT INTO keymap VALUES (");
-            } else {
-                query.append(",(");
-            }
-            query.append("DEFAULT,");
-            query.append(charid).append(",");
-            query.append(keybinding.getKey().intValue()).append(",");
-            query.append(keybinding.getValue().getType()).append(",");
-            query.append(keybinding.getValue().getAction()).append(")");
-        }
-        ps = con.prepareStatement(query.toString());
-        ps.execute();
-        ps.close();
-        con.close();
-    }
+    mplew.write(1); //new 361
+    mplew.write(1); //new 361
+  }
+  
+  public final void saveKeys(Connection con, int charid) throws SQLException {
+    if (!this.changed)
+      return; 
+    PreparedStatement ps = con.prepareStatement("DELETE FROM keymap WHERE characterid = ?");
+    ps.setInt(1, charid);
+    ps.execute();
+    ps.close();
+    if (this.keymap.isEmpty())
+      return; 
+    Iterator<Map.Entry<Integer, Pair<Byte, Integer>>> key = this.keymap.entrySet().iterator();
+    ps = con.prepareStatement("INSERT INTO keymap (`characterid`, `key`, `type`, `action`) VALUES (?, ?, ?, ?)");
+    ps.setInt(1, charid);
+    while (key.hasNext()) {
+      Map.Entry<Integer, Pair<Byte, Integer>> keybinding = key.next();
+      ps.setInt(2, ((Integer)keybinding.getKey()).intValue());
+      ps.setInt(3, ((Byte)((Pair)keybinding.getValue()).getLeft()).byteValue());
+      ps.setInt(4, ((Integer)((Pair)keybinding.getValue()).getRight()).intValue());
+      ps.execute();
+    } 
+    ps.close();
+  }
 }

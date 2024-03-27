@@ -1,51 +1,31 @@
 package server.movement;
 
-import java.awt.Point;
+import tools.data.MaplePacketLittleEndianWriter;
 
-import packet.transfer.write.WritingPacket;
+import java.awt.*;
 
 public class UnknownMovement extends AbstractLifeMovement {
-
-    private Point pixelsPerSecond;
-    private int unk, fh;
-    private byte ForcedStop;
-
-    public UnknownMovement(int type, Point position, int duration, int newstate) {
-        super(type, position, duration, newstate);
-    }
-
-    public Point getPixelsPerSecond() {
-        return pixelsPerSecond;
-    }
-
-    public void setPixelsPerSecond(Point wobble) {
-        this.pixelsPerSecond = wobble;
-    }
-
-    public int getUnk() {
-        return unk;
-    }
-
-    public void setUnk(int unk) {
-        this.unk = unk;
-    }
-
-    public void setFh(short fh) {
-        this.fh = fh;
-    }
-
-    public void setForcedStop(byte ForcedStop) {
-        this.ForcedStop = ForcedStop;
-    }
-
-    @Override
-    public void serialize(WritingPacket packet) {
-        packet.write(getType());
-        packet.writePos(getPosition());
-        packet.writePos(pixelsPerSecond);
-        packet.writeShort(unk);
-        packet.write(getNewstate());
-        packet.writeShort(getDuration());
-        packet.write(ForcedStop);
-    }
+  private Point pixelsPerSecond;
+  
+  public UnknownMovement(int type, Point position, int duration, int newstate, short FH, byte unk) {
+    super(type, position, duration, newstate, FH, unk);
+  }
+  
+  public Point getPixelsPerSecond() {
+    return this.pixelsPerSecond;
+  }
+  
+  public void setPixelsPerSecond(Point wobble) {
+    this.pixelsPerSecond = wobble;
+  }
+  
+  public void serialize(MaplePacketLittleEndianWriter packet) {
+    packet.write(getType());
+    packet.writePos(getPosition());
+    packet.writePos(this.pixelsPerSecond);
+    packet.writeShort(getFootHolds());
+    packet.write(getNewstate());
+    packet.writeShort(getDuration());
+    packet.write(getUnk());
+  }
 }

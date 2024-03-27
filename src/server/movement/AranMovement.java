@@ -1,34 +1,18 @@
 package server.movement;
 
-import java.awt.Point;
+import tools.data.MaplePacketLittleEndianWriter;
 
-import packet.transfer.write.WritingPacket;
+import java.awt.*;
 
 public class AranMovement extends AbstractLifeMovement {
-
-    private byte ForcedStop;
-    private int unk;
-    
-    public AranMovement(int type, Point position, int duration, int newstate) {
-        super(type, position, duration, newstate);
-    }
-
-    public void setForcedStop(byte ForceStop) {
-        this.ForcedStop = ForceStop;
-    }
-    
-    public void setUnk(int unk) {
-        this.unk = unk;
-    }
-
-    @Override
-    public void serialize(WritingPacket packet) {
-        packet.write(getType());
-        if (getType() == 28) {
-            packet.writeInt(unk);
-        }
-        packet.write(getNewstate());
-        packet.writeShort(getDuration());
-        packet.write(ForcedStop);
-    }
+  public AranMovement(int type, Point position, int duration, int newstate, byte unk) {
+    super(type, position, duration, newstate, (short)0, unk);
+  }
+  
+  public void serialize(MaplePacketLittleEndianWriter packet) {
+    packet.write(getType());
+    packet.write(getNewstate());
+    packet.writeShort(getDuration());
+    packet.write(getUnk());
+  }
 }

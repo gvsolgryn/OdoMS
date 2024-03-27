@@ -1,352 +1,333 @@
 package scripting;
 
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.locks.Lock;
+import client.MapleClient;
+import server.life.MapleLifeFactory;
+import tools.FileoutputUtil;
+import tools.packet.CWvsContext;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
-import javax.script.ScriptException;
-
-import client.MapleClient;
-import constants.GameConstants;
-import server.life.MapleLifeProvider;
-import server.life.MapleNPC;
-import server.quest.MapleQuest;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 public class NPCScriptManager extends AbstractScriptManager {
-
-    private final Map<MapleClient, NPCConversationManager> cms = new WeakHashMap<>();
-    private static final NPCScriptManager instance = new NPCScriptManager();
-
-    public static final NPCScriptManager getInstance() {
-        return instance;
-    }
-
-    public final boolean hasScript(final MapleClient c, final int npc, String script) {
-        Invocable iv = getInvocable("npc/" + npc + ".js", c, true);
-        if (script != null && !script.isEmpty()) {
-            iv = getInvocable("npc/" + script + ".js", c, true);
-        }
-        return iv != null;
-    }
-
-        public final void start(final MapleClient c, final int npc) {
-        start(c, npc, null);
-    }
-        
-    public final void start(final MapleClient c, final int npc, String script) {
-        final Lock lock = c.getNPCLock();
-        lock.lock();
-        try {
-            if (!cms.containsKey(c) && c.canClickNPC()) {
-                Invocable iv = getInvocable("npc/" + npc + ".js", c, true); // safe disposal
-                if (script != null) {
-                    iv = getInvocable("npc/" + script + ".js", c, true); // safe disposal
-                    if (iv == null) {
-                        iv = getInvocable("item/" + script + ".js", c, true); // safe disposal
-                    }
-                }
-                if (iv == null) {
-                    iv = getInvocable("npc/notcoded.js", c, true); // safe disposal
-                    if (iv == null) {
-                        dispose(c);
-                        return;
-                    }
-                }
-                final ScriptEngine scriptengine = (ScriptEngine) iv;
-                final NPCConversationManager cm = new NPCConversationManager(c, npc, -1, script, (byte) -1, iv);
-                cms.put(c, cm);
-                scriptengine.put("cm", cm);
-                c.getPlayer().setConversation(1);
-                c.setClickedNPC();
-                
-                // TODO: Remove all start function(s) from the scripts.
-                try {
-                    iv.invokeFunction("start");
-                } catch (NoSuchMethodException nsme) {
-                    //nsme.printStackTrace();
-                    iv.invokeFunction("action", (byte) 1, (byte) 0, 0);
-                }
-                if (c.getPlayer().getGMLevel() > 0) {
-                    MapleNPC npcs = MapleLifeProvider.getNPC(npc);
-                    c.getPlayer().Message(6, "NPC NAME : " + npcs.getName() + " NPC ID : " + npcs.getId() + "");
-                }
-            }
-        } catch (final ScriptException | NoSuchMethodException e) {
-            System.err.println("Error executing NPC script, NPC ID : " + npc + "." + e);
-            e.printStackTrace();
+  private final Map<MapleClient, NPCConversationManager> cms = new WeakHashMap<>();
+  
+  private static final NPCScriptManager instance = new NPCScriptManager();
+  
+  public static final NPCScriptManager getInstance() {
+    return instance;
+  }
+  
+  public final void start(MapleClient c, int npc) {
+    start(c, npc, (String)null);
+  }
+  
+  public final void start(MapleClient c, String script) {
+    start(c, 0, script);
+  }
+  
+  public final boolean UseScript(MapleClient c, int quest) {
+    Invocable iv = null;
+    iv = getInvocable("quest/" + quest + ".js", c, true);
+    return (iv != null);
+  }
+  
+  public final void startHairRoom(MapleClient c, int npc, String script, byte result, int slot, byte temp) {
+    try {
+      if (!this.cms.containsKey(c) && c.canClickNPC()) {
+        Invocable iv;
+        if (script == null) {
+          iv = getInvocable("npc/" + npc + ".js", c, true);
+        } else {
+          iv = getInvocable("npc/" + script + ".js", c);
+        } 
+        if (iv == null) {
+          iv = getInvocable("npc/notcoded.js", c, true);
+          if (iv == null) {
             dispose(c);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public final void action(final MapleClient c, final byte mode, final byte type, final int selection) {
-        if (mode != -1) {
-            final NPCConversationManager cm = cms.get(c);
-            if (cm == null || cm.getLastMsg() > -1) {
-                return;
-            }
-            final Lock lock = c.getNPCLock();
-            lock.lock();
-            try {
-                if (cm.pendingDisposal) {
-                    dispose(c);
-                } else {
-                    c.setClickedNPC();
-                    cm.getIv().invokeFunction("action", mode, type, selection);
-                }
-            } catch (final ScriptException | NoSuchMethodException e) {
-                System.err.println("Error executing NPC script. NPC ID : " + cm.getNpc() + ":" + e);
-                dispose(c);
-                e.printStackTrace();
-            } finally {
-                lock.unlock();
-            }
-        }
-    }
-
-    public final void action(final MapleClient c, final String d, final int npc, final String script) {
-        final Lock lock = c.getNPCLock();
-        lock.lock();
-        try {
-
-            if (!cms.containsKey(c) && c.canClickNPC()) {
-                Invocable iv = getInvocable("npc/" + npc + ".js", c, true); // safe disposal
-                if (script != null) {
-                    iv = getInvocable("npc/" + script + ".js", c, true); // safe disposal
-                }
-
-                if (iv == null) {
-                    iv = getInvocable("npc/notcoded.js", c, true); // safe disposal
-                    if (iv == null) {
-                        dispose(c);
-                        return;
-                    }
-                }
-
-                final ScriptEngine scriptengine = (ScriptEngine) iv;
-                final NPCConversationManager cm = new NPCConversationManager(c, npc, -1, script, (byte) -1, iv);
-                cms.put(c, cm);
-                scriptengine.put("cm", cm);
-
-                c.getPlayer().setConversation(1);
-                c.setClickedNPC();
-
-                // TODO: Remove all start function(s) from the scripts.
-                try {
-                    iv.invokeFunction(d);
-                } catch (NoSuchMethodException nsme) {
-                    // nsme.printStackTrace();
-                    iv.invokeFunction("action", (byte) 1, (byte) 0, 0);
-                }
-            }
-        } catch (final ScriptException | NoSuchMethodException e) {
-            System.err.println("Error executing NPC script, NPC ID : " + npc + "." + e);
-            e.printStackTrace();
-            dispose(c);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public final void action(final MapleClient c, final byte mode, final byte type, final int selection,
-            final int selection2) {
-        if (mode != -1) {
-            final NPCConversationManager cm = cms.get(c);
-            if (cm == null || cm.getLastMsg() > -1) {
-                return;
-            }
-            final Lock lock = c.getNPCLock();
-            lock.lock();
-            try {
-                if (cm.pendingDisposal) {
-                    dispose(c);
-                } else {
-                    c.setClickedNPC();
-                    cm.getIv().invokeFunction("action", mode, type, selection, selection2);
-                }
-            } catch (final ScriptException | NoSuchMethodException e) {
-                System.err.println("Error executing NPC script. NPC ID : " + cm.getNpc() + ":" + e);
-                dispose(c);
-                e.printStackTrace();
-            } finally {
-                lock.unlock();
-            }
-        }
-    }
-
-    public final void startQuest(final MapleClient c, final int npcid, final int quest) {
-        if (!MapleQuest.getInstance(quest).canStart(c.getPlayer(), npcid)) {
-            // System.out.printf("[Quest]: The system tried to start '%s' with the npc '%s'
-            // %n", quest, npc);
-            if (!GameConstants.questReader.contains(quest)) {
-                return;
-            }
-        }
-        final Lock lock = c.getNPCLock();
-        lock.lock();
-        try {
-            if (!cms.containsKey(c) && c.canClickNPC()) {
-                final Invocable iv = getInvocable("quest/" + quest + ".js", c, true);
-                if (iv == null) {
-                    dispose(c);
-                    return;
-                }
-                final ScriptEngine scriptengine = (ScriptEngine) iv;
-                final NPCConversationManager cm = new NPCConversationManager(c, npcid, quest, null, (byte) 0, iv);
-                cms.put(c, cm);
-                scriptengine.put("qm", cm);
-
-                c.getPlayer().setConversation(1);
-                c.setClickedNPC();
-                iv.invokeFunction("start", (byte) 1, (byte) 0, 0); // start it off as something
-            }
-        } catch (final ScriptException | NoSuchMethodException e) {
-            System.err.println("Error executing Quest script. (" + quest + ")..NPCID: " + npcid + ":" + e);
-            e.printStackTrace();
-            dispose(c);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public final void startQuest(final MapleClient c, final byte mode, final byte type, final int selection) {
-        final Lock lock = c.getNPCLock();
-        final NPCConversationManager cm = cms.get(c);
-        if (cm == null || cm.getLastMsg() > -1) {
             return;
-        }
-        lock.lock();
+          } 
+        } 
+        ScriptEngine scriptengine = (ScriptEngine)iv;
+        NPCConversationManager cm = new NPCConversationManager(c, npc, -1, (byte)-1, iv, script);
+        this.cms.put(c, cm);
+        scriptengine.put("cm", cm);
+        c.getPlayer().setConversation(1);
+        c.setClickedNPC();
         try {
-            if (cm.pendingDisposal) {
-                dispose(c);
-            } else {
-                c.setClickedNPC();
-                cm.getIv().invokeFunction("start", mode, type, selection);
-            }
-        } catch (ScriptException | NoSuchMethodException e) {
-            System.err.println("Error executing Quest script. (" + cm.getQuest() + ")...NPC: " + cm.getNpc() + ":" + e);
-            e.printStackTrace();
+          iv.invokeFunction("start", new Object[] { Byte.valueOf(result), Integer.valueOf(slot), Byte.valueOf(temp) });
+        } catch (NoSuchMethodException noSuchMethodException) {
+
+        }
+      } 
+    } catch (Exception e) {
+      System.err.println("Error executing NPC script, NPC ID : " + npc + "." + e);
+      FileoutputUtil.log("Log/Log_Script_Except.rtf", "Error executing NPC script, NPC ID : " + npc + " / NPC SCRIPT : " + script + " / " + e);
+      dispose(c);
+    } finally {}
+  }
+  
+  public final void start(MapleClient c, int npc, String script, String method) {
+    try {
+      if (!this.cms.containsKey(c) && c.canClickNPC()) {
+        Invocable iv;
+        if (script == null) {
+          iv = getInvocable("npc/" + npc + ".js", c, true);
+        } else {
+          iv = getInvocable("npc/" + script + ".js", c);
+        } 
+        if (iv == null) {
+          iv = getInvocable("npc/notcoded.js", c, true);
+          if (iv == null) {
             dispose(c);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public final boolean UseScript(final MapleClient c, int quest) {
-        Invocable iv = null;
-        final Lock lock = c.getNPCLock();
-        lock.lock();
-        try {
-            iv = getInvocable("quest/" + quest + ".js", c, true);
-        } finally {
-            lock.unlock();
-        }
-        return iv != null;
-    }
-
-    public final void endQuest(final MapleClient c, final int npcid, final int questid, final boolean customEnd) {
-        if (!customEnd && !MapleQuest.getInstance(questid).canComplete(c.getPlayer(), npcid)) {
             return;
-        }
-        final Lock lock = c.getNPCLock();
-        lock.lock();
+          } 
+        } 
+        ScriptEngine scriptengine = (ScriptEngine)iv;
+        NPCConversationManager cm = new NPCConversationManager(c, npc, -1, (byte)-1, iv, script);
+        this.cms.put(c, cm);
+        scriptengine.put("cm", cm);
+        c.getPlayer().setConversation(1);
+        c.setClickedNPC();
         try {
-            if (!cms.containsKey(c) && c.canClickNPC()) {
-                final Invocable iv = getInvocable("quest/" + questid + ".js", c, true);
-                if (iv == null) {
-                    dispose(c);
-                    return;
-                }
-                final ScriptEngine scriptengine = (ScriptEngine) iv;
-                final NPCConversationManager cm = new NPCConversationManager(c, npcid, questid, null, (byte) 1, iv);
-                cms.put(c, cm);
-                scriptengine.put("qm", cm);
-
-                c.getPlayer().setConversation(1);
-                c.setClickedNPC();
-                iv.invokeFunction("end", (byte) 1, (byte) 0, 0); // start it off as something
-            }
-        } catch (ScriptException | NoSuchMethodException e) {
-            System.err.println("Error executing Quest script. (" + questid + ")..NPCID: " + npcid + ":" + e);
-            e.printStackTrace();
+          iv.invokeFunction(method, new Object[0]);
+        } catch (NoSuchMethodException nsme) {
+          iv.invokeFunction("action", new Object[] { Byte.valueOf((byte)1), Byte.valueOf((byte)0), Integer.valueOf(0) });
+        } 
+      } 
+    } catch (Exception e) {
+      System.err.println("Error executing NPC script, NPC ID : " + npc + "." + e);
+      FileoutputUtil.log("Log/Log_Script_Except.rtf", "Error executing NPC script, NPC ID : " + npc + " / NPC SCRIPT : " + script + " / " + e);
+      dispose(c);
+    } finally {}
+  }
+  
+  public final void start(MapleClient c, int npc, String script) {
+    try {
+      if (!this.cms.containsKey(c) && c.canClickNPC()) {
+        Invocable iv;
+        if (script == null) {
+          iv = getInvocable("npc/" + npc + ".js", c, true);
+          FileoutputUtil.log(FileoutputUtil.엔피시대화로그, "[엔피시오픈] 계정번호 : " + c.getAccID() + " | " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ")이 " + c.getPlayer().getMapId() + " 에서 " + MapleLifeFactory.getNPC(npc).getName() + "(" + npc + ")를 오픈");
+          c.getPlayer().dropMessageGM(6, "OpenNPC(" + npc + ")");
+        } else {
+          iv = getInvocable("npc/" + script + ".js", c, true);
+          FileoutputUtil.log(FileoutputUtil.엔피시대화로그, "[엔피시오픈] 계정번호 : " + c.getAccID() + " | " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ")이 " + c.getPlayer().getMapId() + " 에서 " + script + "를 오픈");
+          c.getPlayer().dropMessageGM(6, "OpenNPC(" + script + ")");
+        } 
+        if (iv == null) {
+          iv = getInvocable("npc/notcoded.js", c, true);
+          if (iv == null) {
             dispose(c);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public final void endQuest(final MapleClient c, final byte mode, final byte type, final int selection) {
-        final Lock lock = c.getNPCLock();
-        final NPCConversationManager cm = cms.get(c);
-        if (cm == null || cm.getLastMsg() > -1) {
             return;
-        }
-        lock.lock();
+          } 
+        } 
+        ScriptEngine scriptengine = (ScriptEngine)iv;
+        NPCConversationManager cm = new NPCConversationManager(c, npc, -1, (byte)-1, iv, script);
+        this.cms.put(c, cm);
+        scriptengine.put("cm", cm);
+        c.getPlayer().setConversation(1);
+        c.setClickedNPC();
         try {
-            if (cm.pendingDisposal) {
-                dispose(c);
-            } else {
-                c.setClickedNPC();
-                cm.getIv().invokeFunction("end", mode, type, selection);
-            }
-        } catch (ScriptException | NoSuchMethodException e) {
-            System.err.println("Error executing Quest script. (" + cm.getQuest() + ")...NPC: " + cm.getNpc() + ":" + e);
-            e.printStackTrace();
+          iv.invokeFunction("start", new Object[0]);
+        } catch (NoSuchMethodException nsme) {
+          iv.invokeFunction("action", new Object[] { Byte.valueOf((byte)1), Byte.valueOf((byte)0), Integer.valueOf(0) });
+        } 
+      } 
+    } catch (Exception e) {
+      System.err.println("Error executing NPC script, NPC ID : " + npc + "." + e);
+      FileoutputUtil.log("Log/Log_Script_Except.rtf", "Error executing NPC script, NPC ID : " + npc + " / NPC SCRIPT : " + script + " / " + e);
+      dispose(c);
+    } finally {}
+  }
+  
+  public final void startItem(MapleClient c, int npc, String script) {
+    try {
+      if (!this.cms.containsKey(c) && c.canClickNPC()) {
+        Invocable iv = getInvocable("item/" + script + ".js", c);
+        if (iv == null) {
+          iv = getInvocable("item/notcoded.js", c);
+          if (iv == null) {
             dispose(c);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public final void startItemScript(final MapleClient c, final int npc, final String script) {
-        final Lock lock = c.getNPCLock();
-        lock.lock();
+            return;
+          } 
+        } 
+        ScriptEngine scriptengine = (ScriptEngine)iv;
+        NPCConversationManager cm = new NPCConversationManager(c, npc, -1, (byte)-2, iv, script);
+        this.cms.put(c, cm);
+        scriptengine.put("cm", cm);
+        c.getPlayer().setConversation(1);
+        c.setClickedNPC();
         try {
-            if (!cms.containsKey(c) && c.canClickNPC()) {
-                final Invocable iv = getInvocable("item/" + script + ".js", c, true);
-                if (iv == null) {
-                    System.out.println("New scripted item : " + script);
-                    dispose(c);
-                    return;
-                }
-                final ScriptEngine scriptengine = (ScriptEngine) iv;
-                final NPCConversationManager cm = new NPCConversationManager(c, npc, -1, script, (byte) -1, iv);
-                cms.put(c, cm);
-                scriptengine.put("im", cm);
-                c.getPlayer().setConversation(1);
-                c.setClickedNPC();
-                iv.invokeFunction("use");
-            }
-        } catch (final ScriptException | NoSuchMethodException e) {
-            System.err.println("Error executing Item script, SCRIPT : " + script + ". " + e);
-            e.printStackTrace();
-            dispose(c);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public final void dispose(final MapleClient c) {
-        final NPCConversationManager npccm = cms.get(c);
-        if (npccm != null) {
-            cms.remove(c);
-            if (npccm.getType() == -1) {
-                c.removeScriptEngine("scripts/npc/" + npccm.getNpc() + ".js");
-                c.removeScriptEngine("scripts/npc/" + npccm.getScript() + ".js");
-                c.removeScriptEngine("scripts/npc/notcoded.js");
-            } else {
-                c.removeScriptEngine("scripts/quest/" + npccm.getQuest() + ".js");
-            }
-        }
-        if (c.getPlayer() != null && c.getPlayer().getConversation() == 1) {
-            c.getPlayer().setConversation(0);
-        }
-    }
-
-    public final NPCConversationManager getCM(final MapleClient c) {
-        return cms.get(c);
-    }
+          iv.invokeFunction("start", new Object[0]);
+        } catch (NoSuchMethodException nsme) {
+          iv.invokeFunction("action", new Object[] { Byte.valueOf((byte)1), Byte.valueOf((byte)0), Integer.valueOf(0) });
+        } 
+      } 
+    } catch (Exception e) {
+      System.err.println("Error executing Item NPC script, NPC ID : " + npc + "." + e);
+      FileoutputUtil.log("Log/Log_Script_Except.rtf", "Error executing Item NPC script, NPC ID : " + npc + "." + e);
+      dispose(c);
+    } 
+  }
+  
+  public final void action(MapleClient c, byte mode, byte type, int selection) {
+    if (mode != -1) {
+      NPCConversationManager cm = this.cms.get(c);
+      if (cm == null || cm.getLastMsg() > -1)
+        return; 
+      try {
+        if (cm.pendingDisposal) {
+          dispose(c);
+        } else {
+          c.setClickedNPC();
+          cm.getIv().invokeFunction("action", new Object[] { Byte.valueOf(mode), Byte.valueOf(type), Integer.valueOf(selection) });
+        } 
+      } catch (Exception e) {
+        System.err.println("Error executing NPC script. NPC ID : " + cm.getNpc() + " / NPC SCRIPT : " + cm.getScript() + " : " + e);
+        dispose(c);
+        FileoutputUtil.log("Log/Log_Script_Except.rtf", "Error executing NPC script, NPC ID : " + cm.getNpc() + "/" + cm.getScript() + " : " + e);
+      } 
+    } 
+  }
+  
+  public final void zeroaction(MapleClient c, byte mode, byte type, int selection1, int selection2) {
+    if (mode != -1) {
+      NPCConversationManager cm = this.cms.get(c);
+      if (cm == null || cm.getLastMsg() > -1)
+        return; 
+      try {
+        if (cm.pendingDisposal) {
+          dispose(c);
+        } else {
+          c.setClickedNPC();
+          cm.getIv().invokeFunction("zeroaction", new Object[] { Byte.valueOf(mode), Byte.valueOf(type), Integer.valueOf(selection1), Integer.valueOf(selection2) });
+        } 
+      } catch (Exception e) {
+        System.err.println("Error executing NPC script. NPC ID : " + cm.getNpc() + ":" + e);
+        dispose(c);
+        FileoutputUtil.log("Log/Log_Script_Except.rtf", "Error executing NPC script, NPC ID : " + cm.getNpc() + "." + e);
+      } 
+    } 
+  }
+  
+  public final void startQuest(MapleClient c, int npc, int quest) {
+    try {
+      if (quest == 100796 || quest == 100199) {
+        c.removeClickedNPC();
+        getInstance().dispose(c);
+        c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
+      } 
+      if (!this.cms.containsKey(c)) {
+        Invocable iv = getInvocable("quest/" + quest + ".js", c, true);
+        if (iv == null) {
+          dispose(c);
+          return;
+        } 
+        ScriptEngine scriptengine = (ScriptEngine)iv;
+        NPCConversationManager cm = new NPCConversationManager(c, npc, quest, (byte)0, iv, null);
+        this.cms.put(c, cm);
+        scriptengine.put("qm", cm);
+        c.getPlayer().setConversation(1);
+        c.setClickedNPC();
+        FileoutputUtil.log(FileoutputUtil.엔피시대화로그, "[퀘스트오픈] 계정번호 : " + c.getAccID() + " | " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ")이 " + c.getPlayer().getMapId() + " 에서 퀘스트 : " + quest + "를 오픈");
+        System.out.println("NPCID started: " + npc + " startquest " + quest);
+        iv.invokeFunction("start", new Object[] { Byte.valueOf((byte)1), Byte.valueOf((byte)0), Integer.valueOf(0) });
+      } 
+    } catch (Exception e) {
+      System.err.println("Error executing Quest script. (" + quest + ")..NPCID: " + npc + ":" + e);
+      FileoutputUtil.log("Log/Log_Script_Except.rtf", "Error executing Quest script. (" + quest + ")..NPCID: " + npc + ":" + e);
+      dispose(c);
+    } 
+  }
+  
+  public final void startQuest(MapleClient c, byte mode, byte type, int selection) {
+    NPCConversationManager cm = this.cms.get(c);
+    if (cm == null || cm.getLastMsg() > -1)
+      return; 
+    try {
+      if (cm.pendingDisposal) {
+        dispose(c);
+      } else {
+        c.setClickedNPC();
+        cm.getIv().invokeFunction("start", new Object[] { Byte.valueOf(mode), Byte.valueOf(type), Integer.valueOf(selection) });
+      } 
+    } catch (Exception e) {
+      System.err.println("Error executing Quest script. (" + cm.getQuest() + ")...NPC: " + cm.getNpc() + ":" + e);
+      FileoutputUtil.log("Log/Log_Script_Except.rtf", "Error executing Quest script. (" + cm.getQuest() + ")..NPCID: " + cm.getNpc() + ":" + e);
+      dispose(c);
+    } 
+  }
+  
+  public final void endQuest(MapleClient c, int npc, int quest, boolean customEnd) {
+    try {
+      if (!this.cms.containsKey(c) && c.canClickNPC()) {
+        Invocable iv = getInvocable("quest/" + quest + ".js", c, true);
+        if (iv == null) {
+          dispose(c);
+          return;
+        } 
+        ScriptEngine scriptengine = (ScriptEngine)iv;
+        NPCConversationManager cm = new NPCConversationManager(c, npc, quest, (byte)1, iv, null);
+        this.cms.put(c, cm);
+        scriptengine.put("qm", cm);
+        c.getPlayer().setConversation(1);
+        c.setClickedNPC();
+        System.out.println("NPCID started: " + npc + " endquest " + quest);
+        iv.invokeFunction("end", new Object[] { Byte.valueOf((byte)1), Byte.valueOf((byte)0), Integer.valueOf(0) });
+      } 
+    } catch (Exception e) {
+      System.err.println("Error executing Quest script. (" + quest + ")..NPCID: " + npc + ":" + e);
+      FileoutputUtil.log("Log/Log_Script_Except.rtf", "Error executing Quest script. (" + quest + ")..NPCID: " + npc + ":" + e);
+      dispose(c);
+    } 
+  }
+  
+  public final void endQuest(MapleClient c, byte mode, byte type, int selection) {
+    NPCConversationManager cm = this.cms.get(c);
+    if (cm == null || cm.getLastMsg() > -1)
+      return; 
+    try {
+      if (cm.pendingDisposal) {
+        dispose(c);
+      } else {
+        c.setClickedNPC();
+        cm.getIv().invokeFunction("end", new Object[] { Byte.valueOf(mode), Byte.valueOf(type), Integer.valueOf(selection) });
+      } 
+    } catch (Exception e) {
+      System.err.println("Error executing Quest script. (" + cm.getQuest() + ")...NPC: " + cm.getNpc() + ":" + e);
+      FileoutputUtil.log("Log/Log_Script_Except.rtf", "Error executing Quest script. (" + cm.getQuest() + ")..NPCID: " + cm.getNpc() + ":" + e);
+      dispose(c);
+    } 
+  }
+  
+  public final void dispose(MapleClient c) {
+    NPCConversationManager npccm = this.cms.get(c);
+    if (npccm != null) {
+      this.cms.remove(c);
+      if (npccm.getType() == -1) {
+        c.removeScriptEngine("scripts/npc/notcoded.js");
+        if (npccm.getScript() != null) {
+          c.removeScriptEngine("scripts/npc/" + npccm.getScript() + ".js");
+        } else {
+          c.removeScriptEngine("scripts/npc/" + npccm.getNpc() + ".js");
+        } 
+      } else if (npccm.getType() == -2) {
+        c.removeScriptEngine("scripts/item/" + npccm.getScript() + ".js");
+      } else {
+        c.removeScriptEngine("scripts/quest/" + npccm.getQuest() + ".js");
+      } 
+    } 
+    if (c.getPlayer() != null && c.getPlayer().getConversation() == 1)
+      c.getPlayer().setConversation(0); 
+  }
+  
+  public final NPCConversationManager getCM(MapleClient c) {
+    return this.cms.get(c);
+  }
+  
+  public void scriptClear() {
+    this.cms.clear();
+  }
 }

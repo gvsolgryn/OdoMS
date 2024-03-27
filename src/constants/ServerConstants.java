@@ -1,284 +1,229 @@
+// 
+// Decompiled by Procyon v0.5.36
+// 
+
 package constants;
 
-import java.io.FileInputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
-import client.MapleCharacter;
-import client.MapleClient;
-import client.BingoGame;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import server.DimentionMirrorEntry;
+import server.QuickMoveEntry;
+import server.ServerProperties;
+import server.games.BingoGame;
+import tools.Pair;
 import tools.Triple;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ScheduledFuture;
+
 public class ServerConstants {
-
-    /* ¼­¹ö ¼³Á¤ */
-    public static String Host = "175.207.0.33";
-    public static String ADMIN1;
-    public static String ADMIN2;
-    public static String ADMIN3;
-    public static String ADMIN4;
-    public static String ADMIN5;
-    public static int startMap;
-    public static byte defaultFlag;
-    public static int serverCount;
-    public static int LoginPort;
-    public static int ChannelPort;
-    public static int CashShopPort;
-    public static int BuddyChatPort;
-
-    public static boolean isLocal = false;
-    public static int AHT_VERSION = 0;
-    public static long SKILL_FILE_CRC = 1471966654; // skill.wz crc32
-
-    public static byte[] testPacket = null;
-    public static boolean already = false;
-    public static int defaultExpRate;
-    public static int defaultMesoRate;
-    public static int defaultDropRate;
-    public static int defaultCashRate;
-    public static int defaultBossCashRate;
-    public static int maxDrop;
-    public static int bossMaxDrop;
 
     public static String mrank1 = null;
     public static String prank1 = null;
     public static String crank1 = null;
 
-    public static int defaultMaxChannelLoad = 50;
-    public static int cshopNpc = 0;
-    public static int chatlimit = 0;
+    public static String Gateway_IP;
+    public static final short MAPLE_VERSION = 1149;
+    public static final byte MAPLE_PATCH = 1;
+    public static boolean MAPLE_VERSION_IS_TEST;
+    public static boolean Use_Fixed_IV;
+    public static boolean Use_Localhost;
+    public static boolean DEBUG_RECEIVE;
+    public static boolean DEBUG_SEND;
 
-    /* DB ¼³Á¤ */
-    public static int dbPort;
-    public static String dbHost;
-    public static String dbUser;
-    public static String dbPassword;
+    public static boolean DEBUG_CONNECTOR;
 
-    /* Message ¼³Á¤ ¹× ÀÌº¥Æ® ¼³Á¤ */
-    public static String recommendMessage = "";
-    public static String serverName = "";
-    public static String serverMessage = "";
-    public static String serverWelcome = "";
-    public static String eventMessage = "";
-    public static String serverHint = "";
-    public static String beginner = "";
-    public static String serverNotice = "";
-    public static String serverNotititle = "";
-    public static String serverNotification = "";
-    public static String events = "";
-    public static String real_face_hair = "";
-    public static String serverCheckMessage = "ÇöÀç " + serverName + " ¼­¹ö Á¡°Ë ÁßÀÔ´Ï´Ù.\r\n[»çÀ¯ : ½Ã½ºÅÛ ¾ÈÁ¤È­]";
+    public static final byte TRADE_TYPE = 1;
+    public static boolean ServerTest;
+    public static int starForceSalePercent;
+    public static int starForceSalePercents;
+    public static int starForcePlusProb;
+    public static int amazingscrollPlusProb;
+    public static int soulPlusProb;
+    public static int BuddyChatPort;
+    public static int EventBonusExp;
+    public static int WeddingExp;
+    public static int PartyExp;
+    public static int PcRoomExp;
+    public static int RainbowWeekExp;
+    public static int BoomupExp;
+    public static int PortionExp;
+    public static int RestExp;
+    public static int ItemExp;
+    public static int ValueExp;
+    public static int IceExp;
+    public static int HpLiskExp;
+    public static int FieldBonusExp;
+    public static int EventBonusExp2;
+    public static int FieldBonusExp2;
+    public static final byte check = 1;
+    public static int StartMap;
+    public static int warpMap;
+    public static int fishMap;
+    public static int csNpc;
+    public static int JuhunFever;
+    public static String WORLD_UI;
+    public static String SUNDAY_TEXT;
+    public static String SUNDAY_DATE;
+    public static String serverMessage;
+    public static String mailid;
+    public static String mailpw;
+    public static boolean ChangeMapUI;
+    public static boolean feverTime;
+    public static int ReqDailyLevel;
+    public static List<BingoGame> BingoGameHolder;
+    public static List<QuickMoveEntry> quicks;
+    public static List<DimentionMirrorEntry> mirrors;
+    public static List<Pair<Integer, Long>> boss;
+    public static List<Pair<Integer, Long>> boss2;
+    public static List<Pair<Integer, Integer>> CashMainInfo;
+    public static int SgoldappleSuc;
+    public static List<Triple<Integer, Integer, Integer>> goldapple;
+    public static List<Triple<Integer, Integer, Integer>> Sgoldapple;
+    public static List<Pair<Integer, Integer>> NeoPosList;
+    public static List<Integer> FirstLogin;
 
-    /* °³¹ß ¼³Á¤ */
-    public static boolean serverCheck;
+    public static boolean ConnectorSetting = false;
 
-    public static boolean isDev = true;
+    public static int MaxLevel = 999;
 
-    public static int shopSale = 0;
+    public static boolean Event_MapleLive;
+    public static String SundayMapleUI;
+    public static String SundayMapleTEXTLINE_1;
+    public static String SundayMapleTEXTLINE_2;
+    public static int reboottime;
+    public static Thread t;
+    public static ScheduledFuture<?> ts;
 
-    /* ±âÅ¸ ¼³Á¤ */
-    public static boolean UnlockMaxDamage = true;
-    public static boolean feverTime = false;
-    public static boolean useMaxDrop;
-    public static boolean useBossMaxDrop;
-    public static boolean showPackets = false;
-    public static boolean sendPacketShow = false;
-    public static boolean recvPacketShow = false;
-    public static boolean realese = false;
-    public static String path = "";
-    public static String windowsDumpPath = "";
+    // ìš´ì˜ì ì„¸íŒ…
+    public static final String GM_IP = "127.0.0.1";
+    public static final String GM_ID = "";
+    public static final String GM_NAME = "";
 
-    /* ¹öÀü ¼³Á¤ */
-    public static short MAPLE_VERSION;
-    public static byte subVersion;
-    public static final byte check = 0;
-
-    /* ±âÅ¸ ¼³Á¤ 2 */
-    public static String hp_skillid_dummy = "";
-    public static String hp_skillid_real[];
-
-    //public static int loginPointAid = -1;
-
-    public static MapleCharacter chr;
-
-    public static List<MapleCharacter> mChat_char = new ArrayList<>();
-
-    public static boolean isShutdown = false;
-
-    public static boolean AutoHotTimeSystem;
-    public static boolean AutoHotTimeSystemtemchacks = false; 
-    
-    
-    public static BingoGame BingoGame = null;    
-
-    /* ÀÚµ¿ ÇÖÅ¸ÀÓ ¼³Á¤ ½ÃÀÛ */
-    public static int AutoHotTimeSystemHour = 0;
-    public static int AutoHotTimeSystemMinute = 0;
-    public static int AutoHotTimeSystemSecond = 0;
-
-    public static List<Integer> AutoHotTimeSundayItemCode = new ArrayList<Integer>();
-    public static List<Integer> AutoHotTimeMondayItemCode = new ArrayList<Integer>();
-    public static List<Integer> AutoHotTimeTuesdayItemCode = new ArrayList<Integer>();
-    public static List<Integer> AutoHotTimeWednesdayItemCode = new ArrayList<Integer>();
-    public static List<Integer> AutoHotTimeThursdayItemCode = new ArrayList<Integer>();
-    public static List<Integer> AutoHotTimeFridayItemCode = new ArrayList<Integer>();
-    public static List<Integer> AutoHotTimeSaturdayItemCode = new ArrayList<Integer>();
-    
-    /* ÀÚµ¿ ÇÖÅ¸ÀÓ ¼³Á¤ ³¡ */    
-    
-    /*Ä¿³ØÅÍ ¼³Á¤*/
-    public static final Map<String, Triple<String, String, String>> authlist = new ConcurrentHashMap<>();//¸ğµÎÆ÷ÇÔ
-    public static final Map<String, Triple<String, String, String>> authlist2 = new ConcurrentHashMap<>();//¸ğµÎÆ÷ÇÔ
-    public static boolean ConnectorSetting;
-    public static boolean ConnecterLog = false;    
+    // World Boss Item Settings
+    public final static int pice = 1;
+    //public final static int failitem = 4310080; ì‹¤íŒ¨ë³´ìƒì‚­ì œ
+    public final static int[] hour = {3, 6, 9, 12, 15, 18, 21, 24};
 
     static {
-        try {
-            FileInputStream setting = new FileInputStream("property/ServerSettings.properties");
-            Properties setting_ = new Properties();
-            setting_.load(setting);
-            setting.close();
-            defaultFlag = Byte.parseByte(setting_.getProperty(toUni("Flag")));
-            String[] temp = setting_.getProperty(toUni("Ä¿½ºÅÒÄù½ºÆ®")).split(",");
-            for (String v1 : temp) {
-                GameConstants.questReader.add(Integer.parseInt(v1));
-            }
-            serverCount = Integer.parseInt(setting_.getProperty(toUni("¼­¹ö°³¼ö")));
-            LoginPort = Integer.parseInt(setting_.getProperty(toUni("·Î±×ÀÎÆ÷Æ®")));
-            ChannelPort = Integer.parseInt(setting_.getProperty(toUni("Ã¤³ÎÆ÷Æ®")));
-            CashShopPort = Integer.parseInt(setting_.getProperty(toUni("Ä³½Ã¼¥Æ÷Æ®")));
-            BuddyChatPort = Integer.parseInt(setting_.getProperty(toUni("Ä£±¸¼­¹öÆ÷Æ®")));
+        ServerConstants.Gateway_IP = ServerProperties.getProperty("world.host");
+        ServerConstants.MAPLE_VERSION_IS_TEST = false;
+        ServerConstants.Use_Fixed_IV = false;
+        ServerConstants.Use_Localhost = false;
+        ServerConstants.DEBUG_RECEIVE = false;
+        ServerConstants.DEBUG_SEND = false;
+        ServerConstants.DEBUG_CONNECTOR = false;
+        ServerConstants.ServerTest = false;
+        ServerConstants.starForceSalePercent = 30;
+        ServerConstants.starForceSalePercents = 10;
+        ServerConstants.starForcePlusProb = 5;
+        ServerConstants.amazingscrollPlusProb = 5;
+        ServerConstants.soulPlusProb = 2;
+        ServerConstants.BuddyChatPort = Integer.parseInt(ServerProperties.getProperty("ports.buddy"));
+        ServerConstants.EventBonusExp = Integer.parseInt(ServerProperties.getProperty("world.eventBonus"));
+        ServerConstants.WeddingExp = Integer.parseInt(ServerProperties.getProperty("world.weddingBonus"));
+        ServerConstants.PartyExp = Integer.parseInt(ServerProperties.getProperty("world.partyBonus"));
+        ServerConstants.PcRoomExp = Integer.parseInt(ServerProperties.getProperty("world.pcBonus"));
+        ServerConstants.RainbowWeekExp = Integer.parseInt(ServerProperties.getProperty("world.rainbowBonus"));
+        ServerConstants.BoomupExp = Integer.parseInt(ServerProperties.getProperty("world.boomBonus"));
+        ServerConstants.PortionExp = Integer.parseInt(ServerProperties.getProperty("world.portionBonus"));
+        ServerConstants.RestExp = Integer.parseInt(ServerProperties.getProperty("world.restBonus"));
+        ServerConstants.ItemExp = Integer.parseInt(ServerProperties.getProperty("world.itemBonus"));
+        ServerConstants.ValueExp = Integer.parseInt(ServerProperties.getProperty("world.valueBonus"));
+        ServerConstants.IceExp = Integer.parseInt(ServerProperties.getProperty("world.iceBonus"));
+        ServerConstants.HpLiskExp = Integer.parseInt(ServerProperties.getProperty("world.hpLiskBonus"));
+        ServerConstants.FieldBonusExp = Integer.parseInt(ServerProperties.getProperty("world.fieldBonus"));
+        ServerConstants.EventBonusExp2 = Integer.parseInt(ServerProperties.getProperty("world.eventBonus2"));
+        ServerConstants.FieldBonusExp2 = Integer.parseInt(ServerProperties.getProperty("world.fieldBonus2"));
+        ServerConstants.StartMap = Integer.parseInt(ServerProperties.getProperty("world.startMap"));
+        ServerConstants.warpMap = Integer.parseInt(ServerProperties.getProperty("world.warpMap"));
+        ServerConstants.fishMap = 680000711;
 
-            defaultExpRate = Integer.parseInt(setting_.getProperty(toUni("°æÇèÄ¡¹èÀ²")));
-            defaultDropRate = Integer.parseInt(setting_.getProperty(toUni("µå·Ó¹èÀ²")));
-            defaultMesoRate = Integer.parseInt(setting_.getProperty(toUni("¸Ş¼Ò¹èÀ²")));
-            defaultCashRate = Integer.parseInt(setting_.getProperty(toUni("Ä³½Ã¹èÀ²")));
-            defaultBossCashRate = Integer.parseInt(setting_.getProperty(toUni("º¸½ºÄ³½Ã¹èÀ²")));
+        ServerConstants.csNpc = 9001174;
+        ServerConstants.JuhunFever = 0;
+        ServerConstants.WORLD_UI = "UI/UIWindowEvent.img/sundayMaple";
+        ServerConstants.SUNDAY_TEXT = "#sunday# #fnë‚˜ëˆ”ê³ ë”• ExtraBold##fs20##fc0xFFFFFFFF#ê²½í—˜ì¹˜ 3ë°° ì¿ í°(15ë¶„) #fc0xFFFFD800#5ê°œ #fc0xFFFFFFFF#ì§€ê¸‰!\\n#sunday# #fs20##fc0xFFFFFFFF#RISE í¬ì¸íŠ¸ íšë“ ê°€ëŠ¥ëŸ‰ #fc0xFFFFD800#2ë°°!#fc0xFFFFFFFF#";
+        ServerConstants.SUNDAY_DATE = "#fnë‚˜ëˆ”ê³ ë”• ExtraBold##fs15##fc0xFFB7EC00#2019ë…„ 12ì›” 22ì¼ ì¼ìš”ì¼";
+        ServerConstants.serverMessage = "";
+        ServerConstants.mailid = "theblackmaplestory";
+        ServerConstants.mailpw = "ejqmfforrkt3214!";
+        ServerConstants.ChangeMapUI = false;
+        ServerConstants.feverTime = false;
+        ServerConstants.ReqDailyLevel = 33;
+        ServerConstants.BingoGameHolder = new ArrayList<BingoGame>();
+        ServerConstants.quicks = new ArrayList<QuickMoveEntry>();
+        ServerConstants.mirrors = new ArrayList<DimentionMirrorEntry>();
+        ServerConstants.boss = new ArrayList<Pair<Integer, Long>>();
+        ServerConstants.boss2 = new ArrayList<Pair<Integer, Long>>();
+        ServerConstants.CashMainInfo = new ArrayList<Pair<Integer, Integer>>();
+        ServerConstants.goldapple = new ArrayList<Triple<Integer, Integer, Integer>>();
+        ServerConstants.Sgoldapple = new ArrayList<Triple<Integer, Integer, Integer>>();
+        ServerConstants.NeoPosList = new ArrayList<Pair<Integer, Integer>>();
+        ServerConstants.FirstLogin = new ArrayList<Integer>();
+        ServerConstants.Event_MapleLive = false;
+        ServerConstants.SundayMapleUI = "UI/UIWindowEvent.img/sundayMaple";
+        ServerConstants.SundayMapleTEXTLINE_1 = "";
+        ServerConstants.SundayMapleTEXTLINE_2 = "";
 
-            cshopNpc = Integer.parseInt(setting_.getProperty(toUni("Ä³½Ã¼¥NPC")));
+        ServerConstants.reboottime = 0;
+        ServerConstants.t = null;
+        ServerConstants.ts = null;
+    }
 
-            serverName = new String(setting_.getProperty(toUni("¼­¹öÀÌ¸§")).getBytes("ISO-8859-1"), "euc-kr");
-            serverMessage = new String(setting_.getProperty(toUni("¼­¹ö¸Ş¼¼Áö")).getBytes("ISO-8859-1"), "euc-kr");
-            serverWelcome = new String(setting_.getProperty(toUni("¼­¹öÈ¯¿µ¸Ş¼¼Áö")).getBytes("ISO-8859-1"), "euc-kr");
-            eventMessage = new String(setting_.getProperty(toUni("ÀÌº¥Æ®¸Ş¼¼Áö")).getBytes("ISO-8859-1"), "euc-kr");
-            beginner = new String(setting_.getProperty(toUni("Ã³À½½ÃÀÛ°øÁö")).getBytes("ISO-8859-1"), "euc-kr");
-            serverNotititle = new String(setting_.getProperty(toUni("¼­¹ö°øÁöÁ¦¸ñ")).getBytes("ISO-8859-1"), "euc-kr");
-            serverNotification = new String(setting_.getProperty(toUni("¼­¹ö°øÁö³»¿ë")).getBytes("ISO-8859-1"), "euc-kr");
-            recommendMessage = new String(setting_.getProperty(toUni("ÃßÃµ¸Ş¼¼Áö")).getBytes("ISO-8859-1"), "euc-kr");
-            serverHint = new String(setting_.getProperty(toUni("¼­¹öÈùÆ®")).getBytes("ISO-8859-1"), "euc-kr");
 
-            dbHost = new String(setting_.getProperty(toUni("Arc.dbHost")).getBytes("ISO-8859-1"), "euc-kr");
-            dbPort = Integer.parseInt(setting_.getProperty(toUni("Arc.dbPort")));
-            dbUser = new String(setting_.getProperty(toUni("Arc.dbUser")).getBytes("ISO-8859-1"), "euc-kr");
-            dbPassword = new String(setting_.getProperty(toUni("Arc.dbPassword")).getBytes("ISO-8859-1"), "euc-kr");
+    public enum PlayerGMRank {
+        NORMAL('@', 0),
+        DONATOR('#', 1),
+        SUPERDONATOR('$', 2),
+        INTERN('%', 3),
+        GM('!', 4),
+        SUPERGM('!', 5),
+        ADMIN('!', 6);
 
-            events = new String(setting_.getProperty(toUni("ÀÌº¥Æ®")).getBytes("ISO-8859-1"), "euc-kr");
+        private char commandPrefix;
+        private int level;
 
-            startMap = Integer.parseInt(setting_.getProperty(toUni("½ÃÀÛ¸Ê")));
-            serverHint = new String(setting_.getProperty(toUni("¼­¹öÈùÆ®")).getBytes("ISO-8859-1"), "euc-kr");
+        private PlayerGMRank(final char ch, final int level) {
+            this.commandPrefix = ch;
+            this.level = level;
+        }
 
-            MAPLE_VERSION = Short.parseShort(setting_.getProperty(toUni("Å¬¶óÀÌ¾ğÆ®¹öÀü")));
-            subVersion = Byte.parseByte(setting_.getProperty(toUni("¸¶ÀÌ³Ê¹öÀü")));
+        public char getCommandPrefix() {
+            return this.commandPrefix;
+        }
 
-            path = new String(setting_.getProperty(toUni("¿É¼Ç°æ·ÎÁöÁ¤")).getBytes("ISO-8859-1"), "euc-kr");
-            windowsDumpPath = new String(setting_.getProperty(toUni("´ıÇÁ°æ·ÎÁöÁ¤")).getBytes("ISO-8859-1"), "euc-kr");
+        public int getLevel() {
+            return this.level;
+        }
 
-            serverCheck = Boolean.parseBoolean(setting_.getProperty(toUni("¼­¹öÁ¡°Ë")));
-            showPackets = Boolean.parseBoolean(setting_.getProperty(toUni("ÆĞÅ¶Ãâ·Â")));
-            useMaxDrop = Boolean.parseBoolean(setting_.getProperty(toUni("ÃÖ´ëµå¶ø»ç¿ë")));
-            useBossMaxDrop = Boolean.parseBoolean(setting_.getProperty(toUni("ÃÖ´ëº¸½ºµå¶ø»ç¿ë")));
-            bossMaxDrop = Integer.parseInt(setting_.getProperty(toUni("ÃÖ´ëº¸½ºµå¶ø¾ÆÀÌÅÛ°³¼ö")));
-            maxDrop = Integer.parseInt(setting_.getProperty(toUni("ÃÖ´ëµå¶ø¾ÆÀÌÅÛ°³¼ö")));
+        private static PlayerGMRank[] $values() {
+            return new PlayerGMRank[]{PlayerGMRank.NORMAL, PlayerGMRank.DONATOR, PlayerGMRank.SUPERDONATOR, PlayerGMRank.INTERN, PlayerGMRank.GM, PlayerGMRank.SUPERGM, PlayerGMRank.ADMIN};
+        }
 
-            AutoHotTimeSystem = Boolean.parseBoolean(setting_.getProperty(toUni("ÀÚµ¿ÇÖÅ¸ÀÓ»ç¿ë")));
-            AutoHotTimeSystemHour = Integer.parseInt(setting_.getProperty(toUni("ÀÚµ¿ÇÖÅ¸ÀÓ½Ã°£")));
-            AutoHotTimeSystemMinute = Integer.parseInt(setting_.getProperty(toUni("ÀÚµ¿ÇÖÅ¸ÀÓºĞ")));
-            AutoHotTimeSystemSecond = Integer.parseInt(setting_.getProperty(toUni("ÀÚµ¿ÇÖÅ¸ÀÓÃÊ")));
-            
-            String AutoHotTimeSundayItemCodes = setting_.getProperty(toUni("ÀÏ¿äÀÏÇÖÅ¸ÀÓ¾ÆÀÌÅÛ"));
-            if (!AutoHotTimeSundayItemCodes.isEmpty()) {
-                String AutoHotTimeSundayItemCodess[] = AutoHotTimeSundayItemCodes.split(",");
-                for (int i = 0; i < AutoHotTimeSundayItemCodess.length; i++) {
-                    AutoHotTimeSundayItemCode.add(Integer.parseInt(AutoHotTimeSundayItemCodess[i]));
-                }
-            }
-            String AutoHotTimeMondayItemCodes = setting_.getProperty(toUni("¿ù¿äÀÏÇÖÅ¸ÀÓ¾ÆÀÌÅÛ"));
-            if (!AutoHotTimeMondayItemCodes.isEmpty()) {
-                String AutoHotTimeMondayItemCodess[] = AutoHotTimeMondayItemCodes.split(",");
-                for (int i = 0; i < AutoHotTimeMondayItemCodess.length; i++) {
-                    AutoHotTimeMondayItemCode.add(Integer.parseInt(AutoHotTimeMondayItemCodess[i]));
-                }
-            }
-            String AutoHotTimeTuesdayItemCodes = setting_.getProperty(toUni("È­¿äÀÏÇÖÅ¸ÀÓ¾ÆÀÌÅÛ"));
-            if (!AutoHotTimeTuesdayItemCodes.isEmpty()) {
-                String AutoHotTimeTuesdayItemCodess[] = AutoHotTimeTuesdayItemCodes.split(",");
-                for (int i = 0; i < AutoHotTimeTuesdayItemCodess.length; i++) {
-                    AutoHotTimeTuesdayItemCode.add(Integer.parseInt(AutoHotTimeTuesdayItemCodess[i]));
-                }
-            }
-            String AutoHotTimeWednesdayItemCodes = setting_.getProperty(toUni("¼ö¿äÀÏÇÖÅ¸ÀÓ¾ÆÀÌÅÛ"));
-            if (!AutoHotTimeWednesdayItemCodes.isEmpty()) {
-                String AutoHotTimeWednesdayItemCodess[] = AutoHotTimeWednesdayItemCodes.split(",");
-                for (int i = 0; i < AutoHotTimeWednesdayItemCodess.length; i++) {
-                    AutoHotTimeWednesdayItemCode.add(Integer.parseInt(AutoHotTimeWednesdayItemCodess[i]));
-                }
-            }
-            String AutoHotTimeThursdayItemCodes = setting_.getProperty(toUni("¸ñ¿äÀÏÇÖÅ¸ÀÓ¾ÆÀÌÅÛ"));
-            if (!AutoHotTimeThursdayItemCodes.isEmpty()) {
-                String AutoHotTimeThursdayItemCodess[] = AutoHotTimeThursdayItemCodes.split(",");
-                for (int i = 0; i < AutoHotTimeThursdayItemCodess.length; i++) {
-                    AutoHotTimeThursdayItemCode.add(Integer.parseInt(AutoHotTimeThursdayItemCodess[i]));
-                }
-            }
-
-            String AutoHotTimeFridayItemCodes = setting_.getProperty(toUni("±İ¿äÀÏÇÖÅ¸ÀÓ¾ÆÀÌÅÛ"));
-            if (!AutoHotTimeFridayItemCodes.isEmpty()) {
-                String AutoHotTimeFridayItemCodess[] = AutoHotTimeFridayItemCodes.split(",");
-                for (int i = 0; i < AutoHotTimeFridayItemCodess.length; i++) {
-                    AutoHotTimeFridayItemCode.add(Integer.parseInt(AutoHotTimeFridayItemCodess[i]));
-                }
-            }
-            String AutoHotTimeSaturdayItemCodes = setting_.getProperty(toUni("Åä¿äÀÏÇÖÅ¸ÀÓ¾ÆÀÌÅÛ"));
-            if (!AutoHotTimeSaturdayItemCodes.isEmpty()) {
-                String AutoHotTimeSaturdayItemCodess[] = AutoHotTimeSaturdayItemCodes.split(",");
-                for (int i = 0; i < AutoHotTimeSaturdayItemCodess.length; i++) {
-                    AutoHotTimeSaturdayItemCode.add(Integer.parseInt(AutoHotTimeSaturdayItemCodess[i]));
-                }
-            }
-            
-            ConnectorSetting = Boolean.parseBoolean(setting_.getProperty(toUni("Ä¿³ØÅÍ»ç¿ë¼³Á¤")));
-        } catch (Exception e) {
-            System.err.println("[¿À·ù] ¼­¹ö ¼¼ÆÃÆÄÀÏÀ» ºÒ·¯¿À´Âµ¥ ½ÇÆĞÇÏ¿´½À´Ï´Ù.");
-            if (!realese) {
-                e.printStackTrace();
-            }
+        static {
+            PlayerGMRank[] $VALUES = $values();
         }
     }
 
-    public static int basePorts = (isLocal ? 100 : 0) + (ChannelPort);
+    public enum CommandType {
+        NORMAL(0),
+        TRADE(1);
 
-    protected static String toUni(String kor) throws UnsupportedEncodingException {
-        return new String(kor.getBytes("KSC5601"), "8859_1");
-    }
+        private int level;
 
-    public static boolean isAdminIp(String ip) {
-        ip = ip.replaceAll("/", "");
-        return ip.equals(ServerConstants.ADMIN1) || ip.equals(ServerConstants.ADMIN2) || ip.equals(ServerConstants.ADMIN3) || ip.equals(ServerConstants.ADMIN4) || ip.equals(ServerConstants.ADMIN5);
-    }
-
-    public static String getServerHost(MapleClient ha) {
-        try {
-            return InetAddress.getByName(ServerConstants.Host).getHostAddress().replace("/", "");
-        } catch (Exception e) {
-            if (!ServerConstants.realese) {
-                e.printStackTrace();
-            }
+        private CommandType(final int level) {
+            this.level = level;
         }
-        return ServerConstants.Host;
+
+        public int getType() {
+            return this.level;
+        }
+
+        private static CommandType[] $values() {
+            return new CommandType[]{CommandType.NORMAL, CommandType.TRADE};
+        }
+
+        static {
+            CommandType[] $VALUES = $values();
+        }
     }
 }

@@ -1,81 +1,85 @@
 package server.life;
 
+import client.MapleCharacter;
 import client.MapleClient;
-import packet.creators.MainPacketCreator;
-import server.maps.MapleMap;
 import server.maps.MapleMapObjectType;
 import server.shops.MapleShopFactory;
+import tools.packet.CField;
 
 public class MapleNPC extends AbstractLoadedMapleLife {
-
-    protected final MapleNPCStats stats;
-    private boolean custom = false;
-    private boolean temp = false;
-
-    public MapleNPC(final int id, final MapleNPCStats stats) {
-        super(id);
-        this.stats = stats;
-    }
-
-    public final boolean hasShop() {
-        return MapleShopFactory.getInstance().getShopForNPC(getId()) != null;
-    }
-
-    public final void sendShop(final MapleClient c) {
-        MapleShopFactory.getInstance().getShopForNPC(getId()).sendShop(c);
-    }
-
-    @Override
-    public void sendSpawnData(final MapleClient client) {
-        // if (!temp) {
-        client.getSession().writeAndFlush(MainPacketCreator.spawnNPC(this, true));
-        client.getSession().writeAndFlush(MainPacketCreator.spawnNPCRequestController(this, true));
-        // }
-    }
-
-    @Override
-    public final void sendDestroyData(final MapleClient client) {
-        client.getSession().writeAndFlush(MainPacketCreator.removeNPC(getObjectId()));
-    }
-
-    @Override
-    public MapleMapObjectType getType() {
-        return MapleMapObjectType.NPC;
-    }
-
-    public void broadcastPacket(MapleMap map) {
-        if (!temp) {
-            map.broadcastMessage(MainPacketCreator.spawnNPC(this, true));
-            map.broadcastMessage(MainPacketCreator.spawnNPCRequestController(this, true));
-        }
-
-    }
-
-    public final String getName() {
-        return stats.getName();
-    }
-
-    public final void setName(String name) {
-        stats.setName(name);
-    }
-
-    public final boolean isCustom() {
-        return custom;
-    }
-
-    public final void setCustom(final boolean custom) {
-        this.custom = custom;
-    }
-
-    public final boolean isTemp() {
-        return temp;
-    }
-
-    public final void setTemp(final boolean temp) {
-        this.temp = temp;
-    }
-
-    public final MapleNPCStats getNPCStats() {
-        return stats;
-    }
+  private MapleCharacter owner = null;
+  
+  private boolean left = false;
+  
+  private String name = "MISSINGNO";
+  
+  private boolean custom = false;
+  
+  public MapleNPC(int id, String name) {
+    super(id);
+    this.name = name;
+  }
+  
+  public final boolean hasShop() {
+    return (MapleShopFactory.getInstance().getShopForNPC(getId()) != null);
+  }
+  
+  public final void sendShop(MapleClient c) {
+    MapleShopFactory.getInstance().getShopForNPC(getId()).sendShop(c);
+  }
+  
+  public void sendSpawnData(MapleClient client) {
+    if (getId() >= 9901000)
+      return; 
+    if (this.owner != null) {
+      if (client.getPlayer().getId() == this.owner.getId()) {
+        client.getSession().writeAndFlush(CField.NPCPacket.spawnNPC(this, true));
+        client.getSession().writeAndFlush(CField.NPCPacket.spawnNPCRequestController(this, true));
+      } 
+    } else {
+      client.getSession().writeAndFlush(CField.NPCPacket.spawnNPC(this, true));
+      client.getSession().writeAndFlush(CField.NPCPacket.spawnNPCRequestController(this, true));
+    } 
+  }
+  
+  public final void sendDestroyData(MapleClient client) {
+    client.getSession().writeAndFlush(CField.NPCPacket.removeNPCController(getObjectId()));
+    client.getSession().writeAndFlush(CField.NPCPacket.removeNPC(getObjectId()));
+  }
+  
+  public final MapleMapObjectType getType() {
+    return MapleMapObjectType.NPC;
+  }
+  
+  public final String getName() {
+    return this.name;
+  }
+  
+  public void setName(String n) {
+    this.name = n;
+  }
+  
+  public final boolean isCustom() {
+    return this.custom;
+  }
+  
+  public final void setCustom(boolean custom) {
+    this.custom = custom;
+  }
+  
+  public MapleCharacter getOwner() {
+    return this.owner;
+  }
+  
+  public void setOwner(MapleCharacter owner) {
+    this.owner = owner;
+  }
+  
+  public boolean isLeft() {
+    return this.left;
+  }
+  
+  public void setLeft(boolean left) {
+    this.left = left;
+  }
 }

@@ -1,119 +1,110 @@
 package server.maps;
 
-import java.awt.Point;
+import tools.Pair;
+
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import tools.Pair;
-
 public class MapleReactorStats {
-
-    private byte facingDirection;
-    private Point tl;
-    private Point br;
-    private Map<Byte, Map<Byte, StateData>> stateInfo = new HashMap<Byte, Map<Byte, StateData>>();
-
-    public final void setFacingDirection(final byte facingDirection) {
-        this.facingDirection = facingDirection;
+  private Point tl;
+  
+  private Point br;
+  
+  private Map<Byte, StateData> stateInfo = new HashMap<>();
+  
+  public void setTL(Point tl) {
+    this.tl = tl;
+  }
+  
+  public void setBR(Point br) {
+    this.br = br;
+  }
+  
+  public Point getTL() {
+    return this.tl;
+  }
+  
+  public Point getBR() {
+    return this.br;
+  }
+  
+  public void addState(byte state, int type, Pair<Integer, Integer> reactItem, byte nextState, int timeOut, byte canTouch) {
+    this.stateInfo.put(Byte.valueOf(state), new StateData(type, reactItem, nextState, timeOut, canTouch));
+  }
+  
+  public byte getNextState(byte state) {
+    StateData nextState = this.stateInfo.get(Byte.valueOf(state));
+    if (nextState != null)
+      return nextState.getNextState(); 
+    return -1;
+  }
+  
+  public int getType(byte state) {
+    StateData nextState = this.stateInfo.get(Byte.valueOf(state));
+    if (nextState != null)
+      return nextState.getType(); 
+    return -1;
+  }
+  
+  public Pair<Integer, Integer> getReactItem(byte state) {
+    StateData nextState = this.stateInfo.get(Byte.valueOf(state));
+    if (nextState != null)
+      return nextState.getReactItem(); 
+    return null;
+  }
+  
+  public int getTimeOut(byte state) {
+    StateData nextState = this.stateInfo.get(Byte.valueOf(state));
+    if (nextState != null)
+      return nextState.getTimeOut(); 
+    return -1;
+  }
+  
+  public byte canTouch(byte state) {
+    StateData nextState = this.stateInfo.get(Byte.valueOf(state));
+    if (nextState != null)
+      return nextState.canTouch(); 
+    return 0;
+  }
+  
+  private static class StateData {
+    private int type;
+    
+    private int timeOut;
+    
+    private Pair<Integer, Integer> reactItem;
+    
+    private byte nextState;
+    
+    private byte canTouch;
+    
+    private StateData(int type, Pair<Integer, Integer> reactItem, byte nextState, int timeOut, byte canTouch) {
+      this.type = type;
+      this.reactItem = reactItem;
+      this.nextState = nextState;
+      this.timeOut = timeOut;
+      this.canTouch = canTouch;
     }
-
-    public final byte getFacingDirection() {
-        return facingDirection;
+    
+    private int getType() {
+      return this.type;
     }
-
-    public void setTL(Point tl) {
-        this.tl = tl;
+    
+    private byte getNextState() {
+      return this.nextState;
     }
-
-    public void setBR(Point br) {
-        this.br = br;
+    
+    private Pair<Integer, Integer> getReactItem() {
+      return this.reactItem;
     }
-
-    public Point getTL() {
-        return tl;
+    
+    private int getTimeOut() {
+      return this.timeOut;
     }
-
-    public Point getBR() {
-        return br;
+    
+    private byte canTouch() {
+      return this.canTouch;
     }
-
-    public int getStateEventSize(byte state) {
-        if (stateInfo.get(state) == null) {
-            return 0;
-        }
-        return stateInfo.get(state).size();
-    }
-
-    public Map<Byte, StateData> getState(byte stat) {
-        return stateInfo.get(stat);
-    }
-
-    public void addState(byte state, byte index, int type, Pair<Integer, Integer> reactItem, byte nextState) {
-        StateData newState = new StateData(type, reactItem, nextState);
-        if (!stateInfo.containsKey(state)) {
-            stateInfo.put(state, new HashMap<Byte, StateData>());
-        }
-        stateInfo.get(state).put(index, newState);
-    }
-
-    public byte getNextState(byte state, byte index) {
-        if (stateInfo.get(state) == null) {
-            return -1;
-        }
-        StateData nextState = stateInfo.get(state).get(index);
-        if (nextState != null) {
-            return nextState.getNextState();
-        } else {
-            return -1;
-        }
-    }
-
-    public int getType(byte state, byte index) {
-        if (stateInfo.get(state) == null) {
-            return -1;
-        }
-        StateData nextState = stateInfo.get(state).get(index);
-        if (nextState != null) {
-            return nextState.getType();
-        } else {
-            return -1;
-        }
-    }
-
-    public Pair<Integer, Integer> getReactItem(byte state, byte index) {
-        if (stateInfo.get(state) == null) {
-            return null;
-        }
-        StateData nextState = stateInfo.get(state).get(index);
-        if (nextState != null) {
-            return nextState.getReactItem();
-        } else {
-            return null;
-        }
-    }
-
-    private class StateData {
-
-        private int type;
-        private Pair<Integer, Integer> reactItem;
-        private byte nextState;
-
-        private StateData(int type, Pair<Integer, Integer> reactItem, byte nextState) {
-            this.type = type;
-            this.reactItem = reactItem;
-            this.nextState = nextState;
-        }
-
-        private int getType() {
-            return type;
-        }
-
-        private byte getNextState() {
-            return nextState;
-        }
-
-        private Pair<Integer, Integer> getReactItem() {
-            return reactItem;
-        }
-    }
+  }
 }

@@ -1,329 +1,278 @@
 package server.maps;
 
-import java.awt.Point;
-import java.awt.Rectangle;
-
 import client.MapleCharacter;
 import client.MapleClient;
-import client.skills.ISkill;
-import client.skills.SkillFactory;
-import client.skills.SkillStatEffect;
-import packet.creators.MainPacketCreator;
+import client.Skill;
+import client.SkillFactory;
+import constants.GameConstants;
+import server.SecondaryStatEffect;
 import server.life.MapleMonster;
 import server.life.MobSkill;
+import tools.packet.CField;
 
-public class MapleMist extends AbstractHinaMapObject {
+import java.awt.*;
+import java.util.concurrent.ScheduledFuture;
 
-    private Rectangle mistPosition;
-    private MapleCharacter owner = null;
-    private MapleMonster mob = null;
-    private SkillStatEffect source;
-    private MobSkill skill;
-    private boolean isMobMist, isPoisonMist, isShelter, isRecovery, isBurningRegion, isTimeCapsule;
-    private int skillDelay, skilllevel;
-    private int clockType; // ¹Ý¹Ý
-    private boolean isUsed;
-    private Point position;
-    private long endTime = -1;
-    private MapleMap map;
-
-    public MapleMist(Rectangle mistPosition, MapleMonster mob, MobSkill skill, Point position) {
-        this.mistPosition = mistPosition;
-        this.mob = mob;
-        this.skill = skill;
-        skilllevel = skill.getSkillId();
-        isMobMist = true;
-        isPoisonMist = true;
-        isShelter = true;
-        isBurningRegion = false;
-        isTimeCapsule = false;
-        isRecovery = true;
-        skillDelay = 0;
-        clockType = -1;
-        isUsed = false;
-    }
-
-    public MapleMist(Rectangle mistPosition, MapleCharacter owner, SkillStatEffect source, int skilllevel, Point position) {
-        this.mistPosition = mistPosition;
-        this.owner = owner;
-        this.source = source;
-        this.skilllevel = skilllevel;
-        this.position = position;
-        switch (source.getSourceId()) {
-            case 4121015:
-            case 4221006:
-                isMobMist = false;
-                isPoisonMist = false;
-                isShelter = false;
-                isRecovery = false;
-                skillDelay = 8;
-                break;
-            case 1076:
-            case 11076:
-            case 2111003:
-            case 2100010:
-            case 14111006:
-            case 61121105:
-                isMobMist = false;
-                isPoisonMist = true;
-                isShelter = false;
-                isRecovery = false;
-                skillDelay = source.getSourceId() == 2100010 ? 6 : 0;
-                break;
-            case 32121006:
-                isMobMist = false;
-                isPoisonMist = false;
-                isShelter = true;
-                isRecovery = false;
-                skillDelay = 11;
-                break;
-            case 22161003:
-                isMobMist = false;
-                isPoisonMist = false;
-                isShelter = false;
-                isRecovery = true;
-                skillDelay = 8;
-                break;
-            case 100001261:
-                isMobMist = false;
-                isPoisonMist = false;
-                isShelter = false;
-                isRecovery = false;
-                skillDelay = 2;
-                break;
-            case 12121005: // ¹ö´× ¸®Á¯
-                skillDelay = 2;
-                isBurningRegion = true;
-                break;
-            case 36121007: // Å¸ÀÓ Ä¸½¶
-                skillDelay = 15;
-                isTimeCapsule = true;
-                break;
-            case 2201009: //Ä¥¸µ½ºÅÜ
-                isMobMist = true;
-                isPoisonMist = false;
-                isShelter = false;
-                isRecovery = false;
-                skillDelay = 3;
-                break;
-        }
-    }
-
-    public MapleMist(Rectangle mistPosition, MapleCharacter owner, SkillStatEffect source) {
-        this.mistPosition = mistPosition;
-        this.owner = owner;
-        this.source = source;
-        this.skillDelay = 8;
-        this.isMobMist = false;
-        this.skilllevel = owner.getSkillLevel(SkillFactory.getSkill(source.getSourceId() == 400051025 || source.getSourceId() == 400051026 ? 400051024 : source.getSourceId()));
-        switch (source.getSourceId()) {
-            case 24120055:
-            case 24121052:
-                this.isMobMist = false;
-                this.isShelter = false;
-                this.isPoisonMist = false;
-                this.skillDelay = 16;
-                break;
-            case 4121015:
-            case 4221006:
-                isMobMist = false;
-                isPoisonMist = false;
-                isShelter = false;
-                isRecovery = false;
-                skillDelay = 8;
-                break;
-            case 14111006:
-            case 1076:
-            case 11076:
-            case 2111003:
-            case 61121105:
-                isMobMist = false;
-                isPoisonMist = true;
-                isShelter = false;
-                isRecovery = false;
-                skillDelay = 8;
-                break;
-            case 32121006:
-                isMobMist = false;
-                isPoisonMist = false;
-                isShelter = true;
-                isRecovery = false;
-                skillDelay = 11;
-                break;
-            case 22161003:
-                isMobMist = false;
-                isPoisonMist = false;
-                isShelter = false;
-                isRecovery = true;
-                skillDelay = 8;
-                break;
-            case 2201009:
-                isMobMist = true;
-                isPoisonMist = false;
-                isShelter = false;
-                isRecovery = false;
-                skillDelay = 3;
-                break;
-            case 100001261:
-                isMobMist = false;
-                isPoisonMist = false;
-                isShelter = false;
-                isRecovery = false;
-                skillDelay = 2;
-                break;
-            case 12121005:
-                skillDelay = 2;
-                isBurningRegion = true;
-                break;
-            case 36121007:
-                skillDelay = 15;
-                isTimeCapsule = true;
-                break;
-            case 400031037:
-            case 400031039:
-            case 400031040: {
-                skillDelay = 6;
-                break;
-        }
-             
-        }
-    }
-
-    @Override
-    public MapleMapObjectType getType() {
-        return MapleMapObjectType.MIST;
-    }
-
-    @Override
-    public Point getPosition() {
-        return mistPosition.getLocation();
-    }
-
-    public void setEndTime(int i) {
-        endTime = System.currentTimeMillis() + i;
-    }
-
-    public long getEndTime() {
-        return endTime;
-    }
-
-    public ISkill getSourceSkill() {
-        if (source == null) {
-            return null;
-        }
-        return SkillFactory.getSkill(source.getSourceId());
-    }
-
-    public SkillStatEffect getSource() {
-        return source;
-    }
-
-    public boolean isMobMist() {
-        return isMobMist;
-    }
-
-    public boolean isPoisonMist() {
-        return isPoisonMist;
-    }
-
-    public boolean isShelter() {
-        return isShelter;
-    }
-
-    public boolean isBurningRegion() {
-        return isBurningRegion;
-    }
-
-    public boolean isTimeCapsule() {
-        return isTimeCapsule;
-    }
-
-    public boolean isRecovery() {
-        return isRecovery;
-    }
-
-    public void setMap(final MapleMap map) {
-        this.map = map;
-    }
-
-    public void removeMist() {
-        map.broadcastMessage(MainPacketCreator.removeMist(getObjectId(), false));
-        map.removeMapObject(this);
-        if (getOwner() != null) {
-            getOwner().removeVisibleMapObject(this);
-        }
-    }
-
-    public boolean isUsed() {
-        return isUsed;
-    }
-
-    public void setUsed(boolean used) {
-        this.isUsed = used;
-    }
-
-    public int getSkillDelay() {
-        return skillDelay;
-    }
-
-    public int getSkillLevel() {
-        return skilllevel;
-    }
-
-    public MapleMonster getMobOwner() {
-        return mob;
-    }
-
-    public MapleCharacter getOwner() {
-        return owner;
-    }
-
-    public MobSkill getMobSkill() {
-        return this.skill;
-    }
-
-    public Rectangle getBox() {
-        return mistPosition;
-    }
-
-    public int getClockType() {
-        return clockType;
-    }
-
-    public void setClockType(int clockType) {
-        this.clockType = clockType;
-    }
-
-    public boolean isClock() {
-        return clockType != -1;
-    }
-
-    @Override
-    public void setPosition(Point position) {
-    }
-
-    public byte[] fakeSpawnData(int level) {
-        if (owner != null) {
-            return MainPacketCreator.spawnMist(this);
-        }
-        return MainPacketCreator.spawnMist(this);
-    }
-
-    @Override
-    public void sendSpawnData(final MapleClient c) {
-        c.getSession().writeAndFlush(getClockType() > 0 ? MainPacketCreator.spawnClockMist(this) : MainPacketCreator.spawnMist(this));
-    }
-
-    @Override
-    public void sendDestroyData(final MapleClient c) {
-        c.getSession().writeAndFlush(MainPacketCreator.removeMist(getObjectId(), source.isMistEruption()));
-    }
-
-    public boolean makeChanceResult() {
-        return source.makeChanceResult();
-    }
-
-    public Point getTruePosition() {
-        return position;
-    }
+public class MapleMist extends MapleMapObject {
+  private MapleCharacter owner;
+  
+  private MapleMonster mob;
+  
+  private Rectangle mistPosition;
+  
+  private SecondaryStatEffect source;
+  
+  private MobSkill skill;
+  
+  private boolean isMobMist;
+  
+  private byte rltype;
+  
+  private int skillDelay;
+  
+  private int skilllevel;
+  
+  private int isMistType = 0;
+  
+  private int ownerId;
+  
+  private int duration = 0;
+  
+  private int endtime = 0;
+  
+  private int damup = 0;
+  
+  private int customx = 0;
+  
+  private long startTime = 0L;
+  
+  private long bufftime = 0L;
+  
+  private ScheduledFuture<?> schedule = null, poisonSchedule = null;
+  
+  public MapleMist(Rectangle mistPosition, MapleMonster mob, MobSkill skill, int duration) {
+    this.mistPosition = mistPosition;
+    setMob(mob);
+    this.ownerId = mob.getObjectId();
+    this.skill = skill;
+    this.skilllevel = skill.getSkillLevel();
+    this.duration = duration;
+    setStartTime(System.currentTimeMillis());
+    this.isMobMist = true;
+    this.skillDelay = 0;
+    if (skill.getSkillId() == 191)
+      this.skillDelay = 6; 
+    if (skill.getSkillId() == 131 && skill.getSkillLevel() == 28)
+      this.skillDelay = 9; 
+  }
+  
+  public MapleMist(Rectangle mistPosition, MapleCharacter owner, SecondaryStatEffect source, int duration, byte rltype) {
+    this.mistPosition = mistPosition;
+    this.owner = owner;
+    this.ownerId = owner.getId();
+    this.source = source;
+    this.skillDelay = 8;
+    this.isMobMist = false;
+    this.skilllevel = (source.getSourceId() == 25111012) ? owner.getSkillLevel(25111005) : owner.getTotalSkillLevel(GameConstants.getLinkedSkill(source.getSourceId()));
+    setDuration(duration);
+    setRltype(rltype);
+    setStartTime(System.currentTimeMillis());
+    //if (owner.isGM())
+      //owner.dropMessage(6, "skillid " + this.source.getSourceId() + " mist lv : " + this.skilllevel + " / duration : " + this.duration);
+    switch (source.getSourceId()) {
+      case 1076:
+      case 11076:
+      case 2111003:
+      //case 2111013:
+      case 12111005:
+      case 14111006:
+        this.isMistType = 1;
+        break;
+      case 400001017:
+        this.isMistType = 0;
+        this.skillDelay = 1;
+        break;
+      case 4221006:
+      case 32121006:
+      case 400021030:
+      case 400021031:
+        this.isMistType = 0;
+        break;
+      case 22161003:
+        this.isMistType = 4;
+        break;
+      case 12121005:
+        this.isMistType = 6;
+        break;
+      case 61121116:
+        this.skillDelay = 0;
+        break;
+      case 152121041:
+        this.skillDelay = 2;
+        break;
+    } 
+    if (source.getSourceId() == 400001017);
+  }
+  
+  public MapleMapObjectType getType() {
+    return MapleMapObjectType.MIST;
+  }
+  
+  public Skill getSourceSkill() {
+    if (this.source == null)
+      return null; 
+    return SkillFactory.getSkill(this.source.getSourceId());
+  }
+  
+  public void setSchedule(ScheduledFuture<?> s) {
+    this.schedule = s;
+  }
+  
+  public ScheduledFuture<?> getSchedule() {
+    return this.schedule;
+  }
+  
+  public void setPoisonSchedule(ScheduledFuture<?> s) {
+    this.poisonSchedule = s;
+  }
+  
+  public ScheduledFuture<?> getPoisonSchedule() {
+    return this.poisonSchedule;
+  }
+  
+  public int getEndTime() {
+    return this.endtime;
+  }
+  
+  public void setEndTime(int time) {
+    this.endtime = time;
+  }
+  
+  public boolean isMobMist() {
+    return this.isMobMist;
+  }
+  
+  public int isPoisonMist() {
+    return this.isMistType;
+  }
+  
+  public void setSkillLevel(int skilllv) {
+    this.skilllevel = skilllv;
+  }
+  
+  public int getSkillDelay() {
+    return this.skillDelay;
+  }
+  
+  public int getSkillLevel() {
+    return this.skilllevel;
+  }
+  
+  public int getOwnerId() {
+    return this.ownerId;
+  }
+  
+  public MobSkill getMobSkill() {
+    return this.skill;
+  }
+  
+  public Rectangle getBox() {
+    return this.mistPosition;
+  }
+  
+  public void setBox(Rectangle r) {
+    this.mistPosition = r;
+  }
+  
+  public SecondaryStatEffect getSource() {
+    return this.source;
+  }
+  
+  public byte[] fakeSpawnData(int level) {
+    return CField.spawnMist(this);
+  }
+  
+  public void sendSpawnData(MapleClient c) {
+    c.getSession().writeAndFlush(CField.spawnMist(this));
+  }
+  
+  public void sendDestroyData(MapleClient c) {
+    c.getSession().writeAndFlush(CField.removeMist(this));
+  }
+  
+  public boolean makeChanceResult() {
+    return this.source.makeChanceResult();
+  }
+  
+  public MapleCharacter getOwner() {
+    return this.owner;
+  }
+  
+  public MapleMonster getMob() {
+    return this.mob;
+  }
+  
+  public void setMob(MapleMonster mob) {
+    this.mob = mob;
+  }
+  
+  public int getDuration() {
+    return this.duration;
+  }
+  
+  public void setDelay(int delay) {
+    this.skillDelay = delay;
+  }
+  
+  public void setDuration(int duration) {
+    this.duration = duration;
+  }
+  
+  public byte getRltype() {
+    return this.rltype;
+  }
+  
+  public void setRltype(byte rltype) {
+    this.rltype = rltype;
+  }
+  
+  public long getStartTime() {
+    return this.startTime;
+  }
+  
+  public void setStartTime(long startTime) {
+    this.startTime = startTime;
+  }
+  
+  public int getDamup() {
+    return this.damup;
+  }
+  
+  public void setDamup(int damup) {
+    this.damup = damup;
+  }
+  
+  public int getCustomx() {
+    return this.customx;
+  }
+  
+  public void setCustomx(int customx) {
+    this.customx = customx;
+  }
+  
+  public void setOwner(MapleCharacter owner) {
+    this.owner = owner;
+  }
+  
+  public void setOwnerId(int ownerId) {
+    this.ownerId = ownerId;
+  }
+  
+  public long getBufftime() {
+    return this.bufftime;
+  }
+  
+  public void setBufftime(long bufftime) {
+    this.bufftime = bufftime;
+  }
 }

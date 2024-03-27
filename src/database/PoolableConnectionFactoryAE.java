@@ -1,16 +1,36 @@
 package database;
 
-import java.sql.SQLException;
-import java.sql.Connection;
-
+import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.pool.KeyedObjectPoolFactory;
-import org.apache.commons.dbcp.ConnectionFactory;
-import org.apache.commons.pool.KeyedObjectPool;
 import org.apache.commons.pool.ObjectPool;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
+/**
+ * copy & pasted from aionemu project. <br/>
+ * this source (elladev) is distributed under GNU/GPL license v3 which aionemu
+ * uses.
+ */
+/**
+ * Implementation of PoolableConnectionFactory that Override
+ * validateConnection(Connection conn) for testing if connection is still valid,
+ * but instead doing manual query [like it is in default implementation] we will
+ * use Connection.isValid(timeout) from 1.6 [MySql implementation is just doing
+ * ping to Sql server]
+ *
+ * @author -Nemesiss-
+ *
+ */
 public class PoolableConnectionFactoryAE extends PoolableConnectionFactory {
 
+    /**
+     * Validation time out - how much seconds driver should wait for response
+     * from server. 0 - indicates there are no timeout -1 - indicates that
+     * validation should not be used.
+     *
+     */
     private final int validationTimeout;
 
     /**
@@ -24,9 +44,9 @@ public class PoolableConnectionFactoryAE extends PoolableConnectionFactory {
      * create {@link KeyedObjectPool}s for pooling
      * {@link java.sql.PreparedStatement}s, or <tt>null</tt> to disable
      * {@link java.sql.PreparedStatement} pooling
-     * @param validationTimeout a timeout value in seconds used to {@link #validateObject
-     *            validate} {@link Connection}s. Value of <tt>0</tt> means no timeout.
-     * Using <tt>-1</tt> turns off validation.
+     * @param validationTimeout a timeout value in seconds used to
+     * {@link #validateObject validate} {@link Connection}s. Value of <tt>0</tt>
+     * means no timeout. Using <tt>-1</tt> turns off validation.
      * @param defaultReadOnly the default "read only" setting for borrowed
      * {@link Connection}s
      * @param defaultAutoCommit the default "auto commit" setting for returned
@@ -37,6 +57,10 @@ public class PoolableConnectionFactoryAE extends PoolableConnectionFactory {
         this.validationTimeout = validationTimeout;
     }
 
+    /**
+     * Validate connection by checking if connection is not closed and is still
+     * valid. throws SQLException if connection is invalid.
+     */
     @Override
     public void validateConnection(Connection conn) throws SQLException {
         if (conn.isClosed()) {

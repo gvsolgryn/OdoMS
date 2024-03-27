@@ -1,12 +1,11 @@
 package server.movement;
 
-import java.awt.Point;
+import tools.data.MaplePacketLittleEndianWriter;
 
-import packet.transfer.write.WritingPacket;
+import java.awt.*;
 
 public interface LifeMovementFragment {
-
-    void serialize(WritingPacket packet);
-
-    Point getPosition();
+  void serialize(MaplePacketLittleEndianWriter paramMaplePacketLittleEndianWriter);
+  
+  Point getPosition();
 }

@@ -1,53 +1,35 @@
 package server.movement;
 
-import java.awt.Point;
+import tools.data.MaplePacketLittleEndianWriter;
 
-import packet.transfer.write.WritingPacket;
+import java.awt.*;
 
 public class RelativeLifeMovement extends AbstractLifeMovement {
-
-    private short fh;
-    private int unk1, unk2;
-    private byte ForcedStop;
-
-    public RelativeLifeMovement(int type, Point position, int duration, int newstate) {
-        super(type, position, duration, newstate);
-    }
-
-    public short getFh() {
-        return fh;
-    }
-
-    public void setFh(short fh) {
-        this.fh = fh;
-    }
-    
-    public void setUnk1(int unk1) {
-        this.unk1 = unk1;
-    }
-    
-    public void setUnk2(int unk2) {
-        this.unk2 = unk2;
-    }
-
-    public void setForcedStop(byte ForcedStop) {
-        this.ForcedStop = ForcedStop;
-    }
-
-    @Override
-    public void serialize(WritingPacket packet) {
-        packet.write(getType());
-        packet.writeShort(getPosition().x);
-        packet.writeShort(getPosition().y);
-        if (getType() == 21 || getType() == 22) {
-            packet.writeShort(fh);
-        }
-        packet.write(getNewstate());
-        packet.writeShort(getDuration());
-        packet.write(ForcedStop);
-        if (getType() == 59) {
-            packet.writeShort(unk1);
-            packet.writeShort(unk2);
-        }
-    }
+  private int nAttr;
+  
+  private Point v307;
+  
+  public RelativeLifeMovement(int type, Point position, int duration, int newstate, byte unk) {
+    super(type, position, duration, newstate, (short)0, unk);
+  }
+  
+  public void setAttr(int nAttr) {
+    this.nAttr = nAttr;
+  }
+  
+  public void setV307(Point v307) {
+    this.v307 = v307;
+  }
+  
+  public void serialize(MaplePacketLittleEndianWriter packet) {
+    packet.write(getType());
+    packet.writePos(getPosition());
+    if (getType() == 21 || getType() == 22)
+      packet.writeShort(this.nAttr); 
+    if (getType() == 59)
+      packet.writePos(this.v307); 
+    packet.write(getNewstate());
+    packet.writeShort(getDuration());
+    packet.write(getUnk());
+  }
 }
