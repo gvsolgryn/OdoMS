@@ -15,7 +15,7 @@ import java.util.*;
 public class DumpItems {
   private final MapleDataProvider item;
   
-  private final MapleDataProvider string = MapleDataProviderFactory.getDataProvider(new File("wz/String.wz"));
+  private final MapleDataProvider string = MapleDataProviderFactory.getDataProvider(new File("Wz/String.wz"));
   
   private final MapleDataProvider character;
   
@@ -35,7 +35,7 @@ public class DumpItems {
   
   protected boolean hadError = false;
   
-  protected boolean update = false;
+  protected boolean update;
   
   protected int id = 0;
   
@@ -47,10 +47,10 @@ public class DumpItems {
   
   public DumpItems(boolean update) throws Exception {
     this.update = update;
-    this.item = MapleDataProviderFactory.getDataProvider(new File("wz/Item.wz"));
-    this.character = MapleDataProviderFactory.getDataProvider(new File("wz/Character.wz"));
+    this.item = MapleDataProviderFactory.getDataProvider(new File("Wz/Item.wz"));
+    this.character = MapleDataProviderFactory.getDataProvider(new File("Wz/Character.wz"));
     if (this.item == null || this.string == null || this.character == null)
-      this.hadError = true; 
+      this.hadError = true;
   }
   
   public boolean isHadError() {
