@@ -58,7 +58,7 @@ public class DumpItems {
   }
   
   public void dumpItems() throws Exception {
-    System.setProperty("wz", "wz");
+    System.setProperty("Wz", "wz");
     if (!this.hadError) {
       PreparedStatement psa = this.con.prepareStatement("INSERT INTO wz_itemadddata(itemid, `key`, `subKey`, `value`) VALUES (?, ?, ?, ?)");
       PreparedStatement psr = this.con.prepareStatement("INSERT INTO wz_itemrewarddata(itemid, item, prob, quantity, period, worldMsg, effect) VALUES (?, ?, ?, ?, ?, ?, ?)");
