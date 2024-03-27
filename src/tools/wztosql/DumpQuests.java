@@ -29,7 +29,7 @@ public class DumpQuests {
   
   public DumpQuests(boolean update) throws Exception {
     this.update = update;
-    this.quest = MapleDataProviderFactory.getDataProvider(new File("Wz/Quest.wz"));
+    this.quest = MapleDataProviderFactory.getDataProvider(new File("wz/Quest.wz"));
     if (this.quest == null)
       this.hadError = true; 
   }

@@ -27,7 +27,7 @@ public class DumpMobSkills {
   
   public DumpMobSkills(boolean update) throws Exception {
     this.update = update;
-    this.skill = MapleDataProviderFactory.getDataProvider(new File("Wz/Skill.wz"));
+    this.skill = MapleDataProviderFactory.getDataProvider(new File("wz/Skill.wz"));
     if (this.skill == null)
       this.hadError = true; 
   }
@@ -72,8 +72,8 @@ public class DumpMobSkills {
       delete("DELETE FROM wz_mobskilldata");
       System.out.println("Deleted wz_mobskilldata successfully.");
     } 
-    MapleDataProvider skill2 = MapleDataProviderFactory.getDataProvider(new File("Wz/Skill.wz/MobSkill"));
-    for (File fileEntry : (new File("Wz/Skill.wz/MobSkill")).listFiles()) {
+    MapleDataProvider skill2 = MapleDataProviderFactory.getDataProvider(new File("wz/Skill.wz/MobSkill"));
+    for (File fileEntry : (new File("wz/Skill.wz/MobSkill")).listFiles()) {
       MapleData skillz = skill2.getData(fileEntry.getName().replace(".xml", ""));
       System.out.println("Adding into wz_mobskilldata.....");
       for (MapleData lvlz : skillz.getChildByPath("level").getChildren()) {

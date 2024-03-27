@@ -15,7 +15,7 @@ import java.util.*;
 public class DumpItems {
   private final MapleDataProvider item;
   
-  private final MapleDataProvider string = MapleDataProviderFactory.getDataProvider(new File("Wz/String.wz"));
+  private final MapleDataProvider string = MapleDataProviderFactory.getDataProvider(new File("wz/String.wz"));
   
   private final MapleDataProvider character;
   
@@ -47,8 +47,8 @@ public class DumpItems {
   
   public DumpItems(boolean update) throws Exception {
     this.update = update;
-    this.item = MapleDataProviderFactory.getDataProvider(new File("Wz/Item.wz"));
-    this.character = MapleDataProviderFactory.getDataProvider(new File("Wz/Character.wz"));
+    this.item = MapleDataProviderFactory.getDataProvider(new File("wz/Item.wz"));
+    this.character = MapleDataProviderFactory.getDataProvider(new File("wz/Character.wz"));
     if (this.item == null || this.string == null || this.character == null)
       this.hadError = true;
   }
@@ -58,7 +58,7 @@ public class DumpItems {
   }
   
   public void dumpItems() throws Exception {
-    System.setProperty("Wz", "wz");
+    System.setProperty("wz", "wz");
     if (!this.hadError) {
       PreparedStatement psa = this.con.prepareStatement("INSERT INTO wz_itemadddata(itemid, `key`, `subKey`, `value`) VALUES (?, ?, ?, ?)");
       PreparedStatement psr = this.con.prepareStatement("INSERT INTO wz_itemrewarddata(itemid, item, prob, quantity, period, worldMsg, effect) VALUES (?, ?, ?, ?, ?, ?, ?)");

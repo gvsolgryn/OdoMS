@@ -31,7 +31,7 @@ public class FieldSkillFactory {
   }
   
   public void load() {
-    MapleDataProvider skill2 = MapleDataProviderFactory.getDataProvider(new File("Wz/Skill.wz"));
+    MapleDataProvider skill2 = MapleDataProviderFactory.getDataProvider(new File("wz/Skill.wz"));
     MapleData skillz = skill2.getData("FieldSkill.img");
     //System.out.println("Adding into wz_fieldskilldata.....");
     for (MapleData skill3 : skillz.getChildren()) {
