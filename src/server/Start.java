@@ -18,7 +18,6 @@ import handling.channel.MapleGuildRanking;
 import handling.channel.handler.ChatHandler;
 import handling.channel.handler.MatrixHandler;
 import handling.channel.handler.UnionHandler;
-import handling.discord.DiscordBot;
 import handling.farm.FarmServer;
 import handling.login.LoginInformationProvider;
 import handling.login.LoginServer;
@@ -250,12 +249,6 @@ public class Start {
             }
             World.Guild.load();
             GameConstants.isOpen = true;
-            DiscordBot discord = new DiscordBot();
-            try {
-                discord.run();
-            } catch (Exception e) {
-                System.err.println(e.getMessage());
-            }
             if (ServerConstants.ConnectorSetting)
                 ConnectorServer.run();
             if (!ServerConstants.ConnectorSetting)
