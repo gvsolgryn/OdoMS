@@ -120,14 +120,13 @@ public class ChannelServer {
       this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("channel.events").split(","));
       this.port = (short)(Short.parseShort(ServerProperties.getProperty("ports.channel")) + this.channel - 1);
     } catch (Exception e) {
+      System.err.println("[Channel Server] run_startup_configurations() 에서 난 찐빠");
       throw new RuntimeException(e);
     }
-    // 이부분을 한번 로 하드코딩 해보시겠어요??
-    // 이부분 말고도 ip 받아오는곳 있지 않나요?? 이건 5455부터이고,, 8484요
-    // 여기부분은 수정한대로 작동을 할거같은데,, 제가 우려되는것은 8484포트네요
-    // 로그인 서버부분 accept 함수 어디있는지 아시나요??잘몰라여
-    //this.ip = ServerProperties.getProperty("channel.net.interface") + ":" + this.port;
-    this.ip = "185.213.243.67:" + this.port;
+
+    //this.ip = "185.213.243.67:" + this.port;
+    this.ip = ServerProperties.getProperty("world.host") + ":" + this.port;
+
     NioEventLoopGroup nioEventLoopGroup1 = new NioEventLoopGroup();
     NioEventLoopGroup nioEventLoopGroup2 = new NioEventLoopGroup();
     try {

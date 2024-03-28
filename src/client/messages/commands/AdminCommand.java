@@ -164,7 +164,7 @@ public class AdminCommand {
       String am = (hour >= 12) ? "오후" : "오전";
       String type = (Integer.parseInt(splitted[2]) == 1) ? "패치가" : "점검이";
       for (ChannelServer cserv : ChannelServer.getAllInstances())
-        cserv.setServerMessage("안녕하세요, 갈매기서버 입니다. 잠시 후 " + am + " " + hour + "시 " + min + "분 부터 서버" + type + " 진행됩니다. 원활한 진행을 위해 지금 바로 접속을 종료해주시기 바랍니다. 이용에 불편을 끼쳐 드려 죄송합니다.");
+        cserv.setServerMessage("반갑다 아쎄이들, GM황근출 해병이다. 잠시 후 " + am + " " + hour + "시 " + min + "분 부터 서버" + type + " 기합스럽게 진행 될 예정이다. 해병 수육이 되고싶지 않다면 지금 바로 접속을 종료해라 아쎄이!!");
       if (ts == null && (t == null || !t.isAlive())) {
         t = new Thread(ShutdownServer.getInstance());
         ts = Timer.EventTimer.getInstance().register(new Runnable() {

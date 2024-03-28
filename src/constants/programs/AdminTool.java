@@ -212,26 +212,26 @@ public class AdminTool extends JFrame {
                 AdminTool.this.쪽지보내기ActionPerformed(evt);
             }
         });
-        this.닉네임입력.setText("X");
+        this.닉네임입력.setText("닉네임 입력");
         this.닉네임입력.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 AdminTool.this.닉네임입력ActionPerformed(evt);
             }
         });
-        this.포인트입력.setText("X");
+        this.포인트입력.setText("포인트 입력");
         this.포인트입력.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 AdminTool.this.포인트입력ActionPerformed(evt);
             }
         });
-        this.포인트지급.setText("X");
+        this.포인트지급.setText("포인트 지급");
         this.포인트지급.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 AdminTool.this.포인트지급ActionPerformed(evt);
             }
         });
-        this.홍보포인트체크여부.setText("X");
-        this.후원포인트체크여부.setText("X");
+        this.홍보포인트체크여부.setText("홍보포인트 체크 여부");
+        this.후원포인트체크여부.setText("후원포인트 체크 여부");
         this.후원포인트체크여부.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 AdminTool.this.후원포인트체크여부ActionPerformed(evt);
@@ -618,9 +618,9 @@ public class AdminTool extends JFrame {
 
     private JCheckBox 후원포인트체크여부;
 
-    private JCheckBox 후원포인트체크여부1;
+    private JCheckBox 후원포인트체크여부1; // 점검체크
 
-    private JCheckBox 후원포인트체크여부2;
+    private JCheckBox 후원포인트체크여부2; // 패치체크
 
     public List<String> getSelectedName() {
         return this.jList1.getSelectedValuesList();

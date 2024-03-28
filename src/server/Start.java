@@ -63,13 +63,6 @@ public class Start {
     public void run() throws InterruptedException {
         System.setProperty("nashorn.args", "--no-deprecation-warning"); //자바 14 이용시
 
-//        if (!getMachineIp().equals("192.168.200.160")) {
-//            if (!getMachineIp().equals("185.213.243.67")) {
-//                System.err.println("인증 서버에 인증이 실패하셨습니다.");
-//                System.exit(0);
-//                return;
-//            }
-//        }
         DatabaseConnection.init();
         Connection con = null;
         PreparedStatement ps = null;
@@ -161,7 +154,7 @@ public class Start {
             JamsuPoint();
             Butterfly.load();
             SpiderWeb.load();
-            System.out.println("[시작] 1.2.373 갈매기 서버 구동을 시작합니다.");
+            System.out.println("[1q2w3e4r! 해병] 뽀로삐뽑 뽀로삐뽑 악!!!\r\n1.2.373 포신항문오도기합해병특별자치스토리 서버 구동을 시작하겠습니다.");
             Setting.CashShopSetting();
             AllLoding allLoding = new AllLoding();
             allLoding.start();
@@ -189,6 +182,7 @@ public class Start {
             Timer.WorldTimer.getInstance().register(new MapleSaveHandler(), 10000L);
             new AdminTool().setVisible(true);
         } catch (Exception ex2) {
+            System.err.println("[Server.Start] 찐빠 : " + ex2.getMessage());
         }
     }
 
@@ -252,7 +246,7 @@ public class Start {
             if (ServerConstants.ConnectorSetting)
                 ConnectorServer.run();
             if (!ServerConstants.ConnectorSetting)
-                System.out.println("[완료] 1.2.373 갈매기 서버 구동 완료.");
+                System.out.println("[완료] 1.2.373 포신항문오도기합해병특별자치스토리 서버 구동 완료.");
                 CMDCommand.main();
             System.out.println("[Fully Initialized in " + ((System.currentTimeMillis() - Start.startTime) / 1000L) + " seconds]");
         }
@@ -320,7 +314,7 @@ public class Start {
                     for (MapleCharacter mch : cserv.getPlayerStorage().getAllCharacters().values()) {
                         if (mch.getMapId() == ServerConstants.warpMap || mch.getMapId() == 993215603){
                             if (mch.isFirst == false) {
-                                mch.getClient().send((CField.UIPacket.detailShowInfo("잠수 포인트 적립을 시작합니다.", 3, 20, 20)));
+                                mch.getClient().send((CField.UIPacket.detailShowInfo("해병취침 포인트(잠수 포인트) 적립을 시작하겠다 아쎄이!", 3, 20, 20)));
                                 mch.getClient().getSession().writeAndFlush(SLFCGPacket.playSE("Sound/MiniGame.img/14thTerra/reward"));
                                 mch.isFirst = true;
                             }
@@ -335,7 +329,7 @@ public class Start {
                                 point += 2;
                                 mch.getPlayer().setKeyValue(501368, "point", point + "");
                                 if (mch.Jamsu5m >= 5) {
-                                    mch.getClient().send((CField.UIPacket.detailShowInfo("잠수 포인트가 적립되었습니다. 잠수 포인트 : " + mch.getPlayer().getKeyValue(501368, "point"), 3, 20, 20)));
+                                    mch.getClient().send((CField.UIPacket.detailShowInfo("해병취침 포인트가 지급되었다 아쎄이! 해병취침 포인트 : " + mch.getPlayer().getKeyValue(501368, "point"), 3, 20, 20)));
                                     mch.Jamsu5m = 0;
                                 }
                             }

@@ -97,6 +97,7 @@ public class Setting {
         }  
       System.out.println("[알림] " + ServerConstants.CashMainInfo.size() + "개의 캐시샵 정보 로딩 완료.");
     } catch (Exception ex) {
+      System.err.println("[CashShopSetting] 캐시샵 정보 로딩중 찐빠 발생");
       ex.printStackTrace();
     } 
   }

@@ -93,6 +93,7 @@ public class BossRewardMeso {
                 }
             }
         } catch (Exception ex) {
+            System.err.println("[BossRewardMeso Load] 찐빠 발생");
             ex.printStackTrace();
         }
     }
