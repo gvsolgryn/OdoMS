@@ -25,7 +25,7 @@ public class PortalScriptManager {
   private final PortalScript getPortalScript(String scriptName) {
     if (this.scripts.containsKey(scriptName))
       return this.scripts.get(scriptName); 
-    File scriptFile = new File("scripts/portal/" + scriptName + ".js");
+    File scriptFile = new File("Scripts/portal/" + scriptName + ".js");
     if (!scriptFile.exists())
       return null; 
     FileReader fr = null;
