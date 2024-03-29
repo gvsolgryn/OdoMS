@@ -326,7 +326,8 @@ public class MapleCharacterUtil {
         if (ps != null)
           ps.close(); 
       } catch (SQLException sQLException) {}
-    } 
+    }
+
     if (World.Find.findChannel(to) >= 0) {
       MapleCharacter chr = ChannelServer.getInstance(World.Find.findChannel(to)).getPlayerStorage().getCharacterByName(to);
       if (chr != null)
