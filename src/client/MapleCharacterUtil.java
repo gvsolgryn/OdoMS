@@ -300,6 +300,15 @@ public class MapleCharacterUtil {
   }
   
   public static void sendNote(String to, String name, String msg, int fame, int type, int senderid) {
+    // "견쌍섭", "메이플GM", "견쌍섭 용사님 블라블라", 0, 6, 0
+    /*
+    * to -> 견쌍섭
+    * name -> 메이플GM
+    * msg -> 블라블라
+    * fame -> 0
+    * type -> 6
+    * senderid -> 0
+    */
     Connection con = null;
     PreparedStatement ps = null;
     ResultSet rs = null;
@@ -328,11 +337,16 @@ public class MapleCharacterUtil {
       } catch (SQLException sQLException) {}
     }
 
-    if (World.Find.findChannel(to) >= 0) {
-      MapleCharacter chr = ChannelServer.getInstance(World.Find.findChannel(to)).getPlayerStorage().getCharacterByName(to);
-      if (chr != null)
-        chr.getClient().send(CSPacket.NoteHandler(16, 0)); 
-    } 
+    try {
+      if (World.Find.findChannel(to) >= 0) {
+        MapleCharacter chr = ChannelServer.getInstance(World.Find.findChannel(to)).getPlayerStorage().getCharacterByName(to);
+        if (chr != null)
+          chr.getClient().send(CSPacket.NoteHandler(16, 0));
+      }
+    }
+    catch (Exception ex) {
+      System.err.println("[Err] SendNote Err : " + ex);
+    }
   }
   
   public static Triple<Boolean, Integer, Integer> getNXCodeInfo(String code) throws SQLException {

@@ -1154,6 +1154,22 @@ public class SuperGMCommand {
       c.getPlayer().dropMessage(1, splitted[1] + "님에게 " + splitted[2] + " 후원 포인트를 지급 하였습니다.");
       victim.modifyCSPoints(1, Integer.parseInt(splitted[2]), true);
       // victim.sendNote(splitted[1], "메이플GM", "" + splitted[1] + "용사님! 용사님의 소중한 후원 감사드립니다, 용사님의 기대치에 부응하도록 많은 노력을 하겠습니다. 용사님에게 후원 포인트 " + splitted[2] + "포인트를 지급 해드렸습니다. 포인트 확인을 해주시길 바랍니다.", 0, 6, 0);
+      /*
+      public void sendNote(final String to, final String msg, final int type, final int senderid) {
+          this.sendNote(to, msg, 0, type, senderid);
+      }
+
+      public void sendNote(final String to, final String msg, final int fame, final int type, final int senderid) {
+        MapleCharacterUtil.sendNote(to, this.getName(), msg, fame, type, senderid);
+      }
+
+      public void sendNote(final String to, final String from, final String msg, final int fame, final int type, final int senderid) {
+        MapleCharacterUtil.sendNote("견쌍섭", "메이플GM", "견쌍섭 용사님 블라블라", 0, 6, 0);
+      }
+
+
+      */
+
       return 1;
     }
   }
