@@ -3,13 +3,6 @@
 // 
 package client;
 
-import static client.SecondaryStat.Curse;
-import static client.SecondaryStat.Darkness;
-import static client.SecondaryStat.Poison;
-import static client.SecondaryStat.Seal;
-import static client.SecondaryStat.Stigma;
-import static client.SecondaryStat.StopPortion;
-import static client.SecondaryStat.Weakness;
 import client.custom.inventory.CustomItem;
 import client.damage.CalcDamage;
 import client.inventory.*;
@@ -10700,6 +10693,10 @@ public class MapleCharacter extends AnimatedMapleMapObject implements Serializab
 
     public void setNXcredit(int nxcredit) {
         this.nxcredit = nxcredit;
+    }
+
+    public int getNX() {
+        return this.nxcredit;
     }
 
     public void modifyCSPoints(final int type, final int quantity, final boolean show) {

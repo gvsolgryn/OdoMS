@@ -1012,7 +1012,7 @@ public class AdminTool extends JFrame {
             JOptionPane.showMessageDialog(null, "좌측에서 쪽지 내용을 작성한 후 눌러주세요.");
             return;
         }
-        MapleCharacterUtil.sendNote(this.쪽지닉네임입력.getText(), "메이플GM", "안녕하세요. 새벅서버  입니다. " + this.쪽지내용.getText() + "", 0, 6, 0);
+        MapleCharacterUtil.sendNote(this.쪽지닉네임입력.getText(), "황근출해병", "반갑다 아쎄이. " + this.쪽지내용.getText() + "", 0, 6, 0);
         JOptionPane.showMessageDialog(null, this.쪽지닉네임입력.getText() + "님에게 쪽지를 보냈습니다.\r\n      [쪽지내용]\r\n\r\n안녕하세요. 갈매기서버 입니다, " + this.쪽지내용.getText() + "");
     }
 

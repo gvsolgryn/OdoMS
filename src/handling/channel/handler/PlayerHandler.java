@@ -64,52 +64,47 @@ public class PlayerHandler {
         return connectorCheckLong;
     }
 
-    public static boolean isFinisher(int skillid) {
-        switch (skillid) {
-            case 400011027:
-                return true;
-        }
-        return false;
+    public static boolean isFinisher(int skillId) {
+        return skillId == 400011027;
     }
 
-    public static void ChangeSkillMacro(LittleEndianAccessor slea, MapleCharacter chr) {
-        int num = slea.readByte();
+    public static void ChangeSkillMacro(LittleEndianAccessor littleEndianAccessor, MapleCharacter chr) {
+        int num = littleEndianAccessor.readByte();
         for (int i = 0; i < num; i++) {
-            String name = slea.readMapleAsciiString();
-            int shout = slea.readByte();
-            int skill1 = slea.readInt();
-            int skill2 = slea.readInt();
-            int skill3 = slea.readInt();
+            String name = littleEndianAccessor.readMapleAsciiString();
+            int shout = littleEndianAccessor.readByte();
+            int skill1 = littleEndianAccessor.readInt();
+            int skill2 = littleEndianAccessor.readInt();
+            int skill3 = littleEndianAccessor.readInt();
             SkillMacro macro = new SkillMacro(skill1, skill2, skill3, name, shout, i);
             chr.updateMacros(i, macro);
         }
     }
 
-    public static final void ChangeKeymap(LittleEndianAccessor slea, MapleCharacter chr) {
-        if (slea.available() > 8L && chr != null) {
-            slea.skip(4);
-            int a = slea.readInt();
+    public static void ChangeKeymap(LittleEndianAccessor littleEndianAccessor, MapleCharacter chr) {
+        if (littleEndianAccessor.available() > 8L && chr != null) {
+            littleEndianAccessor.skip(4);
+            int a = littleEndianAccessor.readInt();
             if (a != 0) {
                 return;
             }
-            int numChanges = slea.readInt();
+            int numChanges = littleEndianAccessor.readInt();
             for (int i = 0; i < numChanges; i++) {
-                int key = slea.readInt();
-                byte type = slea.readByte();
-                int action = slea.readInt();
+                int key = littleEndianAccessor.readInt();
+                byte type = littleEndianAccessor.readByte();
+                int action = littleEndianAccessor.readInt();
                 if (type == 1 && action >= 1000) {
-                    Skill skil = SkillFactory.getSkill(action);
-                    if (skil != null && ((!skil.isFourthJob() && !skil.isBeginnerSkill() && skil.isInvisible() && chr.getSkillLevel(skil) <= 0) || (action >= 91000000 && action < 100000000))) {
+                    Skill skill = SkillFactory.getSkill(action);
+                    if (skill != null && ((!skill.isFourthJob() && !skill.isBeginnerSkill() && skill.isInvisible() && chr.getSkillLevel(skill) <= 0) || (action >= 91000000 && action < 100000000))) {
                         continue;
                     }
                 }
                 if (action != 26) {
                     chr.changeKeybinding(key, type, action);
                 }
-                continue;
             }
         } else if (chr != null) {
-            int type = slea.readInt(), data = slea.readInt();
+            int type = littleEndianAccessor.readInt(), data = littleEndianAccessor.readInt();
             switch (type) {
                 case 1:
                     if (data <= 0) {
@@ -129,12 +124,12 @@ public class PlayerHandler {
         }
     }
 
-    public static final void UseTitle(LittleEndianAccessor slea, MapleClient c, MapleCharacter chr) {
+    public static void UseTitle(LittleEndianAccessor littleEndianAccessor, MapleClient c, MapleCharacter chr) {
         if (chr == null || chr.getMap() == null) {
             return;
         }
-        int itemId = slea.readInt();
-        Item toUse = chr.getInventory(MapleInventoryType.SETUP).getItem((short) slea.readInt());
+        int itemId = littleEndianAccessor.readInt();
+        Item toUse = chr.getInventory(MapleInventoryType.SETUP).getItem((short) littleEndianAccessor.readInt());
         if (toUse == null || (itemId != 0 && toUse.getItemId() != itemId)) {
             return;
         }
@@ -152,7 +147,7 @@ public class PlayerHandler {
         chr.getStat().recalcLocalStats(chr);
     }
 
-    public static final void UseChair(int itemId, MapleClient c, MapleCharacter chr, LittleEndianAccessor slea) {
+    public static void UseChair(int itemId, MapleClient c, MapleCharacter chr, LittleEndianAccessor slea) {
         int index = slea.readInt();
         slea.skip(1);
         Point pos = new Point(slea.readInt(), slea.readInt());
@@ -164,14 +159,16 @@ public class PlayerHandler {
             chr.setChairText(Special);
         }
         if (itemId == 3015440 || itemId == 3015650 || itemId == 3015651) {
-            int maxmeso = slea.readInt();
+            int maxMeso = slea.readInt();
             chr.getMap().broadcastMessage(SLFCGPacket.MesoChairPacket(chr.getId(), chr.getMesoChairCount(), itemId));
-            ScheduledFuture<?> qwer = Timer.ShowTimer.getInstance().register(() -> {
-                if (chr != null && chr.getChair() != 0) {
-                    chr.UpdateMesoChairCount(maxmeso);
+            ScheduledFuture<?> scheduledFuture = Timer.ShowTimer.getInstance().register(() -> {
+                try {
+                    chr.UpdateMesoChairCount(maxMeso);
+                } catch (Exception ex) {
+                    System.err.println(ex.getMessage());
                 }
             }, 2000L);
-            chr.setMesoChairTimer(qwer);
+            chr.setMesoChairTimer(scheduledFuture);
         }
         chr.setChair(itemId);
         if (itemId / 100 == 30162) {
@@ -11729,7 +11726,7 @@ public class PlayerHandler {
         if (c.getPlayer().getLevel() <= 105) {
             needmeso = 10000000L;
         } else {
-            needmeso = (10000000 + (c.getPlayer().getLevel() - 105) * (c.getPlayer().getLevel() - 105) * 50000);
+            needmeso = (10000000 + (long) (c.getPlayer().getLevel() - 105) * (c.getPlayer().getLevel() - 105) * 50000);
         }
         if (needmeso > c.getPlayer().getMeso()) {
             chr.dropMessage(1, "자유전직을 하기 위한 메소가 부족합니다.");
@@ -11784,49 +11781,49 @@ public class PlayerHandler {
         int unk4 = slea.readInt();
         SecondAtom sa = c.getPlayer().getSecondAtom(objid);
         if (sa != null && unk4 == 1) {
-            c.getSession().writeAndFlush(CField.skillCooldown(162121001, SkillFactory.getSkill(162121001).getEffect(c.getPlayer().getSkillLevel(162121001)).getU2() * 1000));
-            c.getPlayer().addCooldown(162121001, System.currentTimeMillis(), (SkillFactory.getSkill(162121001).getEffect(c.getPlayer().getSkillLevel(162121001)).getU2() * 1000));
+            c.getSession().writeAndFlush(CField.skillCooldown(162121001, Objects.requireNonNull(SkillFactory.getSkill(162121001)).getEffect(c.getPlayer().getSkillLevel(162121001)).getU2() * 1000));
+            c.getPlayer().addCooldown(162121001, System.currentTimeMillis(), (Objects.requireNonNull(SkillFactory.getSkill(162121001)).getEffect(c.getPlayer().getSkillLevel(162121001)).getU2() * 1000L));
         }
     }
 
     public static void Lotus(LittleEndianAccessor slea, MapleClient c) {
-        /* if (c.getPlayer().Lotus) {
-            SkillFactory.getSkill(400001062).getEffect(1).applyTo(c.getPlayer());
+        if (c.getPlayer().Lotus) {
+            Objects.requireNonNull(SkillFactory.getSkill(400001062)).getEffect(1).applyTo(c.getPlayer());
             c.getPlayer().Lotus = false;
-            SecondaryStatEffect effect = SkillFactory.getSkill(400001061).getEffect(c.getPlayer().getSkillLevel(400001061));
+            SecondaryStatEffect effect = Objects.requireNonNull(SkillFactory.getSkill(400001061)).getEffect(c.getPlayer().getSkillLevel(400001061));
 
-            c.getPlayer().addCooldown(400001061, System.currentTimeMillis(), effect.getW() * 1000);
+            c.getPlayer().addCooldown(400001061, System.currentTimeMillis(), effect.getW() * 1000L);
             c.getSession().writeAndFlush(CField.skillCooldown(400001061, effect.getW() * 1000));
-        } */
+        }
     }
 
-    public static void Lotus2(LittleEndianAccessor slea, MapleClient c) {
+    public static void Lotus2(LittleEndianAccessor littleEndianAccessor, MapleClient c) {
     }
 
-    public static void MemoryChoice(LittleEndianAccessor slea, MapleClient c) {
-        int skillid = slea.readInt();
-        c.getPlayer().getClient().getSession().writeAndFlush(SkillPacket.메모리초이스(skillid));
-        c.getPlayer().unstableMemorize = skillid;
+    public static void MemoryChoice(LittleEndianAccessor littleEndianAccessor, MapleClient c) {
+        int skillId = littleEndianAccessor.readInt();
+        c.getPlayer().getClient().getSession().writeAndFlush(SkillPacket.메모리초이스(skillId));
+        c.getPlayer().unstableMemorize = skillId;
         c.getSession().writeAndFlush((Object) CField.skillCooldown(400001063, 10000));
         c.getPlayer().addCooldown(400001063, System.currentTimeMillis(), 10000);
     }
 
-    public static void 믹스헤어(LittleEndianAccessor slea, MapleClient c) {
-        slea.skip(2); // 몰라
-        slea.skip(4); // 템코드
-        slea.skip(2); // 몰라
-        int ordinaryColor = slea.readInt();
+    public static void MixHair(LittleEndianAccessor littleEndianAccessor, MapleClient c) {
+        littleEndianAccessor.skip(2); // 몰라
+        littleEndianAccessor.skip(4); // 템코드
+        littleEndianAccessor.skip(2); // 몰라
+        int ordinaryColor = littleEndianAccessor.readInt();
         int nMixBaseHairColor = -1;
         int nMixAddHairColor = 0;
         int nMixHairBaseProb = 0;
         if (ordinaryColor < 10000) {
             nMixBaseHairColor = 0;
-            c.getPlayer().dropMessageGM(6, "ordinaryColorr 1 : " + ordinaryColor);
+            c.getPlayer().dropMessageGM(6, "ordinaryColor 1 : " + ordinaryColor);
             nMixAddHairColor = ordinaryColor / 1000;
             nMixHairBaseProb = ordinaryColor % 100;
         } else {
             nMixBaseHairColor = ordinaryColor / 10000;
-            c.getPlayer().dropMessageGM(6, "ordinaryColorr 2 : " + ordinaryColor);
+            c.getPlayer().dropMessageGM(6, "ordinaryColor 2 : " + ordinaryColor);
             nMixAddHairColor = (ordinaryColor / 1000 - (nMixBaseHairColor * 10));
             nMixHairBaseProb = ordinaryColor % 100;
         }
@@ -11867,18 +11864,18 @@ public class PlayerHandler {
         c.getPlayer().fakeRelog();
     }
     
-    public static void ApplyLinkPresets(final LittleEndianAccessor slea, final MapleClient c) {
-        final byte size = slea.readByte();
+    public static void ApplyLinkPresets(final LittleEndianAccessor littleEndianAccessor, final MapleClient c) {
+        final byte size = littleEndianAccessor.readByte();
         for (int i = 0; i < size; ++i) {
-            final int unlinkskill = slea.readInt();
-            UnlinkSkill(unlinkskill, c);
+            final int unlinkSkill = littleEndianAccessor.readInt();
+            UnlinkSkill(unlinkSkill, c);
         }
-        final byte size2 = slea.readByte();
+        final byte size2 = littleEndianAccessor.readByte();
         for (int q = 0; q < size2; ++q) {
-            final int skillid = slea.readInt();
-            final int sendid = slea.readInt();
-            slea.skip(12);
-            LinkSkill(skillid, sendid, c.getPlayer().getId(), c);
+            final int skillId = littleEndianAccessor.readInt();
+            final int sendId = littleEndianAccessor.readInt();
+            littleEndianAccessor.skip(12);
+            LinkSkill(skillId, sendId, c.getPlayer().getId(), c);
         }
     }
   
