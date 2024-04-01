@@ -303,9 +303,6 @@ public class Start {
         instance.run();
         DatabaseBackup.main(args);
         CommodityItemUpdate.main(args);
-        // if (false) {
-        //     CommodityItemUpdate.main(args);
-        // }
     }
 
     public static void JamsuPoint() {
