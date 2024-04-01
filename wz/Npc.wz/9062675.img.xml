@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062675.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+<int name="forceMove" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="29" y="69"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="5f6a8ab83bf907d0ab09e612b7a5bcd8069592663967a16e35cc9eb3972b5937"/>
+<string name="_outlink" value="Npc/9062644.img/stand/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="29" y="69"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="59ef7be980cb8d71002d0b1d0fac2cf1bd9f2ca3c03b668e234ebda0efe1bc31"/>
+<string name="_outlink" value="Npc/9062644.img/stand/1"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="29" y="69"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="ced9bb20eeeb561db2acf0cf244f3120b191a40eb7792ccc76b54a6206bd0294"/>
+<string name="_outlink" value="Npc/9062644.img/eye/0"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="29" y="69"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="6a206a4ad7cf94398d90478ad2f873561758174e627e0337fc4f99bd0cc2e003"/>
+<string name="_outlink" value="Npc/9062644.img/eye/1"/>
+</canvas>
+<canvas name="4" width="1" height="1">
+<vector name="origin" x="29" y="69"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="8007e91f274a1135206d0bbff50bec0894925c6f29a2ab3237b0f7a2208f4eb6"/>
+<string name="_outlink" value="Npc/9062644.img/eye/2"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="29" y="69"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="98690e64870a74709e8570940a33517dcffff78211e6d06f41012176a7f5b4d9"/>
+<string name="_outlink" value="Npc/9062644.img/stand/2"/>
+</canvas>
+<canvas name="6" width="1" height="1">
+<vector name="origin" x="29" y="69"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="372f34acf367ad38071adb5ea78dac3744b020c3035131613d958621e42bf6ff"/>
+<string name="_outlink" value="Npc/9062644.img/stand/3"/>
+</canvas>
+<canvas name="7" width="1" height="1">
+<vector name="origin" x="29" y="69"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="9c144d8eb3ff33bf40fc564e4c4886152d72959149b1d040ebc51438b71e4f5c"/>
+<string name="_outlink" value="Npc/9062644.img/stand/4"/>
+</canvas>
+<canvas name="8" width="1" height="1">
+<vector name="origin" x="29" y="69"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="1d134ddc57847149c8be0e4fdaaec083c8c67f5dcbf44c2fb58c6cf66047eb2f"/>
+<string name="_outlink" value="Npc/9062644.img/stand/5"/>
+</canvas>
+<canvas name="9" width="1" height="1">
+<vector name="origin" x="29" y="68"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="48eb5c6b8eeb37c3bce4dc04157899882acd5e8d2cc6e7b63bf6899bcaf8fcde"/>
+<string name="_outlink" value="Npc/9062644.img/say/0"/>
+</canvas>
+<canvas name="10" width="1" height="1">
+<vector name="origin" x="29" y="67"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="67b27b430db7a192c14e730e054e146576924c9799b682f9ac982844102b6460"/>
+<string name="_outlink" value="Npc/9062644.img/say/1"/>
+</canvas>
+<canvas name="11" width="1" height="1">
+<vector name="origin" x="29" y="68"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="7a6c89a44814d783fa2752b1404aafa4d7a9782e76efef88bed4f0fe0d0cf3bf"/>
+<string name="_outlink" value="Npc/9062644.img/say/2"/>
+</canvas>
+<canvas name="12" width="1" height="1">
+<vector name="origin" x="29" y="69"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="f516a5e2d3b4f555a76116ede477644415db24af60e27ffd4f7855e086ba66b4"/>
+<string name="_outlink" value="Npc/9062644.img/say/3"/>
+</canvas>
+<canvas name="13" width="1" height="1">
+<vector name="origin" x="29" y="68"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="880fd6cce1db99f7a71a04838c90fc8c94316bf0512003b0f47ffc194f7d64df"/>
+<string name="_outlink" value="Npc/9062644.img/say/4"/>
+</canvas>
+<canvas name="14" width="1" height="1">
+<vector name="origin" x="29" y="67"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="80d44d05bdd4ab7059cc3bb06a656c97137afb527337837b37d459e404cbb977"/>
+<string name="_outlink" value="Npc/9062644.img/say/5"/>
+</canvas>
+<canvas name="15" width="1" height="1">
+<vector name="origin" x="29" y="68"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="5039220d0078ad8f982ea6cef7ec40479c873b1ecb20da75e154d23511288d98"/>
+<string name="_outlink" value="Npc/9062644.img/say/6"/>
+</canvas>
+</imgdir>
+<imgdir name="move">
+<canvas name="0" width="80" height="77">
+<vector name="origin" x="39" y="63"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="f25def8f0ef18c145db72895951300cbf39b09e0fa62a5503aba969f71a6a542"/>
+</canvas>
+<canvas name="1" width="79" height="76">
+<vector name="origin" x="39" y="62"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="74813e2506bb8db648cd878c8c6142db9ad5cb3c46507c60bae1a50be44216bf"/>
+</canvas>
+<canvas name="2" width="78" height="76">
+<vector name="origin" x="39" y="62"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="574ba41a6654762704b8de06aba2f92cc591ce507d3a1a3671cc18bb123a9b56"/>
+</canvas>
+<canvas name="3" width="72" height="77">
+<vector name="origin" x="39" y="63"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="1b32c3d364bbd4d5fd750d9aab74ab2011fff5f060475561e20542e99845a46a"/>
+</canvas>
+</imgdir>
+</imgdir>

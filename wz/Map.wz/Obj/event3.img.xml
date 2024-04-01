@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="event3.img">
+<imgdir name="2022_silentforest">
+<imgdir name="leaf">
+<imgdir name="0">
+<canvas name="0" width="366" height="198">
+<vector name="origin" x="183" y="71"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-182" y="5"/>
+<vector name="foothold" x="-68" y="-50"/>
+<vector name="foothold" x="-8" y="-49"/>
+<vector name="foothold" x="46" y="-38"/>
+<vector name="foothold" x="101" y="-19"/>
+<vector name="foothold" x="167" y="30"/>
+<vector name="foothold" x="179" y="63"/>
+</extended>
+<string name="_hash" value="fde2b22664a142a8b5ce437eb0fd47c99ee9c0819dc80cebdfb2b042dab1bf5e"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="402" height="89">
+<vector name="origin" x="211" y="56"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-161" y="-34"/>
+<vector name="foothold" x="-148" y="-45"/>
+<vector name="foothold" x="-118" y="-50"/>
+<vector name="foothold" x="-84" y="-51"/>
+<vector name="foothold" x="-39" y="-41"/>
+<vector name="foothold" x="8" y="-21"/>
+<vector name="foothold" x="58" y="-5"/>
+<vector name="foothold" x="107" y="0"/>
+<vector name="foothold" x="152" y="-10"/>
+<vector name="foothold" x="172" y="-23"/>
+<vector name="foothold" x="178" y="-34"/>
+<vector name="foothold" x="178" y="-47"/>
+<vector name="foothold" x="183" y="-46"/>
+</extended>
+<string name="_hash" value="375b86e717898934c5c600eeb2e59d0b109e3dc9906ac6de5ad7e8f1924583e9"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="bottom">
+<imgdir name="0">
+<canvas name="0" width="156" height="115">
+<vector name="origin" x="78" y="57"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-60" y="-20"/>
+<vector name="foothold" x="73" y="-20"/>
+</extended>
+<string name="_hash" value="94c0c1faebc382574941b2f4a175b9ead0d4511b3d72b4b2c29a79a584c6367e"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="155" height="115">
+<vector name="origin" x="77" y="57"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-67" y="-20"/>
+<vector name="foothold" x="70" y="-20"/>
+</extended>
+<string name="_hash" value="3224fa6c7e322730def60ad9b7bcd0096e20cb9f7ae0425be55b94d8a1faad47"/>
+</canvas>
+</imgdir>
+<imgdir name="2">
+<canvas name="0" width="156" height="115">
+<vector name="origin" x="84" y="55"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-71" y="-20"/>
+<vector name="foothold" x="65" y="-20"/>
+</extended>
+<string name="_hash" value="207a83427b6c38442c6c19200814df02f736717ddee96fae0ee695e283e821da"/>
+</canvas>
+</imgdir>
+<imgdir name="3">
+<canvas name="0" width="207" height="115">
+<vector name="origin" x="103" y="57"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-90" y="-20"/>
+<vector name="foothold" x="102" y="-20"/>
+</extended>
+<string name="_hash" value="5f8abfd7628d97528405177091c27cc1a41b775d7c9164c0d1f2772e58e11bb3"/>
+</canvas>
+</imgdir>
+<imgdir name="4">
+<canvas name="0" width="73" height="115">
+<vector name="origin" x="36" y="57"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-21" y="-20"/>
+<vector name="foothold" x="29" y="-20"/>
+</extended>
+<string name="_hash" value="dedc2f0c874cadbc13b532120a420855bf2a79201537ecca32759028ac8fa371"/>
+</canvas>
+</imgdir>
+<imgdir name="5">
+<canvas name="0" width="135" height="115">
+<vector name="origin" x="67" y="57"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-53" y="-20"/>
+<vector name="foothold" x="56" y="-20"/>
+</extended>
+<string name="_hash" value="5bdf9bf4a2ffbffe207cc4c319c0925377a7f2a2e66d3a566742c9fe62fd74be"/>
+</canvas>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

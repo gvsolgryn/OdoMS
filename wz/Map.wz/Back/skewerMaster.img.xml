@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="skewerMaster.img">
+<imgdir name="back">
+<canvas name="0" width="1366" height="768">
+<vector name="origin" x="1006" y="649"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d08b68275b2a1991a008fb8dd4918d2ea8ff36a49a4706019e55c29537c98760"/>
+</canvas>
+<canvas name="1" width="304" height="132">
+<vector name="origin" x="1006" y="21"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7fac53d92ff0a9900d5cdf194c477ddfaa090aff7f203f240e1fc96abcb30480"/>
+</canvas>
+<canvas name="2" width="1366" height="352">
+<vector name="origin" x="1006" y="233"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ae29292c75f5a028a8364184fa653cf108adf05e359586919630b84474114938"/>
+</canvas>
+<canvas name="3" width="1366" height="278">
+<vector name="origin" x="1006" y="259"/>
+<int name="z" value="0"/>
+<string name="_hash" value="10956f54e88d5a75ee014a92daa6e46590555e55c24200f695e152a23f83f146"/>
+</canvas>
+<canvas name="4" width="1366" height="343">
+<vector name="origin" x="1006" y="391"/>
+<int name="z" value="0"/>
+<string name="_hash" value="cf5e07a9ef0b875857597fc139d68814d698d59dd3386b1ef769acabbc102a6e"/>
+</canvas>
+<canvas name="5" width="289" height="188">
+<vector name="origin" x="-71" y="649"/>
+<int name="z" value="0"/>
+<string name="_hash" value="e6f5050ba25da213cf1c5b935de327dade1e410989f255310fb48cc1ab5b3617"/>
+</canvas>
+<canvas name="6" width="1366" height="645">
+<vector name="origin" x="1006" y="533"/>
+<int name="z" value="0"/>
+<string name="_hash" value="898d78d082db6d78bd274b7b4d0b3e0a5a1fcae2af07cf0bedb60139cf0e036b"/>
+</canvas>
+<canvas name="7" width="1366" height="768">
+<vector name="origin" x="1006" y="649"/>
+<int name="z" value="0"/>
+<string name="_hash" value="22bcfd49c240b6dc0d81722f2b1ba5f3b3cca5c0ac6d59fc6824cef7364394bd"/>
+</canvas>
+<canvas name="8" width="1366" height="570">
+<vector name="origin" x="1006" y="526"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ccb776582babdbf0244923fbc0906e4bd86336c70f58d040dc41efafb937be38"/>
+</canvas>
+</imgdir>
+</imgdir>

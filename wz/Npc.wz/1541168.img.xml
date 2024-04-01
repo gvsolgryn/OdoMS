@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1541168.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="50" height="62">
+<vector name="origin" x="26" y="62"/>
+<int name="z" value="0"/>
+<int name="delay" value="3000"/>
+<string name="_hash" value="96e4dbb73b43a4dfbf6c34fcaf3ed2fe32b2b46ac830d4e17189fc54b7024014"/>
+</canvas>
+</imgdir>
+<imgdir name="say">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="26" y="62"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+<canvas name="1" width="50" height="62">
+<vector name="origin" x="26" y="62"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="6f041689765b3bfaffb66fb152fe51bab9874fcffeaa45de323e73a11c42d88f"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="26" y="62"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="26" y="62"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_inlink" value="say/1"/>
+</canvas>
+</imgdir>
+<imgdir name="special1">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="23" y="62"/>
+<int name="z" value="0"/>
+<int name="delay" value="3000"/>
+<string name="_hash" value="b945047ef56e89eefefc1b8902bc69f43bf90c51624d58d985fd5e56f45da2bc"/>
+<string name="_outlink" value="Npc/1541154.img/stand/0"/>
+</canvas>
+<int name="special" value="1"/>
+</imgdir>
+</imgdir>

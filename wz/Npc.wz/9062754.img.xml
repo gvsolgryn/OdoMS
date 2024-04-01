@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062754.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+<imgdir name="speak">
+<string name="0" value="n0"/>
+<string name="1" value="n1"/>
+</imgdir>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="77" height="101">
+<vector name="origin" x="34" y="101"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="ea34634618e58e9dd35df46104e75d8759215810f8af287a19160d8dda5a38d9"/>
+</canvas>
+<canvas name="1" width="68" height="103">
+<vector name="origin" x="34" y="103"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="6b936c26a9ad661097e384d4209c407427b7aaeedbda3e0d13760e56ff96e958"/>
+</canvas>
+<canvas name="2" width="72" height="104">
+<vector name="origin" x="34" y="104"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="e0655e6e69ffe6ba88e59f9b702c59c4fcd08555e591f357e4b7cacb3ba598e5"/>
+</canvas>
+<canvas name="3" width="74" height="105">
+<vector name="origin" x="34" y="105"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="338a7081297c610205203700b529b43f16685b866139105a9dc28db6637742e4"/>
+</canvas>
+<canvas name="4" width="75" height="97">
+<vector name="origin" x="34" y="97"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="bac4461355018efb29c25eb5517c9146e53dd3b131b213ce42c91f131bca90c2"/>
+</canvas>
+<canvas name="5" width="76" height="98">
+<vector name="origin" x="34" y="98"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="fcc5b7a780a0c669715450f36216203619a53f39eb0ee468aac3bf5808f45770"/>
+</canvas>
+</imgdir>
+<imgdir name="eye">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="34" y="101"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="34" y="103"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/1"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="34" y="104"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/2"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="34" y="105"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/3"/>
+</canvas>
+<canvas name="4" width="1" height="1">
+<vector name="origin" x="34" y="97"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/4"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="34" y="98"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/5"/>
+</canvas>
+</imgdir>
+<imgdir name="say">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="34" y="101"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="34" y="103"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/1"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="34" y="104"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/2"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="34" y="105"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/3"/>
+</canvas>
+<canvas name="4" width="1" height="1">
+<vector name="origin" x="34" y="97"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/4"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="34" y="98"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/5"/>
+</canvas>
+</imgdir>
+</imgdir>

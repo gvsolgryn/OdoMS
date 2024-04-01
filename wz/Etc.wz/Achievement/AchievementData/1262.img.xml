@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1262.img">
+<imgdir name="info">
+<string name="name" value="[더 시드] 기름칠은 비겁하다고 생각합니다"/>
+<string name="desc" value="더 시드 양철 나무꾼 1회 처치"/>
+<int name="score" value="20"/>
+<string name="mainCategory" value="adventure"/>
+<string name="subCategory" value="special"/>
+<string name="difficulty" value="rare"/>
+<imgdir name="uiType">
+<string name="gauge" value="submission_info"/>
+<string name="gaugeSubMission" value="script"/>
+</imgdir>
+</imgdir>
+<imgdir name="mission">
+<imgdir name="0">
+<string name="name" value="[더 시드] 양철 나무꾼 1회 처치"/>
+<imgdir name="subMission">
+<imgdir name="script">
+<imgdir name="score">
+<long name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+</imgdir>
+<imgdir name="checkValue">
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

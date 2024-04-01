@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="3003381.img">
+<imgdir name="info">
+<imgdir name="script">
+<imgdir name="0">
+<string name="script" value="spiritSavior_NPC"/>
+</imgdir>
+</imgdir>
+<int name="hide" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+</canvas>
+</imgdir>
+<imgdir name="condition1">
+<imgdir name="stand">
+<canvas name="0" width="115" height="111">
+<vector name="origin" x="48" y="103"/>
+<int name="z" value="0"/>
+<int name="delay" value="200"/>
+<string name="_hash" value="f495ca1654c1cf4f07a36f4b691ac77dee6b692637c1ac5571ef8f66a140aba7"/>
+</canvas>
+<canvas name="1" width="115" height="110">
+<vector name="origin" x="48" y="102"/>
+<int name="z" value="0"/>
+<int name="delay" value="200"/>
+<string name="_hash" value="d54fb19f0b5f7f349bcd930926aebb713b781058e8cbe9730f39ba1d82de3eee"/>
+</canvas>
+<canvas name="2" width="115" height="110">
+<vector name="origin" x="48" y="102"/>
+<int name="z" value="0"/>
+<int name="delay" value="200"/>
+<string name="_hash" value="a46692aba33202a50437d467107f522a6c09bfddc10be1fa08d5c2feb6c9d640"/>
+</canvas>
+<canvas name="3" width="103" height="110">
+<vector name="origin" x="48" y="102"/>
+<int name="z" value="0"/>
+<int name="delay" value="200"/>
+<string name="_hash" value="7be857ee203093f752cbe620615aaac5b1bb4cac1b0ba224741ab650a65d3402"/>
+</canvas>
+<canvas name="4" width="103" height="110">
+<vector name="origin" x="48" y="102"/>
+<int name="z" value="0"/>
+<int name="delay" value="200"/>
+<string name="_hash" value="2ab637121cd02ffce37be2ab746a09fff6adef996a51f2e5aabc5eded2efad30"/>
+</canvas>
+<canvas name="5" width="115" height="110">
+<vector name="origin" x="48" y="102"/>
+<int name="z" value="0"/>
+<int name="delay" value="200"/>
+<string name="_hash" value="ac60cc511d10312e43018cf3a163d6c00b718fe8e36d490e830b76829080bed1"/>
+</canvas>
+</imgdir>
+<int name="34478" value="2"/>
+</imgdir>
+</imgdir>

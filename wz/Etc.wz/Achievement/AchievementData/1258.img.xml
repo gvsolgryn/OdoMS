@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1258.img">
+<imgdir name="info">
+<string name="mainCategory" value="adventure"/>
+<string name="subCategory" value="exploration"/>
+<string name="name" value="[지역탐험] 오디움 탐험"/>
+<string name="desc" value="오디움 모든 지역 탐험"/>
+<string name="difficulty" value="rare"/>
+<int name="score" value="20"/>
+<imgdir name="uiType">
+<string name="uiForm" value="mission"/>
+<string name="gauge" value="mission_count"/>
+</imgdir>
+</imgdir>
+<imgdir name="mission">
+<imgdir name="0">
+<string name="name" value="&lt;연구자들의 도시&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007000"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="1">
+<string name="name" value="&lt;성문과 맞닿은 곳&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007001"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="2">
+<string name="name" value="&lt;성문으로 가는 길 1&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007002"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="3">
+<string name="name" value="&lt;성문으로 가는 길 2&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007003"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="4">
+<string name="name" value="&lt;성문으로 가는 길 3&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007004"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="5">
+<string name="name" value="&lt;성문으로 가는 길 4&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007005"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="6">
+<string name="name" value="&lt;점령당한 골목 1&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007006"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="7">
+<string name="name" value="&lt;점령당한 골목 2&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007007"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="8">
+<string name="name" value="&lt;점령당한 골목 3&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007008"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="9">
+<string name="name" value="&lt;점령당한 골목 4&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007009"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="10">
+<string name="name" value="&lt;눈을 뜬 실험실&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007010"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="11">
+<string name="name" value="&lt;실험실 중간 복도&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007011"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="12">
+<string name="name" value="&lt;볕 드는 실험실 1&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007012"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="13">
+<string name="name" value="&lt;볕 드는 실험실 2&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007013"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="14">
+<string name="name" value="&lt;볕 드는 실험실 3&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007014"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="15">
+<string name="name" value="&lt;잠긴 문 뒤 실험실 1&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007015"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="16">
+<string name="name" value="&lt;잠긴 문 뒤 실험실 2&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007016"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="17">
+<string name="name" value="&lt;잠긴 문 뒤 실험실 3&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007017"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="18">
+<string name="name" value="&lt;마음이 고이는 동력실&gt; 탐험"/>
+<imgdir name="subMission">
+<imgdir name="field_enter">
+<imgdir name="score">
+<int name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="field">
+<int name="field_id" value="410007018"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

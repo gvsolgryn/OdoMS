@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="3005708.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="37" y="66"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="acafb3b130b8a17be25a5cbdcb195c5811aeb5bbc050d83715554fda95b0fa4e"/>
+<string name="_outlink" value="Npc/3003226.img/stand/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="37" y="66"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="12fe3dd857161078c47873104c7d59be3f9b787011884aa38c3d5ab8b7d91455"/>
+<string name="_outlink" value="Npc/3003226.img/stand/1"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="37" y="66"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/3003226.img/stand/0"/>
+</canvas>
+</imgdir>
+</imgdir>

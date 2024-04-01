@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="UIMake.img">
+<imgdir name="0">
+<int name="uiNum" value="1339"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/AttendanceSystem6"/>
+</imgdir>
+<imgdir name="1">
+<int name="uiNum" value="1340"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/IgnitionWarmingUp"/>
+<int name="fieldMoveClose" value="1"/>
+<int name="noOutWindow" value="1"/>
+<int name="battleAlpha" value="1"/>
+</imgdir>
+<imgdir name="2">
+<int name="uiNum" value="1341"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/CygnusRemaster"/>
+<int name="fieldMoveClose" value="1"/>
+<int name="noOutWindow" value="1"/>
+<int name="battleAlpha" value="1"/>
+<int name="type" value="1"/>
+<string name="dragRegion" value="0,0,437,180"/>
+</imgdir>
+<imgdir name="3">
+<int name="uiNum" value="1400"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/ignitionFirework"/>
+<int name="fieldMoveClose" value="1"/>
+<int name="noOutWindow" value="1"/>
+<int name="battleAlpha" value="1"/>
+<string name="dragRegion" value="0,15,526,48"/>
+</imgdir>
+<imgdir name="4">
+<int name="uiNum" value="1342"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/FlameDance"/>
+<int name="noOutWindow" value="1"/>
+<int name="noESC" value="1"/>
+<string name="dragRegion" value="0,0,101,180"/>
+<int name="type" value="2"/>
+</imgdir>
+<imgdir name="5">
+<int name="uiNum" value="1343"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/AmazingIgnition"/>
+<int name="type" value="2"/>
+<int name="noOutWindow" value="1"/>
+<string name="dragRegion" value="0,0,101,180"/>
+<int name="noESC" value="1"/>
+<int name="fieldMoveClose" value="1"/>
+</imgdir>
+<imgdir name="6">
+<int name="uiNum" value="1344"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/AmazingIgnitionUP"/>
+<int name="type" value="2"/>
+<int name="noOutWindow" value="1"/>
+<string name="dragRegion" value="0,0,101,180"/>
+<int name="noESC" value="1"/>
+<int name="fieldMoveClose" value="1"/>
+</imgdir>
+<imgdir name="7">
+<int name="uiNum" value="1402"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/worldwideHandsome"/>
+<int name="noOutWindow" value="1"/>
+<string name="dragRegion" value="80,0,590,150"/>
+<int name="fieldMoveClose" value="1"/>
+<int name="battleAlpha" value="1"/>
+</imgdir>
+<imgdir name="8">
+<int name="uiNum" value="1345"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/AttendanceSystem7"/>
+<string name="dragRegion" value="0, 0, 416, 425"/>
+<int name="fieldMoveClose" value="1"/>
+<int name="noOutWindow" value="1"/>
+<int name="battleAlpha" value="1"/>
+</imgdir>
+<imgdir name="9">
+<int name="uiNum" value="1405"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/WorldBestPunchKing"/>
+<int name="fieldMoveClose" value="1"/>
+<int name="noOutWindow" value="1"/>
+<int name="battleAlpha" value="1"/>
+<string name="dragRegion" value="0, 0, 351, 633"/>
+</imgdir>
+<imgdir name="10">
+<int name="uiNum" value="1413"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/StoneSpiritBringUp"/>
+<int name="fieldMoveClose" value="1"/>
+<int name="noOutWindow" value="1"/>
+<int name="battleAlpha" value="1"/>
+<string name="dragRegion" value="0,-61,580,494"/>
+<int name="type" value="3"/>
+</imgdir>
+<imgdir name="11">
+<int name="uiNum" value="1346"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/HyperStepup"/>
+<int name="type" value="4"/>
+<int name="ctrlZ" value="1"/>
+<int name="noOutWindow" value="1"/>
+</imgdir>
+<imgdir name="12">
+<int name="uiNum" value="1418"/>
+<string name="rootUOL" value="UI/UIWindowEvent.img/greetingWeek"/>
+<int name="fieldMoveClose" value="1"/>
+<int name="noOutWindow" value="1"/>
+<int name="battleAlpha" value="1"/>
+<string name="dragRegion" value="0,-61,580,494"/>
+<int name="type" value="5"/>
+</imgdir>
+</imgdir>

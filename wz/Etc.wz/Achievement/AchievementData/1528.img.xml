@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1528.img">
+<imgdir name="info">
+<string name="name" value="[불꽃늑대] 녀석은 따뜻한 불꽃이었다"/>
+<string name="desc" value="익스트림 불꽃늑대 마지막 타격 후 보상 수령"/>
+<string name="keyword" value="익스트림 불꽃늑대 마지막 타격"/>
+<int name="score" value="40"/>
+<string name="mainCategory" value="battle"/>
+<string name="subCategory" value="field"/>
+<string name="difficulty" value="unique"/>
+<imgdir name="uiType">
+<string name="gauge" value="submission_info"/>
+<string name="gaugeSubMission" value="script"/>
+</imgdir>
+</imgdir>
+<imgdir name="mission">
+<imgdir name="0">
+<string name="name" value="[불꽃늑대] 익스트림 불꽃늑대 마지막 타격하기"/>
+<imgdir name="subMission">
+<imgdir name="script">
+<imgdir name="score">
+<long name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+</imgdir>
+<imgdir name="checkValue">
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

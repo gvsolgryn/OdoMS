@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1541200.img">
+<imgdir name="info">
+<int name="dcLeft" value="-80"/>
+<int name="dcTop" value="-130"/>
+<int name="dcRight" value="80"/>
+<int name="dcBottom" value="0"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="153" height="119">
+<vector name="origin" x="76" y="119"/>
+<int name="z" value="0"/>
+<string name="_hash" value="549e4b3837d733e05bf0c48f5e0ea1326be6b453b3ae4bdba668ea7e6b94702b"/>
+</canvas>
+</imgdir>
+<imgdir name="condition1">
+<imgdir name="36600">
+<imgdir name="0">
+<string name="key" value="00"/>
+<string name="value" value="h0"/>
+</imgdir>
+</imgdir>
+<int name="hide" value="1"/>
+<uol name="stand" value="../stand"/>
+</imgdir>
+<imgdir name="condition2">
+<imgdir name="36600">
+<imgdir name="0">
+<string name="key" value="00"/>
+<string name="value" value="h1"/>
+</imgdir>
+</imgdir>
+<uol name="stand" value="../stand"/>
+</imgdir>
+</imgdir>

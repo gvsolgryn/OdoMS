@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9300002.img">
+<imgdir name="info">
+<string name="info" value="전신거울"/>
+<int name="disappearOnLeave" value="1"/>
+</imgdir>
+<imgdir name="0">
+<imgdir name="event">
+<imgdir name="0">
+<int name="type" value="300"/>
+<int name="state" value="1"/>
+<vector name="lt" x="-70" y="-140"/>
+<vector name="rb" x="70" y="80"/>
+</imgdir>
+</imgdir>
+<int name="repeat" value="1"/>
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="80" y="190"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="4cf58d44e170a45e952c88cc3c8f3ca5d93a046b8a85ba1b3035097d6666df23"/>
+<string name="_outlink" value="Reactor/9300000.img/0/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="80" y="190"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="6168345026e980d9a25b2bbc447de230c3933da48d0522b8ae8b48d707dad6fe"/>
+<string name="_outlink" value="Reactor/9300000.img/0/1"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="80" y="190"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="d5472608a743d136446fca1b5c1ac7a1e09bcfe5c2686a7d7f4a98b151dac5fe"/>
+<string name="_outlink" value="Reactor/9300000.img/0/2"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="80" y="190"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="4c037993803fe6758b2f47e6a16130d7fb4969bcaffa32003f680cbb1ffb59df"/>
+<string name="_outlink" value="Reactor/9300000.img/0/3"/>
+</canvas>
+<canvas name="4" width="1" height="1">
+<vector name="origin" x="80" y="190"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="e794868966bbf039af04cb480384985c0d8e6b9026875ae193a3d1e8a08cc26c"/>
+<string name="_outlink" value="Reactor/9300000.img/0/4"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="80" y="190"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="82ed69bfc4b132dedb00afda1852aca6ea3cc96b7ab08933167951dde693595e"/>
+<string name="_outlink" value="Reactor/9300000.img/0/5"/>
+</canvas>
+<imgdir name="hit">
+<canvas name="0" width="1" height="1">
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="1" height="1">
+</canvas>
+</imgdir>
+</imgdir>

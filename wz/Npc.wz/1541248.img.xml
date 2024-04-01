@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1541248.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+<int name="forceMove" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="101" height="72">
+<vector name="origin" x="73" y="72"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="43108b9980335785bc55d52097a4df6404b52c9d0cb9efa20720c90aad2d23d9"/>
+</canvas>
+<canvas name="1" width="102" height="73">
+<vector name="origin" x="74" y="73"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="94f1ff9ee135df9e4efd1bc57963e2ac190372ed1fcf9fc7bdcb3e78d328b020"/>
+</canvas>
+<canvas name="2" width="102" height="74">
+<vector name="origin" x="74" y="74"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="2828f34bb5987c4308d5100569a07525b71071d4356317687e1d000640b3f525"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="74" y="73"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_inlink" value="stand/1"/>
+</canvas>
+</imgdir>
+<imgdir name="move">
+<canvas name="0" width="92" height="75">
+<vector name="origin" x="64" y="75"/>
+<int name="z" value="0"/>
+<int name="delay" value="150"/>
+<string name="_hash" value="e40f31b14a82189c0a0282ce727d8d2e9f03d7ffc1d73339b31e624e6dac9c38"/>
+</canvas>
+<canvas name="1" width="96" height="74">
+<vector name="origin" x="68" y="74"/>
+<int name="z" value="0"/>
+<int name="delay" value="150"/>
+<string name="_hash" value="76d61cd5d120857c7ea7d03a379195fbaad131ac792fc26f4b30f39b9199f9e2"/>
+</canvas>
+<canvas name="2" width="91" height="75">
+<vector name="origin" x="63" y="75"/>
+<int name="z" value="0"/>
+<int name="delay" value="150"/>
+<string name="_hash" value="22d1faeb4163ba806b8d3c3b9a5831373e9150dd317000687e9df187152ea90a"/>
+</canvas>
+<canvas name="3" width="85" height="77">
+<vector name="origin" x="57" y="74"/>
+<int name="z" value="0"/>
+<int name="delay" value="150"/>
+<string name="_hash" value="57b384e0dd788bed1b37e0aaf98fae791a94f929e3cd6853ea7d852f86cfbafa"/>
+</canvas>
+</imgdir>
+</imgdir>

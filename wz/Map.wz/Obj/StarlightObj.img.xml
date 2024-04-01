@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="StarlightObj.img">
+<imgdir name="Main">
+<imgdir name="Obj">
+<imgdir name="1">
+<canvas name="0" width="2000" height="1100">
+<vector name="origin" x="141" y="252"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1caacdc40cca05b667ac694bc62d9e4484ee96f6cd3cd007804108d0f2f0a662"/>
+</canvas>
+</imgdir>
+<imgdir name="0">
+<canvas name="0" width="3500" height="1550">
+<vector name="origin" x="141" y="252"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1caacdc40cca05b667ac694bc62d9e4484ee96f6cd3cd007804108d0f2f0a662"/>
+</canvas>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

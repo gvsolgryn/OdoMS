@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="01713002.img">
+<imgdir name="info">
+<canvas name="icon" width="37" height="37">
+<vector name="origin" x="3" y="35"/>
+<string name="_hash" value="16766d6f0a072bec63f4227b0b4fdc3c4a0946c794c0e20354ac943e41bca0e5"/>
+</canvas>
+<canvas name="iconRaw" width="37" height="37">
+<vector name="origin" x="3" y="35"/>
+<string name="_hash" value="93304a084d635dd9aff9c8c49e7cc550bf1c69b58fc32c5f369c4e1a53e4a111"/>
+</canvas>
+<int name="reqJob" value="0"/>
+<int name="reqLevel" value="200"/>
+<int name="reqSTR" value="0"/>
+<int name="reqDEX" value="0"/>
+<int name="reqINT" value="0"/>
+<int name="reqLUK" value="0"/>
+<int name="tuc" value="0"/>
+<int name="price" value="1"/>
+<int name="cash" value="0"/>
+<int name="tradeBlock" value="1"/>
+<int name="notSale" value="1"/>
+<int name="incAUT" value="10"/>
+<int name="scanTradeBlock" value="1"/>
+<int name="MDUReward" value="1"/>
+</imgdir>
+</imgdir>

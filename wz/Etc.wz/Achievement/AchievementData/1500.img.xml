@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1500.img">
+<imgdir name="info">
+<string name="name" value="[노비스] 신생 연합 결성"/>
+<string name="desc" value="노비스 유니온 1단계 달성"/>
+<int name="sync" value="1"/>
+<int name="score" value="10"/>
+<string name="mainCategory" value="growth"/>
+<string name="subCategory" value="union"/>
+</imgdir>
+<imgdir name="mission">
+<imgdir name="0">
+<string name="name" value="노비스 유니온 1단계 달성"/>
+<imgdir name="subMission">
+<imgdir name="quest_state_change">
+<imgdir name="score">
+<long name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="quest_change_info">
+<int name="quest_id" value="16013"/>
+<imgdir name="quest_state">
+<int name="min" value="2"/>
+<int name="max" value="2"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

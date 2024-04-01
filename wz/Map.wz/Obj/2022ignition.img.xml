@@ -1,0 +1,1439 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="2022ignition.img">
+<imgdir name="foothold">
+<imgdir name="ground">
+<imgdir name="0">
+<canvas name="0" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-500" y="-26"/>
+<vector name="foothold" x="500" y="-26"/>
+</extended>
+<string name="_hash" value="60ed66f6ef65f95a7272d035adbfdf8ab3e2e429447ec8a52676a5db20bc5e38"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-500" y="-26"/>
+<vector name="foothold" x="500" y="-26"/>
+</extended>
+<string name="_hash" value="62768c0ae77dc96df580f3d67525b8fb32976f97cba7239b76b859889b6bed08"/>
+</canvas>
+</imgdir>
+<imgdir name="2">
+<canvas name="0" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-500" y="-26"/>
+<vector name="foothold" x="500" y="-26"/>
+</extended>
+<string name="_hash" value="ff9bb2e9b4cae42dfee986925dd96f13c013e208b66aab3c0130b12adf83e1d8"/>
+</canvas>
+</imgdir>
+<imgdir name="3">
+<canvas name="0" width="380" height="328">
+<vector name="origin" x="190" y="164"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-190" y="20"/>
+<vector name="foothold" x="190" y="20"/>
+</extended>
+<string name="_hash" value="a0451150af6e5dee2b2b3491675b453a2bf3fb8221c1ab98d4ba5d049e697665"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="sky">
+<imgdir name="0">
+<canvas name="0" width="12" height="26">
+<vector name="origin" x="6" y="13"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-6" y="-11"/>
+<vector name="foothold" x="6" y="-11"/>
+</extended>
+<string name="_hash" value="b2fca921fb1fd8062b9e4067092fc8a6892b264ad4f934305bfb70a4e9b0a4db"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="147" height="26">
+<vector name="origin" x="73" y="13"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-73" y="-11"/>
+<vector name="foothold" x="74" y="-11"/>
+</extended>
+<string name="_hash" value="9775153dae3477fa016ede1b9e3099f36129841d478705b57d7594ce5432db4e"/>
+</canvas>
+</imgdir>
+<imgdir name="2">
+<canvas name="0" width="39" height="26">
+<vector name="origin" x="19" y="13"/>
+<int name="z" value="0"/>
+<extended name="foothold">
+<vector name="foothold" x="-19" y="-11"/>
+<vector name="foothold" x="19" y="-11"/>
+</extended>
+<string name="_hash" value="d2359cbaf24f81adb34e6380d0d1d72c80b2523b418dd4e0849fc01bfec6e929"/>
+</canvas>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="obj">
+<imgdir name="mask">
+<imgdir name="0">
+<canvas name="0" width="1000" height="328">
+<vector name="origin" x="500" y="164"/>
+<int name="z" value="0"/>
+<string name="_hash" value="fd8dd9f8337c1ea8eebdf61ba12d4e5dbadc33eb67fff3c9b21d0a6bc238afb7"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="noise">
+<imgdir name="0">
+<canvas name="0" width="192" height="192">
+<vector name="origin" x="96" y="96"/>
+<int name="z" value="0"/>
+<string name="_hash" value="9b9c402418c7bfe9d86fd3deb090c9e65151debf306ccab8d728edeab50d136f"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="gadget">
+<imgdir name="0">
+<canvas name="0" width="1000" height="115">
+<vector name="origin" x="500" y="57"/>
+<int name="z" value="0"/>
+<string name="_hash" value="eb55dc803b9c4cb162051a831268e58b67f14fe57e4567395bdb6bcdb4ff32fa"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="1000" height="104">
+<vector name="origin" x="500" y="52"/>
+<int name="z" value="0"/>
+<string name="_hash" value="2c51f11ed2555affd1e2c46a74ba84f2ccb68b73bf4fa41dd641ba565b101d22"/>
+</canvas>
+</imgdir>
+<imgdir name="2">
+<canvas name="0" width="1000" height="114">
+<vector name="origin" x="500" y="57"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d831e509970e8dc80553ae95e7ba5b82de8b09cb0a95790b838b996948669e0a"/>
+</canvas>
+</imgdir>
+<imgdir name="3">
+<canvas name="0" width="632" height="600">
+<vector name="origin" x="316" y="300"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ddaea7265b598125b9d3400846a9e4b34d678cb689215d2af419a5a2b5897d4b"/>
+</canvas>
+</imgdir>
+<imgdir name="4">
+<canvas name="0" width="274" height="174">
+<vector name="origin" x="137" y="87"/>
+<int name="z" value="0"/>
+<string name="_hash" value="920fbc6eef9adfa0b5b8d34bcaca513c72069fecc96fd1c4816effc9f1c69188"/>
+</canvas>
+</imgdir>
+<imgdir name="5">
+<canvas name="0" width="308" height="109">
+<vector name="origin" x="7" y="90"/>
+<int name="z" value="0"/>
+<string name="_hash" value="fe6699eff3bcd9811dba0ecc8a4928f7ae0370e7932d7dc5d9c2cd1a404dbba0"/>
+</canvas>
+</imgdir>
+<imgdir name="6">
+<canvas name="0" width="541" height="359">
+<vector name="origin" x="270" y="179"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d03d48bb7bf05dd9218ad41634ae9555aea2b69829cfde9c282088afcc318036"/>
+</canvas>
+</imgdir>
+<imgdir name="7">
+<canvas name="0" width="596" height="254">
+<vector name="origin" x="298" y="127"/>
+<int name="z" value="0"/>
+<string name="_hash" value="547f9df08df819a3f31332f853f5435e9612126ff6a35e7df750b0daae62bcd2"/>
+</canvas>
+</imgdir>
+<imgdir name="8">
+<canvas name="0" width="316" height="194">
+<vector name="origin" x="157" y="102"/>
+<int name="z" value="0"/>
+<string name="_hash" value="14b92965f12cc86e95cae0030901d9e363261f4c276e60bca5e99384c6ba5c34"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="hide">
+<imgdir name="0">
+<canvas name="0" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<imgdir name="foothold">
+<extended name="0">
+<vector name="0" x="-258" y="143"/>
+<vector name="0" x="254" y="143"/>
+</extended>
+<extended name="1">
+<vector name="1" x="-357" y="-41"/>
+<vector name="1" x="-272" y="-56"/>
+</extended>
+<extended name="2">
+<vector name="2" x="-278" y="-84"/>
+<vector name="2" x="-174" y="-103"/>
+</extended>
+<extended name="3">
+<vector name="3" x="-185" y="-168"/>
+<vector name="3" x="-167" y="-175"/>
+<vector name="3" x="-158" y="-170"/>
+</extended>
+<extended name="4">
+<vector name="4" x="171" y="-103"/>
+<vector name="4" x="277" y="-84"/>
+</extended>
+<extended name="5">
+<vector name="5" x="273" y="-55"/>
+<vector name="5" x="358" y="-40"/>
+</extended>
+<extended name="6">
+<vector name="6" x="159" y="-171"/>
+<vector name="6" x="170" y="-172"/>
+<vector name="6" x="186" y="-170"/>
+</extended>
+</imgdir>
+<string name="_hash" value="b6ee78479ca338a118f9b9625c4e48a72ea7ff63e461a11b683ae3b8b14be481"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="392" height="131">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<imgdir name="foothold">
+<extended name="0">
+<vector name="0" x="-193" y="35"/>
+<vector name="0" x="-143" y="50"/>
+<vector name="0" x="-53" y="58"/>
+<vector name="0" x="66" y="58"/>
+<vector name="0" x="136" y="51"/>
+<vector name="0" x="196" y="35"/>
+</extended>
+<extended name="1">
+<vector name="1" x="-192" y="-24"/>
+<vector name="1" x="-160" y="-37"/>
+<vector name="1" x="-98" y="-48"/>
+<vector name="1" x="0" y="-56"/>
+<vector name="1" x="98" y="-48"/>
+<vector name="1" x="160" y="-37"/>
+<vector name="1" x="192" y="-24"/>
+</extended>
+</imgdir>
+<string name="_hash" value="eb0a898bc93117c16eff810ee1b00bc7901e4458125aea1872ecfe11e4654b79"/>
+</canvas>
+</imgdir>
+<imgdir name="2">
+<canvas name="0" width="510" height="567">
+<vector name="origin" x="255" y="283"/>
+<int name="z" value="0"/>
+<imgdir name="foothold">
+<extended name="0">
+<vector name="0" x="46" y="-175"/>
+<vector name="0" x="251" y="-239"/>
+</extended>
+<extended name="1">
+<vector name="1" x="81" y="200"/>
+<vector name="1" x="251" y="196"/>
+</extended>
+</imgdir>
+<string name="_hash" value="ab213b532c046bdac55f8dffba22a69b84c4cb212506f8e17e3c7d95453087f4"/>
+</canvas>
+</imgdir>
+<imgdir name="3">
+<canvas name="0" width="844" height="445">
+<vector name="origin" x="408" y="228"/>
+<int name="z" value="0"/>
+<imgdir name="foothold">
+<extended name="0">
+<vector name="0" x="-243" y="122"/>
+<vector name="0" x="250" y="122"/>
+</extended>
+<extended name="1">
+<vector name="1" x="-358" y="-182"/>
+<vector name="1" x="-337" y="-182"/>
+<vector name="1" x="-309" y="-130"/>
+<vector name="1" x="-269" y="-94"/>
+<vector name="1" x="-236" y="-73"/>
+<vector name="1" x="-174" y="-57"/>
+</extended>
+<extended name="2">
+<vector name="2" x="199" y="-54"/>
+<vector name="2" x="250" y="-66"/>
+<vector name="2" x="295" y="-90"/>
+<vector name="2" x="336" y="-129"/>
+<vector name="2" x="361" y="-175"/>
+<vector name="2" x="368" y="-180"/>
+<vector name="2" x="381" y="-181"/>
+</extended>
+<extended name="3">
+<vector name="3" x="-57" y="-4"/>
+<vector name="3" x="59" y="-7"/>
+<vector name="3" x="96" y="-1"/>
+</extended>
+<extended name="4">
+<vector name="4" x="-241" y="-13"/>
+<vector name="4" x="-162" y="-26"/>
+<vector name="4" x="-137" y="-21"/>
+</extended>
+<extended name="5">
+<vector name="5" x="166" y="-21"/>
+<vector name="5" x="194" y="-26"/>
+<vector name="5" x="268" y="-13"/>
+</extended>
+<extended name="6">
+<vector name="6" x="-19" y="-131"/>
+<vector name="6" x="-7" y="-119"/>
+<vector name="6" x="20" y="-112"/>
+<vector name="6" x="46" y="-120"/>
+<vector name="6" x="57" y="-131"/>
+</extended>
+<extended name="7">
+<vector name="7" x="-27" y="-192"/>
+<vector name="7" x="-12" y="-206"/>
+<vector name="7" x="10" y="-214"/>
+<vector name="7" x="28" y="-214"/>
+<vector name="7" x="51" y="-205"/>
+<vector name="7" x="64" y="-191"/>
+</extended>
+</imgdir>
+<string name="_hash" value="33465beb51b35481876ba3cd18b8f0dcc43c4748e4b020013e5b365a2ec51c75"/>
+</canvas>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="ani">
+<imgdir name="house">
+<imgdir name="0">
+<canvas name="0" width="604" height="465">
+<vector name="origin" x="302" y="232"/>
+<int name="z" value="0"/>
+<string name="_hash" value="537de2bd89ca761ce44e79bf343836dd6cc1c697aeee828d5de0ff5597e538fd"/>
+</canvas>
+<canvas name="1" width="604" height="465">
+<vector name="origin" x="302" y="232"/>
+<int name="z" value="0"/>
+<string name="_hash" value="12fcb911fb156e56276894779486680dd37da06611a51716aac4d77432dfc97a"/>
+</canvas>
+<canvas name="2" width="604" height="465">
+<vector name="origin" x="302" y="232"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ffa503a91ed6ca6d8258df699fad5060736da98df3dbc4b750e446f3c5aed08d"/>
+</canvas>
+<canvas name="3" width="604" height="465">
+<vector name="origin" x="302" y="232"/>
+<int name="z" value="0"/>
+<string name="_hash" value="62a902e91a8a69ff5764e9fcd11564077d8da342505cd029efb8bb03a01cb616"/>
+</canvas>
+<canvas name="4" width="604" height="465">
+<vector name="origin" x="302" y="232"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d5de4d16c4da04c6f81a8802791ff294dd5a1aabd6588dadbb5f7a933eff6431"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="302" y="232"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="ani/house/0/2"/>
+</canvas>
+<canvas name="6" width="1" height="1">
+<vector name="origin" x="302" y="232"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="ani/house/0/1"/>
+</canvas>
+<canvas name="7" width="604" height="465">
+<vector name="origin" x="302" y="232"/>
+<int name="z" value="0"/>
+<string name="_hash" value="839e2c8c042926785803328d9239f74b3c2fd521eb02f4c6cc045415ebc27881"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="255" y="283"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="obj/hide/2/0"/>
+</canvas>
+<canvas name="1" width="510" height="567">
+<vector name="origin" x="255" y="283"/>
+<int name="z" value="0"/>
+<string name="_hash" value="a440cc7c83ea51bd78a3f7e88d587c6da9c1cdbc80073a630e699b6ab247b21f"/>
+</canvas>
+<canvas name="2" width="510" height="567">
+<vector name="origin" x="255" y="283"/>
+<int name="z" value="0"/>
+<string name="_hash" value="54a25cd04f2c8dadd6ad70938787f3cfa44b48936d9e38c87f19f8da235ad853"/>
+</canvas>
+<canvas name="3" width="510" height="567">
+<vector name="origin" x="255" y="283"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ab7150f297571c45bd4beb293c9a42e0af54afd0fcc5f4ce63f7976896041302"/>
+</canvas>
+<canvas name="4" width="510" height="567">
+<vector name="origin" x="255" y="283"/>
+<int name="z" value="0"/>
+<string name="_hash" value="e20752542e7bbb2d09c9618c3abc50cbe5ae10c112fd41b4dd729b83fd5ff82d"/>
+</canvas>
+<canvas name="5" width="510" height="567">
+<vector name="origin" x="255" y="283"/>
+<int name="z" value="0"/>
+<string name="_hash" value="5c1ba20b0fe71fa531c94fefe3991707fbbb0b177a50faac4d78379006bc9d8b"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="booth">
+<imgdir name="0">
+<canvas name="0" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="93534c1e23ec896aa43f210622091ba27ff80ca8eda5e10afd830cf05c95e13d"/>
+</canvas>
+<canvas name="1" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="58d35dbad4336256fa57432cb1a089e541675242175d92e6df1e58cbf4c6ba3c"/>
+</canvas>
+<canvas name="2" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="52ef9139bef43919e922cad2bacbd039fbee2d32a465250949cc5581d7173192"/>
+</canvas>
+<canvas name="3" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="e6c544b27f214f4fd6be0b2fa01819880d35fd7c18391e903717e4897b163e01"/>
+</canvas>
+<canvas name="4" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="31da8b52537b93b95cac6114abac8f2b412351380f11a3a01a0f23d939d3dac2"/>
+</canvas>
+<canvas name="5" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="fceb8a5428af2ef8d60c0a7af2539af200ea6f4fc99a55d50c2098862ce4e8d7"/>
+</canvas>
+<canvas name="6" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d8c2c8e4f357c3cecfb6d669a7bfd2944455daa3b4567792c00917897a6f0879"/>
+</canvas>
+<canvas name="7" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7d6e99b1b43a8cda24f43c18c2b643d18668cdd636d0dea5ce720247a1cdf84f"/>
+</canvas>
+<canvas name="8" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7de527360bf2a128305551b916cbb40b3879ed7c72665d49cb43c1c7375406a9"/>
+</canvas>
+<canvas name="9" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="f06022155d620c7099ce15a3618e9fd2a9abc9a766368952c76b4494df2daa3e"/>
+</canvas>
+<canvas name="10" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="4195ef81b463df1368e5070d39650719b412f682bd0879c932e613504e10b6f3"/>
+</canvas>
+<canvas name="11" width="844" height="494">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7b4daaafd57dd8998930051f03d658ddd39f8fbce541e084dcdbf8c25547ce9a"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="obj/hide/0/0"/>
+</canvas>
+<canvas name="1" width="850" height="497">
+<vector name="origin" x="425" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="40610bb302015c80ce70fb5db87b24b362597825a9250db4bff5ea71844e508b"/>
+</canvas>
+<canvas name="2" width="864" height="505">
+<vector name="origin" x="432" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="754f66144ba29b2d05df7992a154c5f52777c415fa563efd61bb1629b762d05f"/>
+</canvas>
+<canvas name="3" width="878" height="512">
+<vector name="origin" x="439" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="160bc4d2b46e3b1f1755de0b3308f47a2dff59be63695b9e384f9929ccc9451d"/>
+</canvas>
+<canvas name="4" width="864" height="505">
+<vector name="origin" x="432" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="819686f0bcc670e17290ee30c6dd9d3731bc072634f9e22fa84ed91fdf3f2dd8"/>
+</canvas>
+<canvas name="5" width="850" height="497">
+<vector name="origin" x="425" y="271"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6e9055f229517b18e259fcba3a5bdebc887090546608fc698fcd176a7391af0d"/>
+</canvas>
+<canvas name="6" width="1" height="1">
+<vector name="origin" x="422" y="271"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="obj/hide/0/0"/>
+</canvas>
+<canvas name="7" width="1" height="1">
+<vector name="origin" x="425" y="271"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="ani/booth/1/1"/>
+</canvas>
+<canvas name="8" width="1" height="1">
+<vector name="origin" x="432" y="271"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="ani/booth/1/2"/>
+</canvas>
+<canvas name="9" width="1" height="1">
+<vector name="origin" x="439" y="271"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="ani/booth/1/3"/>
+</canvas>
+<canvas name="10" width="1" height="1">
+<vector name="origin" x="432" y="271"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="ani/booth/1/4"/>
+</canvas>
+<canvas name="11" width="1" height="1">
+<vector name="origin" x="425" y="271"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="ani/booth/1/5"/>
+</canvas>
+</imgdir>
+<imgdir name="2">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="408" y="228"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="obj/hide/3/0"/>
+</canvas>
+<canvas name="1" width="850" height="445">
+<vector name="origin" x="411" y="228"/>
+<int name="z" value="0"/>
+<string name="_hash" value="c9eb6027a536efed7bdf98dc2a7ebf6e15a804d5f83c415aac393c12372f0002"/>
+</canvas>
+<canvas name="2" width="864" height="445">
+<vector name="origin" x="418" y="228"/>
+<int name="z" value="0"/>
+<string name="_hash" value="18df79bb3d35f0de4ddea3e8a452453dffa2dff2b0a979f4555982ec2a44b088"/>
+</canvas>
+<canvas name="3" width="878" height="453">
+<vector name="origin" x="425" y="231"/>
+<int name="z" value="0"/>
+<string name="_hash" value="a08be180ea32fa9b0057669494fc4dc5d3518bcb8de750336b12d8f79d3d37c2"/>
+</canvas>
+<canvas name="4" width="864" height="448">
+<vector name="origin" x="418" y="231"/>
+<int name="z" value="0"/>
+<string name="_hash" value="a585f2c7ca458fdc8750c6ee3ff40f86f8aac06bca2a0070e5766cecc36363f0"/>
+</canvas>
+<canvas name="5" width="850" height="448">
+<vector name="origin" x="411" y="231"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ed2b7b8f2916669feaaf196fbc53653e9a8c0ce00018358f08c3962054ab8cbb"/>
+</canvas>
+<canvas name="6" width="844" height="447">
+<vector name="origin" x="408" y="230"/>
+<int name="z" value="0"/>
+<string name="_hash" value="e2a3cf79acf3f2714e4c73cfbf247102866c31dcafb84fe652ddba50c6fbb60b"/>
+</canvas>
+<canvas name="7" width="850" height="445">
+<vector name="origin" x="411" y="228"/>
+<int name="z" value="0"/>
+<string name="_hash" value="941b20c703ba9b12a16deb8ff4b525b87a85de5a7c8add9db560e53d191eecf8"/>
+</canvas>
+<canvas name="8" width="864" height="445">
+<vector name="origin" x="418" y="228"/>
+<int name="z" value="0"/>
+<string name="_hash" value="092c09914b456d3329ff9aafc28467c4ffb4132098b5e99fe0f92b8fa0b24716"/>
+</canvas>
+<canvas name="9" width="878" height="450">
+<vector name="origin" x="425" y="228"/>
+<int name="z" value="0"/>
+<string name="_hash" value="807408dc8a90771ac6fe2e0e882eb70e68cea582021d4c9f4375463b635da21c"/>
+</canvas>
+<canvas name="10" width="864" height="448">
+<vector name="origin" x="418" y="231"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1d67a9e31e840d6d87ca5a9cd7c2c5267e0650820581812ac316c58e4d5688a2"/>
+</canvas>
+<canvas name="11" width="850" height="448">
+<vector name="origin" x="411" y="231"/>
+<int name="z" value="0"/>
+<string name="_hash" value="8dfd0095305d207df6c7d013baa9d6b9a937808605d8d440b71f08c26cd52159"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="desk">
+<imgdir name="0">
+<canvas name="0" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="c2fdaf1fb7ca50bd6dee5aa0f71def6dea88c39ff63f6f805732039f28cbd30d"/>
+</canvas>
+<canvas name="1" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="51f570d10e4c53ee31f0a6dc3bbcf871798b0ee8f6209f47868c12bc8a99cfa9"/>
+</canvas>
+<canvas name="2" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6df2619ac924f2d49273bee708ad53b832ac303cb0a084cd7871088e4fa68612"/>
+</canvas>
+<canvas name="3" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="05ef0e302c2af052e5ac0f2d4e228f3325de6b0b39c53af814bf50e6a25ee26b"/>
+</canvas>
+<canvas name="4" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="74103e873449d999a7094fbabc69257300328d14fc9ee0005311ddfc58035426"/>
+</canvas>
+<canvas name="5" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="f282804a92d9a3c3fe77c9b531749914f5a77170e372d524410a45c599fadc9f"/>
+</canvas>
+<canvas name="6" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="4116aaf403c477c3a11c006eb841d62712190bd0dd2df2dcebfc3decf0d3e6a9"/>
+</canvas>
+<canvas name="7" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="f9021cc99f9e47c792875e7d04b9211b84675db88f796abe45cc1141adbb6f66"/>
+</canvas>
+<canvas name="8" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="3c2a2f2d55aeaf892b65b1bbe05a89deb7845e551048d7479546f15dcf152676"/>
+</canvas>
+<canvas name="9" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1ab8403e28d31d56f9ffbdb81686c8335e6d7cc53bd74af94ef4ccb767e7c384"/>
+</canvas>
+<canvas name="10" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ee003bec09f64ddcf42eb7ce59f2500682ef749cf652f788d88e69d66540ee30"/>
+</canvas>
+<canvas name="11" width="392" height="131">
+<vector name="origin" x="196" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d65a2fe7a1814df97a09df3afb3bc6698826f7c56c1d0d9f6584f1dd928e55d7"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="obj/hide/1/0"/>
+</canvas>
+<canvas name="1" width="392" height="131">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="2c99724cac89af405aed8e088c9c6f09819f50944904eb6a693af1adba45acf3"/>
+</canvas>
+<canvas name="2" width="392" height="131">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="05a81dd37a4b1ca35490e51abe1d8e31abbdecf6b46866e0fd32971fcdf2da42"/>
+</canvas>
+<canvas name="3" width="392" height="131">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="340486ddfeb48810f9a482cd9e4f4447a7f35f7260ed7c71dc20dbe2c8784e20"/>
+</canvas>
+<canvas name="4" width="392" height="131">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="172b95e26ae198af2e2cdb859ce82c90629ef041596ca2c0b79a26f134b9e8af"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="ani/desk/0/11"/>
+</canvas>
+<canvas name="6" width="392" height="131">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="86068131d012d2fbe12aaf3a569fba809aad2ee183637f3a22d025c0ad565766"/>
+</canvas>
+<canvas name="7" width="392" height="131">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="188a2fc90007333a687438b00f1276cec03ff8338114cc8fdc5a8f3fb64577b8"/>
+</canvas>
+<canvas name="8" width="392" height="131">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_hash" value="3195bbc5f0dd1783aca79ee5e8de4b1036df87d3ef29aa9b113a1b4e86dfcb0f"/>
+</canvas>
+<canvas name="9" width="1" height="1">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="ani/desk/1/7"/>
+</canvas>
+<canvas name="10" width="1" height="1">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="ani/desk/1/8"/>
+</canvas>
+<canvas name="11" width="1" height="1">
+<vector name="origin" x="195" y="56"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="ani/desk/1/7"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="ground">
+<imgdir name="0">
+<canvas name="0" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="72027e5e7ac20a86732af41e8f1b497f9af9fe582597eff87b380460bcfba371"/>
+</canvas>
+<canvas name="1" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1329139b20eec111d9e692d2ce7b82c84b58702ee858f5acf488847895743806"/>
+</canvas>
+<canvas name="2" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="5754b547e54efc700877a62be1ca163553bebeb9cc37ea38175cdcc830ff872e"/>
+</canvas>
+<canvas name="3" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="3f54e1468ed6140ada398cffd8420218bafa5d04c7aa90f2d41f015e0690966b"/>
+</canvas>
+<canvas name="4" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ff9da4b4812c9cda96e60154dc6486542c147506c73635a33e07067b1fa57474"/>
+</canvas>
+<canvas name="5" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6b813ccee8d7d9f11415a72bb499b3c2ee20b15260fd4bae62da7624adfb7567"/>
+</canvas>
+<canvas name="6" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="71d344c49258ab9ad715df65d443645a7d56bf4848d92b54ae0202dec0b6261f"/>
+</canvas>
+<canvas name="7" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="146114b776b55728d58dff3298b7282cbbc964ca263a3257f175435cca2e192f"/>
+</canvas>
+<canvas name="8" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="b1be6015a566aaa5024f8cf983d4fc061e706c6e8295bc1c95bd42624b65f541"/>
+</canvas>
+<canvas name="9" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6cb992a76f98750495393b9c198483b9db4e79404b8ed2d0a46dc2c58e62f878"/>
+</canvas>
+<canvas name="10" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="b52c906a18efa8383f69ea87760b7ed569abe6f3e24854cffa553ae0ed9504d9"/>
+</canvas>
+<canvas name="11" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="a00a68a4fc099f91abeaf2d88a4d6f287ef6c9e76bb133c1562fb013628e6f68"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7d2e0e45ab2050403d3e35666df61f8d41c36906b357718196de2865569a5229"/>
+</canvas>
+<canvas name="1" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6298b55ad9647daa347a41963eeecbe2b31df9b7d956205601138cfe96f3d0ee"/>
+</canvas>
+<canvas name="2" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="df223f178c9688fd331ceee964eb8e39ead0478aa3628e1bd97c7e58007cfe9f"/>
+</canvas>
+<canvas name="3" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="09a79555dc8ff0805fd87aa23fe98ef9507f6d67ca0e4d582eb86635b2f15653"/>
+</canvas>
+<canvas name="4" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1b2a2175394fda5e70433e6a84bee23c1920019c1936942245d7766f04a0017b"/>
+</canvas>
+<canvas name="5" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="c5e65191f4125ba1742ab6110b4574883091a11077f385be4f3e946f09162c66"/>
+</canvas>
+<canvas name="6" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="18886f028373f42418856b17d7dedf006d7c5c0fb51c43911a4264ff1a4884f4"/>
+</canvas>
+<canvas name="7" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="37e25b2a8a812791b955e6c89341c7b19b7d50c00fb8ad81ff134d2e10a37fb7"/>
+</canvas>
+<canvas name="8" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="00b90e9b2cfc03cd7303f77c568ea9507b1896fb812f1c01e9fc7014294b3a7b"/>
+</canvas>
+<canvas name="9" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7f1dd521920cfd9b05df237d3caa08550c6b6ad8a26f0ee211ca27d51fe6df6d"/>
+</canvas>
+<canvas name="10" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="098bcb3e924b37f640aa6dc0a71ee579e910467813a0a755380e5af90949e24d"/>
+</canvas>
+<canvas name="11" width="1000" height="308">
+<vector name="origin" x="500" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="be44804ee1d6e837060e899b39fc505685e42611e147db38be220f345b6d0d66"/>
+</canvas>
+</imgdir>
+<imgdir name="2">
+<canvas name="0" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1c1626fdb854497f7a4968f11309d6849e71961b4a503f958362614a0b209da6"/>
+</canvas>
+<canvas name="1" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="b653eea5d62256a4b541e36897d963e946f7257f854e6e288ec4dd50c1e53771"/>
+</canvas>
+<canvas name="2" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d816598d49bb876c92d1b47408d8a53e7bb06c446d14134d0545ea4dd462f58b"/>
+</canvas>
+<canvas name="3" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="e9373d4fbe2035c63c502cc2ff0f56e10f8630c29f993d2a4771e6bb255a8947"/>
+</canvas>
+<canvas name="4" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="4a73d1b90f113dedbf4fb92fe44bba1a3c2c4a94c5e04395501ceb48f7b0a8e1"/>
+</canvas>
+<canvas name="5" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="34a69b5efe2fc4cdf406a7321d0bb9ade1e34a9ef933a075cc97a83ffc4d713a"/>
+</canvas>
+<canvas name="6" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="0406357396002462224aa3957b0b4419e1069b987a27a9e3acf5a55baae2136f"/>
+</canvas>
+<canvas name="7" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="8544a83c3e61bba6c2134930e0668ed930dcf5293550943886d7db8f854ba6cc"/>
+</canvas>
+<canvas name="8" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6b95738855a96e5f3352cc68f63724c03097758ff7652e04491f9ea4362feaa4"/>
+</canvas>
+<canvas name="9" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="587d8fa9d3153e035982f7f9276bd7acf248721ef08b0211289e9e393ae5402b"/>
+</canvas>
+<canvas name="10" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="dac143f606095f6971c4f49f68386297c9e0eafa450a2f8008a22a49ba9ca721"/>
+</canvas>
+<canvas name="11" width="1000" height="307">
+<vector name="origin" x="500" y="153"/>
+<int name="z" value="0"/>
+<string name="_hash" value="b5fa45ce1514fd05b86d5957dc86f8cf0e2b2ff5e2dfecd72b2c544a84c41ea5"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="gadget">
+<imgdir name="0">
+<canvas name="0" width="145" height="20">
+<vector name="origin" x="72" y="10"/>
+<int name="z" value="0"/>
+<string name="_hash" value="8cd2e85626f3ff6d3408100662c3dd8258e3582b4f6c45bbe9a57bb3e2fa0088"/>
+</canvas>
+<canvas name="1" width="145" height="20">
+<vector name="origin" x="72" y="10"/>
+<int name="z" value="0"/>
+<string name="_hash" value="99cb9224b927d1506023d7221e01debe839513b4752283301391012723965d2b"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="150" height="20">
+<vector name="origin" x="75" y="10"/>
+<int name="z" value="0"/>
+<string name="_hash" value="8d031e75307d9c641106b9daef1f002b1ffed9079a7e1984a59340837edb8f37"/>
+</canvas>
+<canvas name="1" width="150" height="20">
+<vector name="origin" x="75" y="10"/>
+<int name="z" value="0"/>
+<string name="_hash" value="a94a3d04de08cd7adff100b3f29e07b5628db402f209be6375e1705193ea60e8"/>
+</canvas>
+</imgdir>
+<imgdir name="2">
+<canvas name="0" width="401" height="308">
+<vector name="origin" x="200" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="472d961b76e1b68399f6b5dea221ab9f488464341b8bb8dd3d0442d6c2b54dad"/>
+</canvas>
+<canvas name="1" width="401" height="308">
+<vector name="origin" x="200" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="9db20859bd5eabd6d2c517f73202b569132da742cf57c7d6fe1c64a3fad5bb80"/>
+</canvas>
+<canvas name="2" width="401" height="308">
+<vector name="origin" x="200" y="154"/>
+<int name="z" value="0"/>
+<string name="_hash" value="8e8572dc922bb9d2d174248e4bc29f68dfd9f6097f369e09ab0df7d41c8bb09e"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="portal">
+<imgdir name="0">
+<canvas name="0" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="a7767c72b613a0a9393997b913f18d407ff9c4907be9595a98818c285ced6b8f"/>
+</canvas>
+<canvas name="1" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="0ecc7902ebd0f4635c920596b1dbab67839640e460df58e94bc4c3c6447c3aa8"/>
+</canvas>
+<canvas name="2" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="46c092e61d7aa88e78665ad21fe6cc7a313c4c8b622761b488758da78b47c728"/>
+</canvas>
+<canvas name="3" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="213d1a5f9a91ba4905edc087bfe46d1d5a4c93f52b054282ff2e02fc5dbd0754"/>
+</canvas>
+<canvas name="4" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="cf43a434e92dd6026a33e693e6ec30546c9906092eacd13f5f2dcbd3042967f1"/>
+</canvas>
+<canvas name="5" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="06df3ea1893a5e878d03090de88929aea89e840c67dc5b53b41ab5c656518d56"/>
+</canvas>
+<canvas name="6" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="91fbd5f7a9c2d5f4aee408c8e1e4c975c47c2c75ac1ae4a1af8fbcf8084ef77b"/>
+</canvas>
+<canvas name="7" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="e9372a6b5392356ff75a5bd8b89030f52757f0e0b0925303979e9babe87f2f50"/>
+</canvas>
+<canvas name="8" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="a99042bfe80592940cde3b600d4abe638eb05c04b24a4d0517840cedb2943d53"/>
+</canvas>
+<canvas name="9" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="0db16030cf0289c694b06675fe044898b2deae855898239e0c1b0c912a97be12"/>
+</canvas>
+<canvas name="10" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7b7b79f59c43e905e771962edac0b29946106c48fe8cd8b78ea6c811d63fed02"/>
+</canvas>
+<canvas name="11" width="377" height="287">
+<vector name="origin" x="188" y="174"/>
+<int name="z" value="0"/>
+<string name="_hash" value="2c38e09eaf48e5cd0d81b46ea10a887ecb255aaaf615b88aee374b5a2738563d"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="352" height="233">
+<vector name="origin" x="176" y="158"/>
+<int name="z" value="0"/>
+<string name="_hash" value="a1270401e331bddc9517cf469a901a455b641c587351f184e14b7b5b036582d3"/>
+</canvas>
+<canvas name="1" width="352" height="233">
+<vector name="origin" x="176" y="158"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7c4608125760540f9e30576543b18580ccf290bacdcfef739043feb6eb911966"/>
+</canvas>
+<canvas name="2" width="352" height="233">
+<vector name="origin" x="176" y="158"/>
+<int name="z" value="0"/>
+<string name="_hash" value="e55b5b1b54d3b71561de363189e9cba10317e8962d836c6e4a67b8fa4200e8a6"/>
+</canvas>
+<canvas name="3" width="352" height="235">
+<vector name="origin" x="176" y="160"/>
+<int name="z" value="0"/>
+<string name="_hash" value="5fc13d2bdb8cc8f727bf5682b756d05517c29e194b97e86b58b57ec0a4f6c6f8"/>
+</canvas>
+<canvas name="4" width="352" height="235">
+<vector name="origin" x="176" y="160"/>
+<int name="z" value="0"/>
+<string name="_hash" value="2a9f959f06b3354bbab166fb55373de82f615c03f56afb3ac701c77c62f905b9"/>
+</canvas>
+<canvas name="5" width="352" height="235">
+<vector name="origin" x="176" y="160"/>
+<int name="z" value="0"/>
+<string name="_hash" value="20deb4316b80281ef0b63532faa72476dcb76810dbd52ce1119dedfae20a736d"/>
+</canvas>
+<canvas name="6" width="352" height="233">
+<vector name="origin" x="176" y="158"/>
+<int name="z" value="0"/>
+<string name="_hash" value="31423ce3416f60907d21e992b788941f84be8f97ead194e78dc350ac6ad81cf2"/>
+</canvas>
+<canvas name="7" width="352" height="233">
+<vector name="origin" x="176" y="158"/>
+<int name="z" value="0"/>
+<string name="_hash" value="9c3091abfe29371fabc248bf10a2fa8b6afc379c35e7b76d6f2cc5e936093dbb"/>
+</canvas>
+<canvas name="8" width="352" height="233">
+<vector name="origin" x="176" y="158"/>
+<int name="z" value="0"/>
+<string name="_hash" value="985ffc4c2af630521f0a65d20bd2a3d730a790ebdf0b82a7e01ce03d3cdce7d1"/>
+</canvas>
+<canvas name="9" width="352" height="235">
+<vector name="origin" x="176" y="160"/>
+<int name="z" value="0"/>
+<string name="_hash" value="30601ce799a11b4420925d096cc88e02175574ee485b11c41ff1b69ce98aabf3"/>
+</canvas>
+<canvas name="10" width="352" height="235">
+<vector name="origin" x="176" y="160"/>
+<int name="z" value="0"/>
+<string name="_hash" value="58bd2857b81b0b2979745537755313473decfe0dc97a7efe0ccfdb7b6239a61d"/>
+</canvas>
+<canvas name="11" width="352" height="235">
+<vector name="origin" x="176" y="160"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6dcf472ae3305fe2c949d4e31fbae978b3a0d85913382d33565c9dde05c4b866"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="dron">
+<imgdir name="0">
+<canvas name="0" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="9980a3884f9c7876a5abab75f34677204646f817cd53bee6fc6673a9dac044eb"/>
+</canvas>
+<canvas name="1" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="36ac4dba0383e0c067e9f790dbdeed5becffcac779f057c38858658df15f68bd"/>
+</canvas>
+<canvas name="2" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="258862f50439f420432c9393305316849de64a027f8dcf1ce9d2d68b7afd2483"/>
+</canvas>
+<canvas name="3" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="2fab48843436c0468ac35f3934ad0b7bdc1e445062ea97922397d0363a472712"/>
+</canvas>
+<canvas name="4" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="c8e3014987596848ec0793d593a01baa9d1aba4bac1936ce9e3b883fca2fc6cb"/>
+</canvas>
+<canvas name="5" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="4b3bc5e0132f086c1ca1c266f68a9a01d572099a92a14a0e6fad2595dbb2ab8f"/>
+</canvas>
+<canvas name="6" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="353590e8d101ebb1b6ccf08db5647cd5ca05827e8d95c4ffe470b79f2e6385bc"/>
+</canvas>
+<canvas name="7" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="0d4d979684e9ef7ec55d735b73d821126f6f73de2a1e16a7a7b43b4379f9d1f7"/>
+</canvas>
+<canvas name="8" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1e9bfee67d4749a61c503372baaf3e3dbcf843d74ab07b740ab0ee4c712a7a90"/>
+</canvas>
+<canvas name="9" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="447fa9bbe90709b739dfb7690272d7db59512f25df3dc1e624447ff0538d44fb"/>
+</canvas>
+<canvas name="10" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="9da2b6716d68dde44cb1908dcd0247d639e2568257d8235c4edc0a9b6fcb68d5"/>
+</canvas>
+<canvas name="11" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ab592abfa91fd772018a2177a5b6180fd67a45a974469854697ed8d61fbd379c"/>
+</canvas>
+<canvas name="12" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ef3fc1940a8afc447adb7c8f1331fcf0d79e19515174ef175a0ca1ca6ccdfbe5"/>
+</canvas>
+<canvas name="13" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="df487a7969f87bb140535c20cf0e2580b14639ce22077c12d216b03ebc6d6826"/>
+</canvas>
+<canvas name="14" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="fa7706e3fa4b8dc11937ba02a97069460549891966b15b61801f707e24c13d79"/>
+</canvas>
+<canvas name="15" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6d012178fbc62c13a6d372d39625accbb11410273de94a188a0dcd9fc715d254"/>
+</canvas>
+<canvas name="16" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="c9c226d1444e44cd47dc95d8997f3e17b509348fceeae07dc0c9c2dc4658a2c3"/>
+</canvas>
+<canvas name="17" width="188" height="256">
+<vector name="origin" x="99" y="146"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1ca960b6cb4f2f3e7985a405d5f34d583ace7566e5985678228c062ec3207c6c"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ab40418cbf1b553735f8158eaf91a0d728d31e5fd83fa559554f27c009b918f5"/>
+</canvas>
+<canvas name="1" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="842278aadf735a41b1ccd5652d8784139449f7414f078551bb1d633a16d491ac"/>
+</canvas>
+<canvas name="2" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="0166b10480e531128ccf2724b613807ac98bd4ac3544e1314d7b702203e2c2d1"/>
+</canvas>
+<canvas name="3" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="02684428a118e6e73a4208ca35411f91ddbe351715efbc62770228afd5b53506"/>
+</canvas>
+<canvas name="4" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="e4d826f8f9cc4f8c2fc00e2520f189d7297e5d4fcf8fead1224d2a8cd41be57e"/>
+</canvas>
+<canvas name="5" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1c700b6daf92cef3cd1038306fa1755c9a073268a8e735b42f188793fbc847a2"/>
+</canvas>
+<canvas name="6" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="fb5bfe6f16391c49d86de3a71ffb5c30cbdb8baf0fd1ad5047059e8ab2dacde3"/>
+</canvas>
+<canvas name="7" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="320561da46dfe87f0e3bffc9ddb7c09eeb2e9653f2c1ee7d47af972b4d7b64ba"/>
+</canvas>
+<canvas name="8" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="f189ae7f94bce7d9f4e43f1f6f53b5d9c4a851154ea817ca01193ac260a83689"/>
+</canvas>
+<canvas name="9" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="4b523efab2d670bb6b351e87a7deb5124d14c622cbdf3f455b867b64414e11bb"/>
+</canvas>
+<canvas name="10" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="99c801b806c194b2af14e90a6e14bec05bb9b8d839e0bd4547f68b31f5ecae45"/>
+</canvas>
+<canvas name="11" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="141e11504855fa8bccea61c84e237f999f380ffe641c84cfb402637afd461ca3"/>
+</canvas>
+<canvas name="12" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="af5139f7fe29fcf2524d3ecfe045207f763c3a41ccd0286f3397fd61c40ba22d"/>
+</canvas>
+<canvas name="13" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="f7c82a12ab275c5be4ac2ee3a65eac26b980b7ef7a619ee601491c98b12c39f1"/>
+</canvas>
+<canvas name="14" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6d1fb05483aa43d0b97d6b2109eaf247ec3fba59c3f5ea4d6095613921a731ef"/>
+</canvas>
+<canvas name="15" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="f00bb2387a866f5879554bf02abda1d0bae6bdcf1d7f07dcf169e1883f9a3df4"/>
+</canvas>
+<canvas name="16" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="8b023cf6e562c48f74daaf055e406f80025ac5c29b34a431d0c1e1d290b2ebdd"/>
+</canvas>
+<canvas name="17" width="193" height="256">
+<vector name="origin" x="88" y="109"/>
+<int name="z" value="0"/>
+<string name="_hash" value="0038f3ec403bdc49401993a5ddbd154dc41716c45293ef1a2ed0ec9621d846c4"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="jump">
+<imgdir name="0">
+<canvas name="0" width="207" height="250">
+<vector name="origin" x="124" y="139"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ad13e353edd7a379cc30decaee0613c941e8184f8b88d5d4e4d64a6df55140ca"/>
+</canvas>
+<canvas name="1" width="207" height="250">
+<vector name="origin" x="123" y="138"/>
+<int name="z" value="0"/>
+<string name="_hash" value="047064cf6285b0c8b24e0b5d223bbd32f075e5db171c359596dffa8fbd5f2e36"/>
+</canvas>
+<canvas name="2" width="207" height="252">
+<vector name="origin" x="120" y="137"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7123c4e4c7567f6ca1bb73997315258cb89584fdb2ba4e0310fcfc67eea7ed48"/>
+</canvas>
+<canvas name="3" width="212" height="256">
+<vector name="origin" x="118" y="133"/>
+<int name="z" value="0"/>
+<string name="_hash" value="cc7627529625a9be3c4dbbb97d0137727af89cec968582df4b3e4f6f69f03081"/>
+</canvas>
+<canvas name="4" width="216" height="255">
+<vector name="origin" x="117" y="128"/>
+<int name="z" value="0"/>
+<string name="_hash" value="5b4afe01047f2ac4a0baf018ec2d5c6de3933f80dc9e82e64ce226bafdb357a6"/>
+</canvas>
+<canvas name="5" width="217" height="254">
+<vector name="origin" x="117" y="126"/>
+<int name="z" value="0"/>
+<string name="_hash" value="30f69f25d53bba51202e6803720f342723505947532ea48d1feab6a0cdb5b357"/>
+</canvas>
+<canvas name="6" width="217" height="254">
+<vector name="origin" x="117" y="126"/>
+<int name="z" value="0"/>
+<string name="_hash" value="8692ef221c6619cb0882172a8deab02c9f9990b4a791309192346424ced07a82"/>
+</canvas>
+<canvas name="7" width="215" height="254">
+<vector name="origin" x="117" y="129"/>
+<int name="z" value="0"/>
+<string name="_hash" value="3dbff2feab3996333b4ba919ff58d8d9edfc2e5f37c829b817b480397ec96b38"/>
+</canvas>
+<canvas name="8" width="210" height="250">
+<vector name="origin" x="118" y="134"/>
+<int name="z" value="0"/>
+<string name="_hash" value="fbce0a58e902d2fb2782a5658776ec0357eb6f864f05c98d8032a4f656db5000"/>
+</canvas>
+<canvas name="9" width="208" height="250">
+<vector name="origin" x="122" y="137"/>
+<int name="z" value="0"/>
+<string name="_hash" value="8adb377508012649013efedcf2d0d227e4a686d49a53831dd162ae8f37df021a"/>
+</canvas>
+<canvas name="10" width="207" height="250">
+<vector name="origin" x="123" y="138"/>
+<int name="z" value="0"/>
+<string name="_hash" value="df4ef4efdb5705b0ee3b1059bc26576ec6481f85ae004f0474c5366413408594"/>
+</canvas>
+<canvas name="11" width="207" height="250">
+<vector name="origin" x="124" y="139"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ae867c4b5e1538253b3dc5598abaf9c96d120da41bfb38788a907a95753287b7"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="ufo">
+<imgdir name="0">
+<canvas name="0" width="1227" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="dbeaefc997a6244e093f947b00ffe58e302cc2e2a60ef200746028802313d3b6"/>
+</canvas>
+<canvas name="1" width="1231" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7351ff995e12b52835ae7466a1f97f2cafd0350df536f22e64fb1151ecfa3faf"/>
+</canvas>
+<canvas name="2" width="1235" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="07057bf1f82ae1fc105b6da0e6ca468f0850e4c2fab3b9b96ebf1b1adb3f957e"/>
+</canvas>
+<canvas name="3" width="1235" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="c8f4384481814a1a36761bb135d7053fcb3babc3d62c2d1ac5a423acd6c42b60"/>
+</canvas>
+<canvas name="4" width="1235" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="2775169027aa9d95ce2842041804f1838cbf964622996ed205d0be0af674c7b3"/>
+</canvas>
+<canvas name="5" width="1235" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="2562e2e3f09cea2fc71ae7058f36b583937747cd78f2b2608f927220ddc23a4e"/>
+</canvas>
+<canvas name="6" width="1235" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="8efd6ac18b978acfd008b5b6cc4fd2ac7845d6b05d1a71cb4ada41a8310b8640"/>
+</canvas>
+<canvas name="7" width="1235" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="3b873f96ff4d875802a7c47825344a1510d21c330d44c250be9774851a5677e8"/>
+</canvas>
+<canvas name="8" width="1235" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="b2f59dbc58e48878c8ee667b3c0e1d1d54381e403e1238727a6fae3fc6114e95"/>
+</canvas>
+<canvas name="9" width="1235" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="db9fd5bc66e3dc8fc1fac62bb8f6838e2ceb80e0581c808b953493e220267577"/>
+</canvas>
+<canvas name="10" width="1235" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="82b58b2fd7aa921fad6a36ab502526ece0860c027da544b9e25945f151972245"/>
+</canvas>
+<canvas name="11" width="1229" height="683">
+<vector name="origin" x="615" y="341"/>
+<int name="z" value="0"/>
+<string name="_hash" value="879ff442177ec6c35cf3d4cce11641578349d0854bd1a6c5e3b8da61daa4af00"/>
+</canvas>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="spine">
+<imgdir name="pineapple">
+<imgdir name="0">
+<string name="spine" value="pineapple_tent"/>
+<canvas name="0" width="1024" height="512">
+<vector name="origin" x="512" y="256"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d6d8be679eb786f307f27414e12bf299f0705df0e9047dc27ade5879f66167f7"/>
+</canvas>
+<string name="pineapple_tent.atlas" value="0
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+01_back_object1
+  rotate: false
+  xy: 2, 106
+  size: 374, 278
+  orig: 374, 278
+  offset: 0, 0
+  index: -1
+01_front_object1
+  rotate: false
+  xy: 378, 153
+  size: 410, 231
+  orig: 410, 231
+  offset: 0, 0
+  index: -1
+01_pineapple1
+  rotate: false
+  xy: 790, 359
+  size: 18, 25
+  orig: 18, 25
+  offset: 0, 0
+  index: -1
+02_pineapple2
+  rotate: false
+  xy: 2, 2
+  size: 15, 22
+  orig: 15, 22
+  offset: 0, 0
+  index: -1
+03_big_light1
+  rotate: false
+  xy: 2, 26
+  size: 80, 78
+  orig: 80, 78
+  offset: 0, 0
+  index: -1
+03_side_light1
+  rotate: false
+  xy: 378, 121
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: -1
+"/>
+<string name="pineapple_tent.json" value="{&quot;skeleton&quot;:{&quot;hash&quot;:&quot;pBoCHmZp9U5RxTn+1vWP3JLUE3Q&quot;,&quot;spine&quot;:&quot;2.1.27&quot;,&quot;width&quot;:410.08,&quot;height&quot;:282.31,&quot;images&quot;:&quot;./image/&quot;},&quot;bones&quot;:[{&quot;name&quot;:&quot;pineapple_tent&quot;,&quot;color&quot;:&quot;00069bff&quot;},{&quot;name&quot;:&quot;00_object&quot;,&quot;parent&quot;:&quot;pineapple_tent&quot;,&quot;length&quot;:389.53,&quot;x&quot;:-193.88,&quot;y&quot;:0.45,&quot;rotation&quot;:-0.45,&quot;color&quot;:&quot;00069bff&quot;},{&quot;name&quot;:&quot;01_pineapple1_1&quot;,&quot;parent&quot;:&quot;pineapple_tent&quot;,&quot;length&quot;:9.2,&quot;x&quot;:78.29,&quot;y&quot;:116.4,&quot;rotation&quot;:-90.9,&quot;color&quot;:&quot;9c1200ff&quot;},{&quot;name&quot;:&quot;01_pineapple2_1&quot;,&quot;parent&quot;:&quot;pineapple_tent&quot;,&quot;length&quot;:9.62,&quot;x&quot;:105.04,&quot;y&quot;:108.48,&quot;rotation&quot;:-90,&quot;color&quot;:&quot;9c1200ff&quot;},{&quot;name&quot;:&quot;01_pineapple3_1&quot;,&quot;parent&quot;:&quot;pineapple_tent&quot;,&quot;length&quot;:8.55,&quot;x&quot;:133.93,&quot;y&quot;:102.71,&quot;rotation&quot;:-90,&quot;color&quot;:&quot;9c1200ff&quot;},{&quot;name&quot;:&quot;01_pineapple4_1&quot;,&quot;parent&quot;:&quot;pineapple_tent&quot;,&quot;length&quot;:9.85,&quot;x&quot;:153.4,&quot;y&quot;:106.99,&quot;rotation&quot;:-87.74,&quot;color&quot;:&quot;9c1200ff&quot;},{&quot;name&quot;:&quot;02_pineapple1_1&quot;,&quot;parent&quot;:&quot;pineapple_tent&quot;,&quot;length&quot;:8.38,&quot;x&quot;:-117.93,&quot;y&quot;:109.81,&quot;rotation&quot;:-90.45,&quot;color&quot;:&quot;009c8cff&quot;},{&quot;name&quot;:&quot;02_pineapple2_1&quot;,&quot;parent&quot;:&quot;pineapple_tent&quot;,&quot;length&quot;:7.74,&quot;x&quot;:-95.87,&quot;y&quot;:102.07,&quot;rotation&quot;:-91.8,&quot;color&quot;:&quot;009c8cff&quot;},{&quot;name&quot;:&quot;02_pineapple3_1&quot;,&quot;parent&quot;:&quot;pineapple_tent&quot;,&quot;length&quot;:6.32,&quot;x&quot;:-77.04,&quot;y&quot;:100.01,&quot;rotation&quot;:-87.71,&quot;color&quot;:&quot;009c8cff&quot;},{&quot;name&quot;:&quot;02_pineapple4_1&quot;,&quot;parent&quot;:&quot;pineapple_tent&quot;,&quot;length&quot;:5.93,&quot;x&quot;:-58.85,&quot;y&quot;:104.52,&quot;rotation&quot;:-89.09,&quot;color&quot;:&quot;009c8cff&quot;},{&quot;name&quot;:&quot;01_pineapple1_2&quot;,&quot;parent&quot;:&quot;01_pineapple1_1&quot;,&quot;length&quot;:11.55,&quot;x&quot;:9.2,&quot;y&quot;:-0.07,&quot;color&quot;:&quot;9c0400ff&quot;},{&quot;name&quot;:&quot;01_pineapple2_2&quot;,&quot;parent&quot;:&quot;01_pineapple2_1&quot;,&quot;length&quot;:10.91,&quot;x&quot;:9.62,&quot;y&quot;:-0.21,&quot;rotation&quot;:0.9,&quot;color&quot;:&quot;9c0400ff&quot;},{&quot;name&quot;:&quot;01_pineapple3_2&quot;,&quot;parent&quot;:&quot;01_pineapple3_1&quot;,&quot;length&quot;:10.91,&quot;x&quot;:8.55,&quot;y&quot;:-0.21,&quot;rotation&quot;:-0.9,&quot;color&quot;:&quot;9c0400ff&quot;},{&quot;name&quot;:&quot;01_pineapple4_2&quot;,&quot;parent&quot;:&quot;01_pineapple4_1&quot;,&quot;length&quot;:8.99,&quot;x&quot;:9.85,&quot;y&quot;:0.04,&quot;rotation&quot;:-0.45,&quot;color&quot;:&quot;9c0400ff&quot;},{&quot;name&quot;:&quot;02_pineapple1_2&quot;,&quot;parent&quot;:&quot;02_pineapple1_1&quot;,&quot;length&quot;:10.19,&quot;x&quot;:8.25,&quot;y&quot;:-0.19,&quot;color&quot;:&quot;009c8cff&quot;},{&quot;name&quot;:&quot;02_pineapple2_2&quot;,&quot;parent&quot;:&quot;02_pineapple2_1&quot;,&quot;length&quot;:9.54,&quot;x&quot;:7.74,&quot;y&quot;:-0.01,&quot;rotation&quot;:1.36,&quot;color&quot;:&quot;009c8cff&quot;},{&quot;name&quot;:&quot;02_pineapple3_2&quot;,&quot;parent&quot;:&quot;02_pineapple3_1&quot;,&quot;length&quot;:7.48,&quot;x&quot;:6.32,&quot;y&quot;:-0.12,&quot;rotation&quot;:-0.9,&quot;color&quot;:&quot;009c8cff&quot;},{&quot;name&quot;:&quot;02_pineapple4_2&quot;,&quot;parent&quot;:&quot;02_pineapple4_1&quot;,&quot;length&quot;:8.12,&quot;x&quot;:5.93,&quot;y&quot;:-0.09,&quot;color&quot;:&quot;009c8cff&quot;}],&quot;slots&quot;:[{&quot;name&quot;:&quot;01_back_object1&quot;,&quot;bone&quot;:&quot;00_object&quot;,&quot;attachment&quot;:&quot;01_back_object1&quot;},{&quot;name&quot;:&quot;02_pineapple1&quot;,&quot;bone&quot;:&quot;02_pineapple1_1&quot;,&quot;attachment&quot;:&quot;02_pineapple2&quot;},{&quot;name&quot;:&quot;02_pineapple3&quot;,&quot;bone&quot;:&quot;02_pineapple3_1&quot;,&quot;attachment&quot;:&quot;02_pineapple2&quot;},{&quot;name&quot;:&quot;02_pineapple2&quot;,&quot;bone&quot;:&quot;02_pineapple2_1&quot;,&quot;attachment&quot;:&quot;02_pineapple2&quot;},{&quot;name&quot;:&quot;02_pineapple4&quot;,&quot;bone&quot;:&quot;02_pineapple4_1&quot;,&quot;attachment&quot;:&quot;02_pineapple2&quot;},{&quot;name&quot;:&quot;03_side_light5&quot;,&quot;bone&quot;:&quot;02_pineapple1_1&quot;,&quot;attachment&quot;:&quot;03_side_light1&quot;},{&quot;name&quot;:&quot;03_side_light6&quot;,&quot;bone&quot;:&quot;02_pineapple2_1&quot;,&quot;attachment&quot;:&quot;03_side_light1&quot;},{&quot;name&quot;:&quot;03_side_light7&quot;,&quot;bone&quot;:&quot;02_pineapple3_1&quot;,&quot;attachment&quot;:&quot;03_side_light1&quot;},{&quot;name&quot;:&quot;03_side_light8&quot;,&quot;bone&quot;:&quot;02_pineapple4_1&quot;,&quot;attachment&quot;:&quot;03_side_light1&quot;},{&quot;name&quot;:&quot;01_front_object1&quot;,&quot;bone&quot;:&quot;00_object&quot;,&quot;attachment&quot;:&quot;01_front_object1&quot;},{&quot;name&quot;:&quot;01_pineapple2&quot;,&quot;bone&quot;:&quot;01_pineapple2_1&quot;,&quot;attachment&quot;:&quot;01_pineapple1&quot;},{&quot;name&quot;:&quot;01_pineapple1&quot;,&quot;bone&quot;:&quot;01_pineapple1_1&quot;,&quot;attachment&quot;:&quot;01_pineapple1&quot;},{&quot;name&quot;:&quot;01_pineapple3&quot;,&quot;bone&quot;:&quot;01_pineapple3_1&quot;,&quot;attachment&quot;:&quot;01_pineapple1&quot;},{&quot;name&quot;:&quot;01_pineapple4&quot;,&quot;bone&quot;:&quot;01_pineapple4_1&quot;,&quot;attachment&quot;:&quot;01_pineapple1&quot;},{&quot;name&quot;:&quot;03_big_light1&quot;,&quot;bone&quot;:&quot;00_object&quot;,&quot;attachment&quot;:&quot;03_big_light1&quot;},{&quot;name&quot;:&quot;03_side_light2&quot;,&quot;bone&quot;:&quot;01_pineapple2_1&quot;,&quot;attachment&quot;:&quot;03_side_light1&quot;},{&quot;name&quot;:&quot;03_side_light1&quot;,&quot;bone&quot;:&quot;01_pineapple1_1&quot;,&quot;attachment&quot;:&quot;03_side_light1&quot;},{&quot;name&quot;:&quot;03_side_light3&quot;,&quot;bone&quot;:&quot;01_pineapple3_1&quot;,&quot;attachment&quot;:&quot;03_side_light1&quot;},{&quot;name&quot;:&quot;03_side_light4&quot;,&quot;bone&quot;:&quot;01_pineapple4_1&quot;,&quot;attachment&quot;:&quot;03_side_light1&quot;}],&quot;skins&quot;:{&quot;default&quot;:{&quot;01_back_object1&quot;:{&quot;01_back_object1&quot;:{&quot;x&quot;:192.86,&quot;y&quot;:137.18,&quot;rotation&quot;:0.45,&quot;width&quot;:374,&quot;height&quot;:278}},&quot;01_front_object1&quot;:{&quot;01_front_object1&quot;:{&quot;x&quot;:179.77,&quot;y&quot;:109.42,&quot;rotation&quot;:0.45,&quot;width&quot;:410,&quot;height&quot;:231}},&quot;01_pineapple1&quot;:{&quot;01_pineapple1&quot;:{&quot;type&quot;:&quot;skinnedmesh&quot;,&quot;uvs&quot;:[1,0.11027,1,0.71147,0.81712,1,0.54743,1,0.17402,1,0,0.74881,0,0.41087,0,0.12334,0.21032,0,0.77563,0,0.38666,0.409,0.67449,0.41647,0.95974,0.41087,0.19736,0.52102,0.85342,0.51542,0.36072,0.15321,0.7108,0.15508],&quot;triangles&quot;:[14,12,1,5,6,13,3,11,14,13,10,3,4,5,13,2,3,14,4,13,3,1,2,14,0,1,12,15,8,9,16,15,9,16,9,0,11,10,15,15,6,7,15,7,8,12,16,0,16,11,15,11,16,12,14,11,12,3,10,11,13,6,15,10,13,15],&quot;vertices&quot;:[1,2,1.32,8.04,1,1,10,7.14,8.35,1,1,10,14.41,5.17,1,1,10,14.48,0.31,1,1,10,14.59,-6.4,1,1,10,8.35999,-9.63,1,1,2,9.12,-9.83,1,1,2,1.93,-9.95,1,1,2,-1.2,-6.21,1,1,2,-1.37,3.95,1,1,2,8.96,-2.87,1,1,2,9.06,2.3,1,1,2,8.84,7.43,1,1,10,2.60999,-6.17,1,1,10,2.28,5.63,1,1,2,2.57,-3.44,1,1,2,2.52,2.85,1],&quot;hull&quot;:10,&quot;edges&quot;:[10,12,16,18,6,8,4,6,8,10,2,4,12,14,2,0,14,16,18,0],&quot;width&quot;:18,&quot;height&quot;:25}},&quot;01_pineapple2&quot;:{&quot;01_pineapple1&quot;:{&quot;type&quot;:&quot;skinnedmesh&quot;,&quot;uvs&quot;:[1,0.11581,1,0.41901,1,0.55205,1,0.83359,0.80799,1,0.24508,1,0.13766,0.88618,0,0.39117,0,0.12509,0.28376,0,0.7908,0,0.39978,0.40663,0.66619,0.41592,0.3654,0.17769,0.71346,0.18078,0.17633,0.44376,0.10758,0.68818],&quot;triangles&quot;:[12,1,2,16,7,15,12,2,3,11,6,16,7,16,6,15,11,16,5,6,11,4,12,3,5,11,12,4,5,12,13,9,10,14,13,10,14,10,0,8,15,7,13,8,9,12,11,13,13,15,8,14,12,13,14,0,1,12,14,1,11,15,13],&quot;vertices&quot;:[2,3,2.36999,7.72,0.97363,11,-7.13,8.04,0.02636,2,3,9.18999,7.72,0.55355,11,-0.31,7.94,0.44644,2,3,12.18,7.72,0.24952,11,2.68,7.89,0.75047,2,3,18.52,7.72,0.00633,11,9.01,7.79,0.99366,1,11,12.71,4.62,1,1,11,12.56,-4.48999,1,1,11,9.97,-6.19,1,2,3,8.56,-8.47,0.66218,11,-1.19,-8.24,0.33781,2,3,2.57,-8.47,0.96945,11,-7.18,-8.14999,0.03054,1,3,-0.23,-3.88,1,1,3,-0.23,4.33,1,2,3,8.91,-2,0.51966,11,-0.74,-1.77,0.48033,2,3,9.12,2.31,0.56666,11,-0.46,2.53,0.43333,2,3,3.76,-2.56,0.99244,11,-5.9,-2.25,0.00755,2,3,3.83,3.07,0.97909,11,-5.74,3.38,0.0209,2,3,9.74,-5.62,0.39597,11,0.03,-5.41,0.60402,2,3,15.24,-6.73,0.08699,11,5.51,-6.61,0.913],&quot;hull&quot;:11,&quot;edges&quot;:[14,16,2,0,18,20,8,10,2,4,4,6,10,12,12,14,6,8,16,18,20,0],&quot;width&quot;:18,&quot;height&quot;:25}},&quot;01_pineapple3&quot;:{&quot;01_pineapple1&quot;:{&quot;type&quot;:&quot;skinnedmesh&quot;,&quot;uvs&quot;:[1,0.10731,1,0.75504,0.78354,1,0.20722,1,0.08071,0.75504,0,0.41769,0,0.12418,0.25407,0,0.7976,0,0.4087,0.40756,0.71326,0.41431,0.38527,0.15117,0.732,0.17479,0.15568,0.46492,0.89131,0.49528],&quot;triangles&quot;:[4,5,13,14,0,1,9,4,13,3,4,9,2,10,14,2,14,1,9,10,2,3,9,2,11,7,8,12,11,8,12,8,0,9,11,12,10,9,12,6,13,5,11,6,7,11,13,6,9,13,11,14,12,0,10,12,14],&quot;vertices&quot;:[2,4,2.02,6.31,0.99148,12,-6.63,6.42,0.00851,2,4,14.98,6.31,0.01499,12,6.32,6.62,0.985,1,12,11.26,3.58,1,1,12,11.39,-4.71,1,2,4,14.98,-6.92,0.02992,12,6.52,-6.61,0.97007,2,4,8.22999,-8.08,0.55693,12,-0.2,-7.87,0.44306,2,4,2.35999,-8.08,0.94549,12,-6.07,-7.97,0.0545,2,4,-0.11,-4.42999,0.99933,12,-8.60999,-4.35,6.6E-4,1,4,-0.11,3.39,1,2,4,8.03,-2.2,0.69164,12,-0.49,-1.99,0.30835,2,4,8.16,2.18,0.6316,12,-0.42,2.38,0.36839,2,4,2.9,-2.54,0.9974,12,-5.61,-2.41,0.00259,2,4,3.37,2.45,0.99254,12,-5.21999,2.58,0.00745,2,4,9.17,-5.84,0.37785,12,0.7,-5.62,0.62214,2,4,9.78,4.73999,0.31178,12,1.14,4.96999,0.6882],&quot;hull&quot;:9,&quot;edges&quot;:[10,12,14,16,4,6,6,8,8,10,2,4,0,2,16,0,12,14],&quot;width&quot;:18,&quot;height&quot;:25}},&quot;01_pineapple4&quot;:{&quot;01_pineapple1&quot;:{&quot;type&quot;:&quot;skinnedmesh&quot;,&quot;uvs&quot;:[1,0.11745,1,0.41445,1,0.72025,0.81925,1,0.13176,1,0,0.66745,0,0.41005,0,0.10205,0.2937,0,0.76731,0,0.37315,0.17685,0.70314,0.17905,0.38231,0.40565,0.65425,0.40125],&quot;triangles&quot;:[4,5,12,3,13,2,4,12,3,10,8,9,11,10,9,11,9,0,13,10,11,12,10,13,10,6,7,10,7,8,6,10,12,11,0,1,13,11,1,5,6,12,13,1,2,12,13,3],&quot;vertices&quot;:[2,5,2.68,7.63,0.98555,13,-7.22,7.53,0.01444,2,5,8.60999,7.4,0.66002,13,-1.28,7.35,0.33997,2,5,14.73,7.16,0.08811,13,4.82,7.15,0.91188,1,13,10.33,4.37,1,1,13,10.01,-5.51,1,2,5,13.11,-7.18,0.18426,13,3.31,-7.2,0.81573,2,5,7.96,-6.98,0.72456,13,-1.83,-7.03,0.27543,2,5,1.81,-6.74,0.99784,13,-7.99,-6.84,0.00215,1,5,-0.06,-2.43,1,1,5,0.2,4.37,1,1,5,3.51,-1.43,1,2,5,3.74,3.31,0.98995,13,-6.13,3.22,0.01004,2,5,8.09,-1.47,0.90482,13,-1.74,-1.53,0.09517,2,5,8.16,2.43,0.88404,13,-1.71,2.38,0.11595],&quot;hull&quot;:10,&quot;edges&quot;:[16,18,12,14,0,2,10,12,6,8,2,4,8,10,4,6,18,0,14,16],&quot;width&quot;:18,&quot;height&quot;:25}},&quot;02_pineapple1&quot;:{&quot;02_pineapple2&quot;:{&quot;type&quot;:&quot;skinnedmesh&quot;,&quot;uvs&quot;:[1,0.13153,1,0.44035,1,0.71984,0.80589,1,0.1953,1,0,0.88597,0,0.65339,0,0.42862,0,0.13544,0.25549,0,0.75429,0,0.30423,0.1843,0.67115,0.19212,0.33576,0.42666,0.65109,0.42666],&quot;triangles&quot;:[3,4,14,4,13,14,3,14,2,13,4,6,4,5,6,14,1,2,6,7,13,14,12,1,7,11,13,14,13,12,12,0,1,7,8,11,12,13,11,12,10,0,10,12,9,8,9,11,12,11,9],&quot;vertices&quot;:[1,6,1.46,7.79,1,2,6,8.25,7.84,0.5,14,0,8.04,0.5,1,14,6.14,8.09,1,1,14,12.33,5.23,1,1,14,12.4,-3.92,1,1,14,9.92,-6.87,1,1,14,4.8,-6.91,1,2,6,8.10999,-7.15,0.5,14,-0.14,-6.95,0.5,1,6,1.66,-7.2,1,1,6,-1.34,-3.39,1,1,6,-1.4,4.08,1,1,6,2.7,-2.63,1,1,6,2.83,2.87,1,2,6,8.03,-2.10999,0.5,14,-0.22,-1.92,0.5,2,6,7.99,2.60999,0.5,14,-0.26,2.8,0.5],&quot;hull&quot;:11,&quot;edges&quot;:[18,20,14,16,2,0,12,14,10,12,6,8,2,4,8,10,4,6,20,0,16,18],&quot;width&quot;:15,&quot;height&quot;:22}},&quot;02_pineapple2&quot;:{&quot;02_pineapple2&quot;:{&quot;type&quot;:&quot;skinnedmesh&quot;,&quot;uvs&quot;:[1,0.11764,1,0.41772,1,0.62402,1,0.84158,1,1,0.73408,1,0.26096,1,0,1,0,0.88659,0,0.68029,0,0.41022,0,0.11202,0,0,0.25271,0,0.72033,0,1,0,0.34073,0.19266,0.70658,0.19641,0.32698,0.40272,0.69007,0.40834,0.31598,0.69529,0.68457,0.70092],&quot;triangles&quot;:[19,1,2,20,9,10,18,20,10,21,18,19,21,19,2,20,18,21,21,2,3,8,9,20,6,7,8,20,6,8,5,21,3,6,20,21,5,6,21,5,3,4,11,12,13,14,15,0,16,13,14,17,16,14,17,14,0,16,11,13,16,10,11,19,16,17,18,16,19,18,10,16,17,0,1,19,17,1],&quot;vertices&quot;:[2,7,1.09,7.01,0.98241,15,-6.47,7.18,0.01758,2,7,7.03,7.2,0.58874,15,-0.52999,7.23,0.41125,2,7,11.11,7.33,0.17661,15,3.54,7.26,0.82338,2,7,15.42,7.46,0.01396,15,7.85,7.29,0.98603,1,15,10.99,7.32,1,1,15,11.02,3.73,1,1,15,11.07,-2.65,1,1,15,11.09,-6.17,1,1,15,8.85,-6.19,1,2,7,12.66,-6.12,0.04109,15,4.76,-6.22,0.9589,2,7,7.31,-6.29,0.57194,15,-0.57,-6.26,0.42805,2,7,1.41,-6.48,0.99198,15,-6.48,-6.31,0.00801,1,7,-0.8,-6.55,1,1,7,-0.91,-3.14,1,1,7,-1.11,3.16,1,1,7,-1.22,6.93,1,2,7,2.86,-1.83,0.99849,15,-4.92,-1.7,0.0015,2,7,2.78,3.1,0.98407,15,-4.88,3.23,0.01592,2,7,7.02,-1.88,0.79116,15,-0.76,-1.85,0.20883,2,7,6.98,3.01,0.66124,15,-0.68,3.04,0.33875,2,7,12.82,-1.85,0.00428,15,5.03,-1.95,0.99571,2,7,12.77,3.12,0.02649,15,5.1,3.01,0.9735],&quot;hull&quot;:16,&quot;edges&quot;:[24,26,26,28,28,30,22,24,0,30,20,22,0,2,18,20,14,16,16,18,12,14,8,10,10,12,6,8,2,4,4,6],&quot;width&quot;:15,&quot;height&quot;:22}},&quot;02_pineapple3&quot;:{&quot;02_pineapple2&quot;:{&quot;type&quot;:&quot;skinnedmesh&quot;,&quot;uvs&quot;:[1,0.1364,1,0.43272,1,0.70842,1,1,0.80405,1,0.17964,1,0,1,0,0.72342,0,0.42334,0,0.12702,0,0,0.30342,0,0.77654,0,1,0,0.32268,0.18891,0.69127,0.19454,0.30342,0.42147,0.70227,0.42897,0.30067,0.69154,0.66376,0.69529],&quot;triangles&quot;:[18,8,16,19,16,17,18,16,19,17,1,2,19,17,2,7,8,18,5,6,7,18,5,7,4,19,2,5,18,19,4,5,19,4,2,3,16,8,14,1,17,15,14,17,16,9,10,11,12,13,0,15,14,11,9,11,14,12,15,11,15,12,0,14,8,9,1,15,0,17,14,15],&quot;vertices&quot;:[1,8,0.68,6.37,1,2,8,5.89,6.16,0.5,16,-0.52,6.27,0.5,1,16,4.32,6.16,1,1,16,9.45,6.04,1,1,16,9.39,3.69,1,1,16,9.21,-3.8,1,1,16,9.16,-5.95,1,1,16,4.29,-5.83,1,2,8,5.23999,-5.82,0.5,16,-0.98,-5.71,0.5,1,8,0.03,-5.61,1,1,8,-2.19,-5.52,1,1,8,-2.05,-1.88,1,1,8,-1.82,3.78,1,1,8,-1.71,6.46,1,1,8,1.28,-1.78,1,1,8,1.55,2.61999,1,2,8,5.36,-2.18,0.5,16,-0.92,-2.07,0.5,2,8,5.68,2.58999,0.5,16,-0.68,2.7,0.5,1,16,3.82,-2.21,1,1,16,3.99,2.13,1],&quot;hull&quot;:14,&quot;edges&quot;:[20,22,22,24,24,26,18,20,0,26,16,18,0,2,12,14,14,16,10,12,6,8,8,10,2,4,4,6],&quot;width&quot;:15,&quot;height&quot;:22}},&quot;02_pineapple4&quot;:{&quot;02_pineapple2&quot;:{&quot;type&quot;:&quot;skinnedmesh&quot;,&quot;uvs&quot;:[1,0.42731,1,0.75176,1,1,0.85157,1,0.22716,1,0,1,0,0.85116,0,0.42731,0,0,0.24092,0,0.7883,0,1,0,0.31794,0.191,0.66177,0.18537,0.34269,0.41043,0.69203,0.42356,0.34544,0.67862,0.68928,0.67674],&quot;triangles&quot;:[15,16,14,17,15,0,17,16,15,7,14,16,17,0,1,6,7,16,4,5,6,16,4,6,3,17,1,4,16,17,3,4,17,3,1,2,13,9,10,12,9,13,14,12,13,0,15,13,14,13,15,12,7,8,12,8,9,7,12,14,13,10,11,11,0,13],&quot;vertices&quot;:[2,9,6,6.27,0.48452,17,0.06,6.36,0.51547,2,9,11.71,6.18,0.01887,17,5.77,6.27,0.98112,2,9,16.08,6.11,1.0E-5,17,10.14,6.2,0.99998,1,17,10.10999,4.42,1,2,9,15.93,-3.15,0,17,10,-3.06,1,1,17,9.95,-5.78,1,2,9,13.27,-5.84,1.4E-4,17,7.33,-5.74,0.99985,2,9,5.81,-5.72,0.51207,17,-0.12,-5.62,0.48792,1,9,-1.7,-5.6,1,1,9,-1.66,-2.71,1,1,9,-1.55,3.85,1,2,9,-1.51,6.39,0.99934,17,-7.44,6.48,6.5E-4,2,9,1.71,-1.84,0.98447,17,-4.21,-1.74,0.01552,2,9,1.68,2.28,0.97181,17,-4.25,2.36999,0.02818,2,9,5.58,-1.6,0.48152,17,-0.35,-1.51,0.51847,2,9,5.87,2.58,0.44181,17,-0.05,2.67,0.55817,2,9,10.3,-1.64,0.00374,17,4.36,-1.55,0.99625,2,9,10.33,2.47,0.01453,17,4.4,2.57,0.98546],&quot;hull&quot;:12,&quot;edges&quot;:[16,18,18,20,20,22,14,16,0,22,10,12,12,14,8,10,4,6,6,8,0,2,2,4],&quot;width&quot;:15,&quot;height&quot;:22}},&quot;03_big_light1&quot;:{&quot;03_big_light1&quot;:{&quot;x&quot;:206.62,&quot;y&quot;:236.61,&quot;rotation&quot;:0.45,&quot;width&quot;:80,&quot;height&quot;:78}},&quot;03_side_light1&quot;:{&quot;03_side_light1&quot;:{&quot;x&quot;:15.9,&quot;y&quot;:0.12,&quot;rotation&quot;:90.9,&quot;width&quot;:30,&quot;height&quot;:30}},&quot;03_side_light2&quot;:{&quot;03_side_light1&quot;:{&quot;x&quot;:15.33,&quot;y&quot;:0.74,&quot;rotation&quot;:90,&quot;width&quot;:30,&quot;height&quot;:30}},&quot;03_side_light3&quot;:{&quot;03_side_light1&quot;:{&quot;x&quot;:13.6,&quot;y&quot;:0.11,&quot;rotation&quot;:90,&quot;width&quot;:30,&quot;height&quot;:30}},&quot;03_side_light4&quot;:{&quot;03_side_light1&quot;:{&quot;x&quot;:13.41,&quot;y&quot;:0.86,&quot;rotation&quot;:87.74,&quot;width&quot;:30,&quot;height&quot;:30}},&quot;03_side_light5&quot;:{&quot;03_side_light1&quot;:{&quot;x&quot;:14.2,&quot;y&quot;:0.9,&quot;scaleX&quot;:0.8,&quot;scaleY&quot;:0.8,&quot;rotation&quot;:90.45,&quot;width&quot;:30,&quot;height&quot;:30}},&quot;03_side_light6&quot;:{&quot;03_side_light1&quot;:{&quot;x&quot;:12.79,&quot;y&quot;:0.19,&quot;scaleX&quot;:0.8,&quot;scaleY&quot;:0.8,&quot;rotation&quot;:91.8,&quot;width&quot;:30,&quot;height&quot;:30}},&quot;03_side_light7&quot;:{&quot;03_side_light1&quot;:{&quot;x&quot;:11.69,&quot;y&quot;:0.11,&quot;scaleX&quot;:0.8,&quot;scaleY&quot;:0.8,&quot;rotation&quot;:87.71,&quot;width&quot;:30,&quot;height&quot;:30}},&quot;03_side_light8&quot;:{&quot;03_side_light1&quot;:{&quot;x&quot;:11.31,&quot;y&quot;:0.33,&quot;scaleX&quot;:0.8,&quot;scaleY&quot;:0.8,&quot;rotation&quot;:89.09,&quot;width&quot;:30,&quot;height&quot;:30}}}},&quot;animations&quot;:{&quot;pineapple_tent&quot;:{&quot;slots&quot;:{&quot;01_back_object1&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;01_back_object1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;01_back_object1&quot;}]},&quot;01_front_object1&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;01_front_object1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;01_front_object1&quot;}]},&quot;01_pineapple1&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;01_pineapple1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;01_pineapple1&quot;}]},&quot;01_pineapple2&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;01_pineapple1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;01_pineapple1&quot;}]},&quot;01_pineapple3&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;01_pineapple1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;01_pineapple1&quot;}]},&quot;01_pineapple4&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;01_pineapple1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;01_pineapple1&quot;}]},&quot;02_pineapple1&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;02_pineapple2&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;02_pineapple2&quot;}]},&quot;02_pineapple2&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;02_pineapple2&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;02_pineapple2&quot;}]},&quot;02_pineapple3&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;02_pineapple2&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;02_pineapple2&quot;}]},&quot;02_pineapple4&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;02_pineapple2&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;02_pineapple2&quot;}]},&quot;03_big_light1&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;03_big_light1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;03_big_light1&quot;}],&quot;color&quot;:[{&quot;time&quot;:0,&quot;color&quot;:&quot;ffffff95&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1,&quot;color&quot;:&quot;ffffffff&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;color&quot;:&quot;ffffff95&quot;}]},&quot;03_side_light1&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;03_side_light1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;03_side_light1&quot;}],&quot;color&quot;:[{&quot;time&quot;:0,&quot;color&quot;:&quot;ffffff64&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:0.5,&quot;color&quot;:&quot;ffffffff&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;color&quot;:&quot;ffffff64&quot;}]},&quot;03_side_light2&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;03_side_light1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;03_side_light1&quot;}],&quot;color&quot;:[{&quot;time&quot;:0,&quot;color&quot;:&quot;ffffff64&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:0.6666,&quot;color&quot;:&quot;ffffffff&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;color&quot;:&quot;ffffff64&quot;}]},&quot;03_side_light3&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;03_side_light1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;03_side_light1&quot;}],&quot;color&quot;:[{&quot;time&quot;:0,&quot;color&quot;:&quot;ffffff64&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:0.8333,&quot;color&quot;:&quot;ffffffff&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;color&quot;:&quot;ffffff64&quot;}]},&quot;03_side_light4&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;03_side_light1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;03_side_light1&quot;}],&quot;color&quot;:[{&quot;time&quot;:0,&quot;color&quot;:&quot;ffffff64&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1,&quot;color&quot;:&quot;ffffffff&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;color&quot;:&quot;ffffff64&quot;}]},&quot;03_side_light5&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;03_side_light1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;03_side_light1&quot;}],&quot;color&quot;:[{&quot;time&quot;:0,&quot;color&quot;:&quot;ffffff64&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:0.6666,&quot;color&quot;:&quot;ffffffff&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;color&quot;:&quot;ffffff64&quot;}]},&quot;03_side_light6&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;03_side_light1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;03_side_light1&quot;}],&quot;color&quot;:[{&quot;time&quot;:0,&quot;color&quot;:&quot;ffffff64&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:0.8333,&quot;color&quot;:&quot;ffffffff&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;color&quot;:&quot;ffffff64&quot;}]},&quot;03_side_light7&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;03_side_light1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;03_side_light1&quot;}],&quot;color&quot;:[{&quot;time&quot;:0,&quot;color&quot;:&quot;ffffff64&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1,&quot;color&quot;:&quot;ffffffff&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;color&quot;:&quot;ffffff64&quot;}]},&quot;03_side_light8&quot;:{&quot;attachment&quot;:[{&quot;time&quot;:0,&quot;name&quot;:&quot;03_side_light1&quot;},{&quot;time&quot;:2,&quot;name&quot;:&quot;03_side_light1&quot;}],&quot;color&quot;:[{&quot;time&quot;:0,&quot;color&quot;:&quot;ffffff64&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1.1666,&quot;color&quot;:&quot;ffffffff&quot;,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;color&quot;:&quot;ffffff64&quot;}]}},&quot;bones&quot;:{&quot;pineapple_tent&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;angle&quot;:0}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;01_pineapple1_1&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-2.3,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:0.5,&quot;angle&quot;:2.56,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-2.3}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;01_pineapple1_2&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-3.77,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:0.8333,&quot;angle&quot;:3.04,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-3.77}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;01_pineapple2_1&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-2.73,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:0.6666,&quot;angle&quot;:1.79,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-2.73}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;01_pineapple2_2&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-3,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1,&quot;angle&quot;:4.13,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-3}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;01_pineapple3_1&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-1.86,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:0.8333,&quot;angle&quot;:3.24,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-1.86}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;01_pineapple3_2&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-1.3,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1,&quot;angle&quot;:3.48,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-1.3}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;01_pineapple4_1&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-1.17,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1,&quot;angle&quot;:2.03,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-1.17}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;01_pineapple4_2&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-2.99,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1.1666,&quot;angle&quot;:3.16,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-2.99}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;02_pineapple1_1&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:0,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:0.6666,&quot;angle&quot;:0.9,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:0}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;02_pineapple1_2&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-4.02,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1,&quot;angle&quot;:2.82,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-4.02}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;02_pineapple2_1&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-1.91,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:0.8333,&quot;angle&quot;:1.88,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-1.91}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;02_pineapple2_2&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-1.99,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1.1666,&quot;angle&quot;:2.22,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-1.99}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;02_pineapple3_1&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-1.84,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1,&quot;angle&quot;:2.06,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-1.84}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;02_pineapple3_2&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-2.65,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1.3333,&quot;angle&quot;:3.16,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-2.65}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;02_pineapple4_1&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-2.08,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1.1666,&quot;angle&quot;:1.49,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-2.08}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;02_pineapple4_2&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:-2.14,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:1.5,&quot;angle&quot;:2.4,&quot;curve&quot;:[0.436,0.1,0.573,0.94]},{&quot;time&quot;:2,&quot;angle&quot;:-2.14}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]},&quot;00_object&quot;:{&quot;rotate&quot;:[{&quot;time&quot;:0,&quot;angle&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;angle&quot;:0}],&quot;translate&quot;:[{&quot;time&quot;:0,&quot;x&quot;:0,&quot;y&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:0,&quot;y&quot;:0}],&quot;scale&quot;:[{&quot;time&quot;:0,&quot;x&quot;:1,&quot;y&quot;:1,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2,&quot;x&quot;:1,&quot;y&quot;:1}]}},&quot;ffd&quot;:{&quot;default&quot;:{&quot;01_pineapple1&quot;:{&quot;01_pineapple1&quot;:[{&quot;time&quot;:0}]},&quot;01_pineapple2&quot;:{&quot;01_pineapple1&quot;:[{&quot;time&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2}]},&quot;01_pineapple3&quot;:{&quot;01_pineapple1&quot;:[{&quot;time&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2}]},&quot;01_pineapple4&quot;:{&quot;01_pineapple1&quot;:[{&quot;time&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2}]},&quot;02_pineapple1&quot;:{&quot;02_pineapple2&quot;:[{&quot;time&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2}]},&quot;02_pineapple2&quot;:{&quot;02_pineapple2&quot;:[{&quot;time&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2}]},&quot;02_pineapple3&quot;:{&quot;02_pineapple2&quot;:[{&quot;time&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2}]},&quot;02_pineapple4&quot;:{&quot;02_pineapple2&quot;:[{&quot;time&quot;:0,&quot;curve&quot;:&quot;stepped&quot;},{&quot;time&quot;:2}]}}}}}}"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

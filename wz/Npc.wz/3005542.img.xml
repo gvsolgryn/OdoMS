@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="3005542.img">
+<imgdir name="info">
+<int name="hide" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="31" y="105"/>
+<int name="z" value="0"/>
+<string name="_hash" value="205f46ed64678016cbb369cc38177f5d5eebfba70e2e3673e76ba92b6978ee32"/>
+<string name="_outlink" value="Npc/3001604.img/special2/0"/>
+</canvas>
+</imgdir>
+<imgdir name="condition2">
+<imgdir name="38331">
+<imgdir name="0">
+<string name="key" value="42"/>
+<string name="value" value="h0"/>
+</imgdir>
+</imgdir>
+<int name="hide" value="1"/>
+<uol name="stand" value="../stand"/>
+</imgdir>
+<imgdir name="condition3">
+<imgdir name="38331">
+<imgdir name="0">
+<string name="key" value="42"/>
+<string name="value" value="h1"/>
+</imgdir>
+</imgdir>
+<uol name="stand" value="../stand"/>
+</imgdir>
+</imgdir>

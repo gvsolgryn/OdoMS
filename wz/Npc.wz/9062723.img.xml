@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062723.img">
+<imgdir name="info">
+<int name="shop" value="1"/>
+<int name="scriptNpcShop" value="1"/>
+<int name="noDiscountPrice" value="1"/>
+<int name="notRecommend" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="26" y="76"/>
+<int name="z" value="0"/>
+<string name="_hash" value="3550a5cc652b98a394b952c20d5a4483a090fa141970f9a6fb5b98b42375353b"/>
+<string name="_outlink" value="Npc/9062722.img/stand/0"/>
+</canvas>
+</imgdir>
+<imgdir name="eye">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="26" y="76"/>
+<int name="z" value="0"/>
+<string name="_hash" value="3e2b38c61e1ddb848e94fb1ec02590f074b8ee04555bd434a65ccc115bba7551"/>
+<string name="_outlink" value="Npc/9062722.img/eye/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="26" y="76"/>
+<int name="z" value="0"/>
+<string name="_hash" value="791ecb8848d82f1b2af1001d981c78adc4ca79fcb3a2868fcb268eb8ceee40b4"/>
+<string name="_outlink" value="Npc/9062722.img/eye/1"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="26" y="76"/>
+<int name="z" value="0"/>
+<string name="_hash" value="a517dd283b055e86fe4c8b7ae1a85b910600861be89448a1422f7fdb06e8784c"/>
+<string name="_outlink" value="Npc/9062722.img/eye/2"/>
+</canvas>
+</imgdir>
+<imgdir name="say">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="26" y="76"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_outlink" value="Npc/9062722.img/stand/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="26" y="76"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="39d2c7a36792f33ac21c5d5f1f8998e20fed8738d9d8eeacb69191111abf7305"/>
+<string name="_outlink" value="Npc/9062722.img/say/1"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="26" y="76"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="eb52721625d340f6b6fc799987e7594397da4ae224b2e6ccd909669ff0425e94"/>
+<string name="_outlink" value="Npc/9062722.img/say/2"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="26" y="76"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="0bcce6bb3812ced3bb32aaf167dffce99b247638b6339a171c6c3eff90736407"/>
+<string name="_outlink" value="Npc/9062722.img/say/3"/>
+</canvas>
+</imgdir>
+</imgdir>

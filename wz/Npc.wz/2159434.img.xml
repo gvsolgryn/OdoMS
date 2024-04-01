@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="2159434.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+<canvas name="default" width="137" height="157">
+<vector name="origin" x="66" y="157"/>
+<int name="z" value="0"/>
+<string name="_hash" value="989307b3b59ebb985035c3b3b81d492314b834751903410859783f1342fedfe1"/>
+</canvas>
+<int name="dcLeft" value="-78"/>
+<int name="dcTop" value="-160"/>
+<int name="dcRight" value="78"/>
+<int name="dcBottom" value="0"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="0" y="121"/>
+<string name="_hash" value="8577edd22163b12a14a0ac92397fa66b5d675176653e9427283c6e92da37528f"/>
+<string name="_outlink" value="Npc/1064022.img/stand/0"/>
+</canvas>
+</imgdir>
+</imgdir>

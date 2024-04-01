@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="HeinzBack_Rachika.img">
+<imgdir name="back">
+<canvas name="0" width="2200" height="1100">
+<vector name="origin" x="0" y="0"/>
+<int name="z" value="0"/>
+<string name="_hash" value="015a037dee7230cb6fe436f439bb69b1e811f5df8c493a150a752937014dc772"/>
+</canvas>
+<canvas name="1" width="2200" height="1100">
+<int name="z" value="0"/>
+<string name="_hash" value="c63c9b00cf6660698fc0afa591609a2a070fabb289180b83c06e64f5a66d368b"/>
+<vector name="origin" x="0" y="0"/>
+</canvas>
+<canvas name="2" width="2200" height="1100">
+<int name="z" value="0"/>
+<string name="_hash" value="271dde418bf8dd5544f4eb76bd5f511663529e40f4b2c769f50cab9daf47d9c9"/>
+<vector name="origin" x="0" y="0"/>
+</canvas>
+<canvas name="3" width="2200" height="1100">
+<int name="z" value="0"/>
+<string name="_hash" value="32733c7aada6d09eec6710f98f6547da642aa7ced8ad09b05b50018d9ab195ca"/>
+<vector name="origin" x="0" y="0"/>
+</canvas>
+</imgdir>
+</imgdir>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="200.img">
+<imgdir name="info">
+<string name="name" value="[합성] 1 더하기 1은 1++"/>
+<string name="desc" value="잠재능력이 없는 두 아이템을 합성하여 에픽 등급 이상 잠재능력과 에디셔널 잠재능력이 있는 아이템 획득"/>
+<string name="keyword" value="특정 아이템 합성"/>
+<int name="score" value="40"/>
+<string name="mainCategory" value="memory"/>
+<string name="subCategory" value="memory"/>
+<string name="difficulty" value="unique"/>
+<imgdir name="demand">
+<imgdir name="world_type">
+<string name="0" value="normal"/>
+<string name="1" value="burning"/>
+<string name="2" value="challenge"/>
+<string name="3" value="pinkBean"/>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="mission">
+<imgdir name="0">
+<string name="name" value="잠재능력이 없는 두 아이템을 합성하여 에픽 등급 이상 잠재능력과 에디셔널 잠재능력이 있는 아이템 획득"/>
+<imgdir name="subMission">
+<imgdir name="makingskill_synthesize">
+<imgdir name="score">
+<long name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="item">
+<string name="condition" value="and"/>
+<imgdir name="values">
+<imgdir name="0">
+<imgdir name="item_potential">
+<imgdir name="item_potential_grade">
+<int name="min" value="0"/>
+<int name="max" value="0"/>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="1">
+<imgdir name="item_potential">
+<imgdir name="item_potential_grade">
+<int name="min" value="0"/>
+<int name="max" value="0"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="makingskill_result">
+<short name="is_success" value="-1"/>
+<imgdir name="item">
+<imgdir name="item_potential">
+<imgdir name="item_potential_grade">
+<int name="min" value="2"/>
+<int name="max" value="2"/>
+</imgdir>
+</imgdir>
+<imgdir name="item_additional">
+<imgdir name="item_additional_grade">
+<int name="min" value="1"/>
+<int name="max" value="1"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

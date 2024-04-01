@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="EventCharacterBurning.img">
+<int name="levelUpEffectDelay" value="1000"/>
+<imgdir name="LimitedJobCode">
+<int name="0" value="10000"/>
+<int name="1" value="10100"/>
+<int name="2" value="10110"/>
+<int name="3" value="10111"/>
+<int name="4" value="10112"/>
+<int name="5" value="13000"/>
+<int name="6" value="13100"/>
+<int name="7" value="13500"/>
+<int name="8" value="15003"/>
+<int name="9" value="15400"/>
+<int name="10" value="15410"/>
+<int name="11" value="15411"/>
+<int name="12" value="15412"/>
+</imgdir>
+<imgdir name="LimitedJobCode2">
+<int name="0" value="13000"/>
+<int name="1" value="13100"/>
+<int name="2" value="13500"/>
+<int name="3" value="15003"/>
+<int name="4" value="15400"/>
+<int name="5" value="15410"/>
+<int name="6" value="15411"/>
+<int name="7" value="15412"/>
+</imgdir>
+<imgdir name="Event">
+<imgdir name="0">
+<string name="start" value="201812271000"/>
+<string name="end" value="202303020800"/>
+<int name="maxLevel" value="130"/>
+<int name="minLevel" value="10"/>
+<int name="addPoint" value="2"/>
+<int name="maxCount" value="3"/>
+</imgdir>
+</imgdir>
+<imgdir name="EventEx">
+<imgdir name="0">
+<string name="start" value="202112140000"/>
+<string name="end" value="202203092359"/>
+<int name="maxLevel" value="200"/>
+<int name="minLevel" value="10"/>
+<int name="addPoint" value="2"/>
+</imgdir>
+</imgdir>
+<imgdir name="EventHyper">
+<imgdir name="0">
+<string name="start" value="202211010000"/>
+<string name="end" value="202303012359"/>
+<int name="maxLevel" value="250"/>
+<int name="minLevel" value="10"/>
+<int name="addPoint" value="2"/>
+</imgdir>
+</imgdir>
+<imgdir name="EventHyper2">
+<imgdir name="0">
+<string name="start" value="202211010000"/>
+<string name="end" value="202303012359"/>
+<int name="maxLevel" value="250"/>
+<int name="minLevel" value="200"/>
+<int name="addPoint" value="2"/>
+</imgdir>
+</imgdir>
+<imgdir name="AllowWorldID">
+<int name="0" value="48"/>
+<int name="1" value="49"/>
+<int name="2" value="52"/>
+<int name="3" value="54"/>
+</imgdir>
+<imgdir name="WorldTransferEventWorldID">
+<imgdir name="World">
+</imgdir>
+</imgdir>
+<imgdir name="ResetQuestList">
+<imgdir name="4">
+<int name="0" value="100981"/>
+</imgdir>
+</imgdir>
+</imgdir>

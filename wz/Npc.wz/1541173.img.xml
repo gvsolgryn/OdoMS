@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1541173.img">
+<imgdir name="info">
+<int name="forceMove" value="1"/>
+<int name="hideName" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="51" height="102">
+<vector name="origin" x="27" y="102"/>
+<int name="z" value="0"/>
+<int name="delay" value="3000"/>
+<string name="_hash" value="a5ab3901ec52d6db981f04f98bd3aceb32a03bd6d4619f637de1c3ab1661e809"/>
+</canvas>
+</imgdir>
+<imgdir name="say">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="27" y="102"/>
+<int name="z" value="0"/>
+<int name="delay" value="3000"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+</imgdir>
+<imgdir name="move">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="27" y="102"/>
+<int name="z" value="0"/>
+<int name="delay" value="3000"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+</imgdir>
+</imgdir>

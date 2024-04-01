@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062834.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="127" height="123">
+<vector name="origin" x="61" y="123"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d99168093988356f62cd934fc9b081fc5bc0fa7543820cd14a9631267cbf3f8f"/>
+</canvas>
+</imgdir>
+<imgdir name="say">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="61" y="123"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+<canvas name="1" width="127" height="123">
+<vector name="origin" x="61" y="123"/>
+<int name="z" value="0"/>
+<string name="_hash" value="05b55c924ea9231fe251a4b3dd9173f19397f328d3d090967cf6b575505d9f3f"/>
+</canvas>
+<canvas name="2" width="128" height="123">
+<vector name="origin" x="62" y="123"/>
+<int name="z" value="0"/>
+<string name="_hash" value="f68e2b1c4fea2eb43177f16e13998dc85c4e3c588cbff02a1c59bbe08e1c6048"/>
+</canvas>
+<canvas name="3" width="128" height="123">
+<vector name="origin" x="62" y="123"/>
+<int name="z" value="0"/>
+<string name="_hash" value="5ac6b7ac44c822490eb41d9e711466f00941ceb94b57bdd456553c37f36da4b7"/>
+</canvas>
+<canvas name="4" width="128" height="123">
+<vector name="origin" x="62" y="123"/>
+<int name="z" value="0"/>
+<string name="_hash" value="8f3be144cd4f1d81ef97b513f7ba59b287ee48302bae0ece050fe24bbe1c9d79"/>
+</canvas>
+<canvas name="5" width="127" height="123">
+<vector name="origin" x="61" y="123"/>
+<int name="z" value="0"/>
+<string name="_hash" value="4b1723dc14fcefb59a564141277976cf397ae2b69ad3a63740840db2c4428087"/>
+</canvas>
+</imgdir>
+<imgdir name="eye">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="61" y="123"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="61" y="123"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+<canvas name="2" width="128" height="123">
+<vector name="origin" x="62" y="123"/>
+<int name="z" value="0"/>
+<string name="_hash" value="608c349107647a5730a3a7bce3abf10d6e7525026b58f4374bb52b93e325330d"/>
+</canvas>
+<canvas name="3" width="128" height="123">
+<vector name="origin" x="62" y="123"/>
+<int name="z" value="0"/>
+<string name="_hash" value="92956ffb6f9dfaaf2bdeef8820cdaf7ff849a5e596e2359e3851b214ece9bceb"/>
+</canvas>
+<canvas name="4" width="128" height="123">
+<vector name="origin" x="62" y="123"/>
+<int name="z" value="0"/>
+<string name="_hash" value="94e0062fe846e6e857f5966524850b06e9d923666723f2b2b6638e53fefdfeb9"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="61" y="123"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="say/5"/>
+</canvas>
+</imgdir>
+</imgdir>
