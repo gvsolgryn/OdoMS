@@ -2,7 +2,7 @@ package server;
 
 import java.util.List;
 
-public class DimentionMirrorEntry {
+public class DimensionMirrorEntry {
   private int id;
   
   private int level;
@@ -17,7 +17,7 @@ public class DimentionMirrorEntry {
   
   private List<Integer> items;
   
-  public DimentionMirrorEntry(String name, String desc, int level, int id, int type, String script, List<Integer> items) {
+  public DimensionMirrorEntry(String name, String desc, int level, int id, int type, String script, List<Integer> items) {
     this.id = id;
     this.level = level;
     setName(name);

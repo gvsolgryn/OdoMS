@@ -9,13 +9,13 @@ import constants.GameConstants;
 import constants.ServerConstants;
 import constants.programs.AdminTool;
 import constants.programs.GarbageDataBaseRemover;
+import database.DatabaseBackup;
 import database.DatabaseConnection;
 import handling.MapleSaveHandler;
 import handling.auction.AuctionServer;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
 import handling.channel.MapleGuildRanking;
-import handling.channel.handler.ChatHandler;
 import handling.channel.handler.MatrixHandler;
 import handling.channel.handler.UnionHandler;
 import handling.farm.FarmServer;
@@ -48,6 +48,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -134,18 +135,18 @@ public class Start {
                 GarbageDataBaseRemover.main();
             }
 
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("자유 전직", "", 200, 0, 0, "1541032", new ArrayList(Arrays.asList(4310086))));
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("닉네임변경", "", 10, 1, 1, "9062010", new ArrayList<>(Arrays.asList(4034803))));
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("계승 시스템", "", 300, 2, 2, "9062116", new ArrayList<>()));
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("무릉도장", "", 10, 3, 3, "9900004", new ArrayList<>()));
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("몬스터파크", "", 10, 4, 4, "9071003", new ArrayList<>()));
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("티어시스템", "", 100, 5, 5, "2007", new ArrayList<>()));
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("추천인시스템", "", 10, 6, 6, "3001931", new ArrayList<>()));
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("제작 및 강화", "", 100, 7, 7, "2400003", new ArrayList<>()));
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("안개 수련장", "", 200, 8, 8, "9062318", new ArrayList<>()));
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("커플 컨텐츠", "", 10, 9, 9, "9201000", new ArrayList<>()));
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("유니온 시스템", "", 109, 10, 10, "9010106", new ArrayList<>()));
-            ServerConstants.mirrors.add(new DimentionMirrorEntry("룰렛 시스템", "", 109, 11, 11, "9000155", new ArrayList<>()));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("자유 전직", "", 200, 0, 0, "1541032", List.of(4310086)));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("닉네임변경", "", 10, 1, 1, "9062010", List.of(4034803)));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("계승 시스템", "", 300, 2, 2, "9062116", new ArrayList<>()));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("무릉도장", "", 10, 3, 3, "9900004", new ArrayList<>()));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("몬스터파크", "", 10, 4, 4, "9071003", new ArrayList<>()));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("티어시스템", "", 100, 5, 5, "2007", new ArrayList<>()));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("추천인시스템", "", 10, 6, 6, "3001931", new ArrayList<>()));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("제작 및 강화", "", 100, 7, 7, "2400003", new ArrayList<>()));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("안개 수련장", "", 200, 8, 8, "9062318", new ArrayList<>()));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("커플 컨텐츠", "", 10, 9, 9, "9201000", new ArrayList<>()));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("유니온 시스템", "", 109, 10, 10, "9010106", new ArrayList<>()));
+            ServerConstants.mirrors.add(new DimensionMirrorEntry("룰렛 시스템", "", 109, 11, 11, "9000155", new ArrayList<>()));
 
             ServerConstants.quicks.add(new QuickMoveEntry(1, 2000, 0, 10, "주요 지역으로 캐릭터를 이동시켜 주는 #c<워프 시스템>#을 이용한다."));
             ServerConstants.WORLD_UI = ServerProperties.getProperty("login.serverUI");
@@ -300,10 +301,11 @@ public class Start {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         instance.run();
-        //DatabaseBackup.main(args);
-        if (false) {
-            CommodityItemUpdate.main(args);
-        }
+        DatabaseBackup.main(args);
+        CommodityItemUpdate.main(args);
+        // if (false) {
+        //     CommodityItemUpdate.main(args);
+        // }
     }
 
     public static void JamsuPoint() {
@@ -313,7 +315,7 @@ public class Start {
                 for (ChannelServer cserv : ChannelServer.getAllInstances()) {
                     for (MapleCharacter mch : cserv.getPlayerStorage().getAllCharacters().values()) {
                         if (mch.getMapId() == ServerConstants.warpMap || mch.getMapId() == 993215603){
-                            if (mch.isFirst == false) {
+                            if (!mch.isFirst) {
                                 mch.getClient().send((CField.UIPacket.detailShowInfo("해병취침 포인트(잠수 포인트) 적립을 시작하겠다 아쎄이!", 3, 20, 20)));
                                 mch.getClient().getSession().writeAndFlush(SLFCGPacket.playSE("Sound/MiniGame.img/14thTerra/reward"));
                                 mch.isFirst = true;

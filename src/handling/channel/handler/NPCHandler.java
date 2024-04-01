@@ -12,7 +12,7 @@ import constants.ServerConstants;
 import handling.SendPacketOpcode;
 import scripting.NPCConversationManager;
 import scripting.NPCScriptManager;
-import server.DimentionMirrorEntry;
+import server.DimensionMirrorEntry;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
 import server.MapleStorage;
@@ -541,7 +541,7 @@ public class NPCHandler {
         slea.skip(4);
         int id = slea.readInt();
 
-        for (DimentionMirrorEntry dm : ServerConstants.mirrors) {
+        for (DimensionMirrorEntry dm : ServerConstants.mirrors) {
             if (dm.getId() == id) {
                 c.removeClickedNPC();
                 NPCScriptManager.getInstance().dispose(c);
