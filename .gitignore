@@ -107,3 +107,14 @@ nbdist/
 
 sql/
 sql/*
+
+Log/
+Log/*
+log/
+log/*
+LogFile/
+LogFile/*
+logFile/
+logFile/*
+logfile/
+logfile/*
