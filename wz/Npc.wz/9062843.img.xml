@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062843.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+<int name="dcLeft" value="-150"/>
+<int name="dcTop" value="-200"/>
+<int name="dcRight" value="150"/>
+<int name="dcBottom" value="0"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="300" height="200">
+<vector name="origin" x="150" y="200"/>
+<int name="z" value="0"/>
+<string name="_hash" value="2a9d36aa737cc57e171920f250231a837d10a33767f7aa424fe5a36a0b9a65a2"/>
+</canvas>
+</imgdir>
+<imgdir name="condition1">
+<string name="dateStart" value="202212290000"/>
+<string name="dateEnd" value="202301050000"/>
+<imgdir name="stand">
+<canvas name="0" width="300" height="200">
+<vector name="origin" x="150" y="200"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d4fb3e680d814e33850587391af9e40dcea7e7897b39584fb1392a16d7fb72a0"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="condition2">
+<string name="dateStart" value="202301050000"/>
+<string name="dateEnd" value="202301120000"/>
+<imgdir name="stand">
+<canvas name="0" width="300" height="200">
+<vector name="origin" x="150" y="200"/>
+<int name="z" value="0"/>
+<string name="_hash" value="305daab2833c8ccbd2e70f6baeaf97a23781d7281452af39b467c1cde3491cff"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="condition3">
+<string name="dateStart" value="202301120000"/>
+<string name="dateEnd" value="202301190000"/>
+<imgdir name="stand">
+<canvas name="0" width="300" height="200">
+<vector name="origin" x="150" y="200"/>
+<int name="z" value="0"/>
+<string name="_hash" value="5f86c8c41d43185df85682cdbf1220cb100a11092841e343d41cc5bab86ed1f4"/>
+</canvas>
+</imgdir>
+</imgdir>
+</imgdir>

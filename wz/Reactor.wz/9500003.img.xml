@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9500003.img">
+<imgdir name="info">
+<string name="info" value="미지의 구역의 제단"/>
+<int name="disappearOnLeave" value="1"/>
+</imgdir>
+<imgdir name="0">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="44" y="78"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7d79be253862e919c760b2fdfd2010062ac40a098aac449369c719563363bdb7"/>
+<string name="_outlink" value="Reactor/9500002.img/0/0"/>
+</canvas>
+<int name="repeat" value="1"/>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="50" y="113"/>
+<int name="z" value="0"/>
+<string name="_hash" value="b4ee44d6b1c8b52a17c840dfcd5ff9bf0c0a6df776bcfa0561f9bb2ccffb6d90"/>
+<string name="_outlink" value="Reactor/9500002.img/1/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="50" y="113"/>
+<int name="z" value="0"/>
+<string name="_hash" value="3a62bb90d320cbad3ccdb23ccefa6f20d58c5d372e7b40e578c401187d8a6ffb"/>
+<string name="_outlink" value="Reactor/9500002.img/1/1"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="50" y="113"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d9923263d50525e94ef6b6ee10df6dec75cfaf0879d09ab89fca5831470f8532"/>
+<string name="_outlink" value="Reactor/9500002.img/1/2"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="50" y="113"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d4820110ae2f1ae7e2915520106fe735f5078e2f090ddcef786b48f2807757a7"/>
+<string name="_outlink" value="Reactor/9500002.img/1/3"/>
+</canvas>
+<canvas name="4" width="1" height="1">
+<vector name="origin" x="50" y="114"/>
+<int name="z" value="0"/>
+<string name="_hash" value="4abcd0227e7be448d6fc4e8eb6f8ab2480872b525770b321b51b27a026cec2b4"/>
+<string name="_outlink" value="Reactor/9500002.img/1/4"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="50" y="111"/>
+<int name="z" value="0"/>
+<string name="_hash" value="20413ea54ce93cb9f8a6c80d913a65d7e68bf52179dc9d2f8728d40944a4a2c7"/>
+<string name="_outlink" value="Reactor/9500002.img/1/5"/>
+</canvas>
+<canvas name="6" width="1" height="1">
+<vector name="origin" x="50" y="111"/>
+<int name="z" value="0"/>
+<string name="_hash" value="b9cbbceb4bd7ed0dd7d9faf40513e2195a292a504db1a87b6397818c24c7baba"/>
+<string name="_outlink" value="Reactor/9500002.img/1/6"/>
+</canvas>
+<int name="repeat" value="1"/>
+<imgdir name="hit">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="44" y="78"/>
+<int name="z" value="0"/>
+<string name="_outlink" value="Reactor/9500002.img/0/0"/>
+</canvas>
+</imgdir>
+</imgdir>
+</imgdir>

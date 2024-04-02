@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="ExitButton.img">
+<imgdir name="fieldType">
+<imgdir name="320">
+<string name="question" value="정말 나가시겠습니까?"/>
+<string name="origin" value="rb"/>
+<vector name="offset" x="6" y="-50"/>
+</imgdir>
+</imgdir>
+</imgdir>

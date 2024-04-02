@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="dinorush.img">
+<imgdir name="dinorush">
+<imgdir name="ground">
+<imgdir name="0">
+<canvas name="0" width="495" height="287">
+<vector name="origin" x="247" y="143"/>
+<int name="z" value="0"/>
+<string name="_hash" value="05d9772ac76bdad07ee6fc33ee2660cf6877be1ea136a51147693ac9308e2221"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="mark">
+<imgdir name="0">
+<canvas name="0" width="292" height="79">
+<vector name="origin" x="146" y="39"/>
+<int name="z" value="0"/>
+<string name="_hash" value="73025ffe61a88cd76f41f975ba05c1ac5091c5656a607a1726adc6b24887d926"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="292" height="79">
+<vector name="origin" x="146" y="39"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6439f9344b2e52003c8e0423332b32f2d2e8f0a2a161925c3d02f1e8b828d6e1"/>
+</canvas>
+</imgdir>
+<imgdir name="2">
+<canvas name="0" width="255" height="79">
+<vector name="origin" x="127" y="39"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d36f902e2918e3737d7672bcb9c4f16ec91651a811a74ceeaace891cd0f408d9"/>
+</canvas>
+</imgdir>
+<imgdir name="3">
+<canvas name="0" width="255" height="79">
+<vector name="origin" x="127" y="39"/>
+<int name="z" value="0"/>
+<string name="_hash" value="e39c6ec6a2fb358fdd19841a3187818cc8ebe4a8fc46c43662c362a2669d1378"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="prob">
+<imgdir name="0">
+<canvas name="0" width="188" height="108">
+<vector name="origin" x="94" y="54"/>
+<int name="z" value="0"/>
+<string name="_hash" value="c19c71c284bbdc5bf61facc7b6d793699fc08db8633130fd6d78e3fe08b6ce5e"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="435" height="445">
+<vector name="origin" x="217" y="222"/>
+<int name="z" value="0"/>
+<string name="_hash" value="7d029ff5056023ace0cf4accf9191af2223ae50044f6c138d206b9d09d4bae38"/>
+</canvas>
+</imgdir>
+<imgdir name="2">
+<canvas name="0" width="494" height="489">
+<vector name="origin" x="247" y="244"/>
+<int name="z" value="0"/>
+<string name="_hash" value="117debf868baa0bfb2301d5c1c78e47678f1e34690fe31dde9ba2f7e90e2078d"/>
+</canvas>
+</imgdir>
+<imgdir name="3">
+<canvas name="0" width="776" height="322">
+<vector name="origin" x="388" y="161"/>
+<int name="z" value="0"/>
+<string name="_hash" value="f93d42de53e8d92f2a5c2a97bff1e374feb0e0598b7a510b95493906d672b8c8"/>
+</canvas>
+</imgdir>
+<imgdir name="4">
+<canvas name="0" width="542" height="173">
+<vector name="origin" x="271" y="86"/>
+<int name="z" value="0"/>
+<string name="_hash" value="234a200ec4a67b2bad66bff1e94289802fd68d8c93dd9cf23a68a8ab5590f284"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="dino">
+<imgdir name="0">
+<canvas name="0" width="341" height="628">
+<vector name="origin" x="170" y="314"/>
+<int name="z" value="0"/>
+<string name="_hash" value="5e2e5d10c057a8d32cfafd4728f455bca3d5c1c04b466de10a369667cb0b5ee4"/>
+</canvas>
+</imgdir>
+</imgdir>
+<imgdir name="cave">
+<imgdir name="0">
+<canvas name="0" width="339" height="708">
+<vector name="origin" x="169" y="354"/>
+<int name="z" value="0"/>
+<string name="_hash" value="32ef33697d2d429725185531d00cc24923dbd8b075e9b852a886c577815e2550"/>
+</canvas>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="471" height="698">
+<vector name="origin" x="235" y="349"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1da3b01215c1945c569eb2857c75f2b58b19cacf8c40ca62ac170da336e18366"/>
+</canvas>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

@@ -2741,10 +2741,6 @@ public class MapleClient {
         getSession().writeAndFlush(p);
     }
 
-    public String getDiscord() {
-        return discord;
-    }
-
     public int getAllowed() {
         return allowed;
     }

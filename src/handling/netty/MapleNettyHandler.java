@@ -2289,7 +2289,7 @@ public class MapleNettyHandler extends SimpleChannelInboundHandler<LittleEndianA
                 }
                 break;
             case mix_hair:
-                PlayerHandler.믹스헤어(slea, c);
+                PlayerHandler.MixHair(slea, c);
                 break;
             default: {
                 System.out.println("[UNHANDLED] Recv [" + header.toString() + "] found");

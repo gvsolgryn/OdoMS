@@ -119,7 +119,7 @@ public class CommodityItemUpdate {
                 fos.write(("        <int name=\"PbPoint\" value=\"30\"/>\r\n").getBytes(Charset.forName("MS949")));
                 fos.write(("        <int name=\"PbGift\" value=\"30\"/>\r\n").getBytes(Charset.forName("MS949")));
                 fos.write(("    </imgdir>\r\n").getBytes(Charset.forName("MS949")));
-                System.out.println("sn [" + sn[idx] + "] itemid [" + itemid + "]");
+                // System.out.println("sn [" + sn[idx] + "] itemid [" + itemid + "]");
                 sn[idx]++;
                 id++;
             }
@@ -129,10 +129,10 @@ public class CommodityItemUpdate {
          *  SN ID : 130000000
          *
          *  스페셜 캐시 (모자) 시작부터 끝까지
-         *//*
+         */
         for (int item = 1006800; item <= 1006834; item++) {
             writeCommodity(130000000, id++, item, 6000, fos);
-        }*/
+        }
         writeCommodity(150000001, id++, 5150044, 10000, fos);
         writeCommodity(150100000, id++, 5152058, 5000, fos);
         writeCommodity(150200000, id++, 5680222, 15000, fos);
@@ -142,7 +142,7 @@ public class CommodityItemUpdate {
         }
         fos.write("</imgdir>".getBytes());
         fos.close();
-        System.out.println("끝");
+        // System.out.println("끝");
     }
 
     public static void writeCommodity(int sn, int id, int itemid, int price, FileOutputStream fos) throws IOException {

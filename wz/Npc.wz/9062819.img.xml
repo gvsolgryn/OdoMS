@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062819.img">
+<imgdir name="info">
+<int name="trunkPut" value="100"/>
+<int name="dcLeft" value="-32"/>
+<int name="dcTop" value="-93"/>
+<int name="dcRight" value="36"/>
+<int name="dcBottom" value="0"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="68" height="93">
+<vector name="origin" x="32" y="93"/>
+<int name="z" value="0"/>
+<string name="_hash" value="b95000a7ceaadd35f63a321de7d572730a22ecc0fe74c5b539a527da04c2a7b1"/>
+</canvas>
+</imgdir>
+</imgdir>

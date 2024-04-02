@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062724.img">
+<imgdir name="info">
+<int name="trunkPut" value="100"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="89" height="104">
+<vector name="origin" x="43" y="104"/>
+<int name="z" value="0"/>
+<string name="_hash" value="f66770040862635fb92e687197d5e843ff46cdb52ad8e96fe6ea315bfc5cc280"/>
+</canvas>
+</imgdir>
+</imgdir>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1541166.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+<imgdir name="illustration2">
+<canvas name="base" width="1" height="1">
+</canvas>
+<imgdir name="face">
+<canvas name="0" width="246" height="376">
+<vector name="origin" x="-2" y="260"/>
+<int name="z" value="0"/>
+<string name="_hash" value="852e1bdee3a7c84ff23d876bb11df73e8369f2c9bd4cd5dbd1eaaa37757031b8"/>
+</canvas>
+<canvas name="1" width="217" height="328">
+<vector name="origin" x="-24" y="216"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6558cfeedc0c31a9adada6d3398bf81d9eedbf0863a47af00e186bfa0d420e09"/>
+</canvas>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="29" y="86"/>
+<int name="z" value="0"/>
+</canvas>
+</imgdir>
+</imgdir>

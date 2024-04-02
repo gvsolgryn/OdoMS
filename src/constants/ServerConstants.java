@@ -4,7 +4,7 @@
 
 package constants;
 
-import server.DimentionMirrorEntry;
+import server.DimensionMirrorEntry;
 import server.QuickMoveEntry;
 import server.ServerProperties;
 import server.games.BingoGame;
@@ -72,7 +72,7 @@ public class ServerConstants {
     public static int ReqDailyLevel;
     public static List<BingoGame> BingoGameHolder;
     public static List<QuickMoveEntry> quicks;
-    public static List<DimentionMirrorEntry> mirrors;
+    public static List<DimensionMirrorEntry> mirrors;
     public static List<Pair<Integer, Long>> boss;
     public static List<Pair<Integer, Long>> boss2;
     public static List<Pair<Integer, Integer>> CashMainInfo;
@@ -151,7 +151,7 @@ public class ServerConstants {
         ServerConstants.ReqDailyLevel = 33;
         ServerConstants.BingoGameHolder = new ArrayList<BingoGame>();
         ServerConstants.quicks = new ArrayList<QuickMoveEntry>();
-        ServerConstants.mirrors = new ArrayList<DimentionMirrorEntry>();
+        ServerConstants.mirrors = new ArrayList<DimensionMirrorEntry>();
         ServerConstants.boss = new ArrayList<Pair<Integer, Long>>();
         ServerConstants.boss2 = new ArrayList<Pair<Integer, Long>>();
         ServerConstants.CashMainInfo = new ArrayList<Pair<Integer, Integer>>();

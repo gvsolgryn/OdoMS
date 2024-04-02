@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062787.img">
+<imgdir name="info">
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="116" height="175">
+<vector name="origin" x="-11" y="59"/>
+<int name="z" value="0"/>
+<string name="_hash" value="2cac9c329f14399f8719a0d8246943d56c53cc79d417bf0d4ff14f53553d2c93"/>
+</canvas>
+</imgdir>
+<imgdir name="eye">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="-11" y="27"/>
+<int name="z" value="0"/>
+<string name="_hash" value="a18c2c345c9f22376053774ef0e02d71507260811d3742db62fb4784611bfa9d"/>
+<string name="_outlink" value="Npc/9062786.img/stand/0"/>
+</canvas>
+</imgdir>
+<imgdir name="say">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="-11" y="27"/>
+<int name="z" value="0"/>
+<string name="_outlink" value="Npc/9062786.img/stand/0"/>
+</canvas>
+</imgdir>
+</imgdir>

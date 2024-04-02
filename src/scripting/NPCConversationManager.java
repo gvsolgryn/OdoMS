@@ -3931,10 +3931,6 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         return value;
     }
 
-    public final String getDiscord() {
-        return c.getDiscord();
-    }
-
     public void Entertuto(boolean black) {
         Entertuto(black, true, false);
     }

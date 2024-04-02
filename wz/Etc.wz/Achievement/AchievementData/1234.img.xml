@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1234.img">
+<imgdir name="info">
+<string name="name" value="운명을 넘어선 자"/>
+<string name="desc" value="리멘 스토리 퀘스트 완료"/>
+<int name="sync" value="1"/>
+<int name="score" value="20"/>
+<string name="mainCategory" value="adventure"/>
+<string name="subCategory" value="quest"/>
+<string name="difficulty" value="rare"/>
+<imgdir name="uiType">
+<string name="uiForm" value="basic"/>
+<string name="gauge" value="submission_info"/>
+<int name="gaugeMissionIndex" value="0"/>
+<string name="gaugeSubMission" value="quest_state_change"/>
+</imgdir>
+<imgdir name="demand">
+<imgdir name="world_type">
+<string name="0" value="normal"/>
+<string name="1" value="reboot"/>
+<string name="2" value="burning"/>
+<string name="3" value="challenge"/>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="mission">
+<imgdir name="0">
+<string name="name" value="&lt;[리멘] 운명을 넘어선 자&gt; 완료"/>
+<imgdir name="subMission">
+<imgdir name="quest_state_change">
+<imgdir name="score">
+<long name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+<imgdir name="quest_change_info">
+<int name="quest_id" value="35815"/>
+<imgdir name="quest_state">
+<int name="min" value="2"/>
+<int name="max" value="2"/>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

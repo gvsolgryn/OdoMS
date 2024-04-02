@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1541260.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="86" height="113">
+<vector name="origin" x="34" y="113"/>
+<int name="z" value="0"/>
+<string name="_hash" value="5b0ef8df94f13ac0b452fefca89b7958084fc12594c67746ed118a3d3dd7693f"/>
+</canvas>
+</imgdir>
+</imgdir>

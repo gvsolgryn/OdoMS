@@ -95,22 +95,22 @@ public class PlayerCommand {
 
         public int execute(MapleClient c, String[] splitted) {
             if (splitted.length < 2) {
-                c.getPlayer().dropMessage(5, "잘못된 정보입니다.");
+                c.getPlayer().dropMessage(5, "새끼... 기열!!!!!");
                 return 0;
             }
             int change = 0;
             try {
                 change = Integer.parseInt(splitted[1]);
             } catch (NumberFormatException nfe) {
-                c.getPlayer().dropMessage(5, "제대로 입력되지 못했습니다.");
+                c.getPlayer().dropMessage(5, "새끼... 기열!!!!!\r\n제대로 입력 할 수 있도록!!!!!");
                 return 0;
             }
             if (change <= 0) {
-                c.getPlayer().dropMessage(5, "0보다 큰 숫자를 입력해야합니다.");
+                c.getPlayer().dropMessage(5, "기열수 말고 기합수만 입력할 수 있도록!\r\n(0보다 큰 숫자 쓰란 뜻)");
                 return 0;
             }
             if (c.getPlayer().getRemainingAp() < change) {
-                c.getPlayer().dropMessage(5, "AP포인트보다 작은 숫자를 입력해야합니다.");
+                c.getPlayer().dropMessage(5, "긴빠이는 있는 물건을 아무도 모르게 가져가야 긴빠이다!\r\n(AP포인트보다 작은 숫자 쓰라는 뜻)");
                 return 0;
             }
             if (getStat(c.getPlayer()) + change > statLim) {
@@ -120,7 +120,7 @@ public class PlayerCommand {
             setStat(c.getPlayer(), getStat(c.getPlayer()) + change);
             c.getPlayer().setRemainingAp((short) (c.getPlayer().getRemainingAp() - change));
             c.getPlayer().updateSingleStat(MapleStat.AVAILABLEAP, c.getPlayer().getRemainingAp());
-            c.getPlayer().dropMessage(5, StringUtil.makeEnumHumanReadable(this.stat.name()) + " 스탯이 " + change + " 만큼 증가하였습니다.");
+            c.getPlayer().dropMessage(5, StringUtil.makeEnumHumanReadable(this.stat.name()) + " 스탯이 " + change + " 만큼 기합스러워졌다 아쎄이.");
             return 1;
         }
 
@@ -140,7 +140,7 @@ public class PlayerCommand {
 
     public static class 동접 extends CommandExecute {
         public int execute(MapleClient c, String[] splitted) {
-            c.getPlayer().dropMessage(-8, "[공지] 갈매기서버에 접속중인 목록입니다.");
+            c.getPlayer().dropMessage(-8, "[공지] 오도기합 해병 목록");
             int ret = 0;
             int cashshop = 0;
             for (ChannelServer csrv : ChannelServer.getAllInstances()) {
@@ -154,7 +154,7 @@ public class PlayerCommand {
             c.getPlayer().dropMessage(6, "경매장 : " + AuctionServer.getPlayerStorage().getAllCharacters().size() + "명\r\n");
             ret += FarmServer.getPlayerStorage().getAllCharacters().size();
             c.getPlayer().dropMessage(6, "농장 : " + FarmServer.getPlayerStorage().getAllCharacters().size() + "명\r\n");
-            c.getPlayer().dropMessage(-8, "[갈매기] 총 유저 접속 수 : " + ret);
+            c.getPlayer().dropMessage(-8, "[OdoStory] 총 오도기합 해병 수 : " + ret);
             return 1;
         }
     }
@@ -202,12 +202,12 @@ public class PlayerCommand {
             for (MapleMapObject monstermo : c.getPlayer().getMap().getMapObjectsInRange(c.getPlayer().getPosition(), 100000.0D, Arrays.asList(new MapleMapObjectType[]{MapleMapObjectType.MONSTER}))) {
                 mob = (MapleMonster) monstermo;
                 if (mob.isAlive()) {
-                    c.getPlayer().dropMessage(6, "몬스터 정보 :  " + mob.toString());
+                    c.getPlayer().dropMessage(6, "참새 정보 :  " + mob.toString());
                     break;
                 }
             }
             if (mob == null) {
-                c.getPlayer().dropMessage(6, "주변에 몬스터가 없습니다.");
+                c.getPlayer().dropMessage(6, "기열참새들은 주변에 없으니 안심해라 아쎄이!");
             }
             return 1;
         }

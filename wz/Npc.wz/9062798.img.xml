@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062798.img">
+<imgdir name="info">
+<imgdir name="script">
+<imgdir name="0">
+<string name="script" value="npc_9062798"/>
+</imgdir>
+</imgdir>
+<imgdir name="speak">
+<string name="0" value="n0"/>
+<string name="1" value="n1"/>
+</imgdir>
+<int name="dcLeft" value="-35"/>
+<int name="dcTop" value="-84"/>
+<int name="dcRight" value="20"/>
+<int name="dcBottom" value="0"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="54" height="84">
+<vector name="origin" x="34" y="84"/>
+<int name="z" value="0"/>
+<string name="_hash" value="010996ab5bcf19768c7763e495142f7dccd07d725b23fa63128cfd9a1ee6cf10"/>
+</canvas>
+</imgdir>
+<imgdir name="say">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="34" y="84"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+<canvas name="1" width="50" height="84">
+<vector name="origin" x="32" y="84"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="0c400cef155d64c58665e00496fd8c91dd3bb0a683c8e1d7141c607c10dbcdb8"/>
+</canvas>
+<canvas name="2" width="50" height="84">
+<vector name="origin" x="32" y="84"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="0860389e2888bd0b9431ab7870a4aded153f526cc7151db66380b457ec5a85f1"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="32" y="84"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="say/1"/>
+</canvas>
+<canvas name="4" width="50" height="84">
+<vector name="origin" x="32" y="84"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="765bd07bdf70ca57e9211e049f69807586ae2a32e7e2696856dcb904f7337ccd"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="32" y="84"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_inlink" value="say/1"/>
+</canvas>
+</imgdir>
+<imgdir name="eye">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="34" y="84"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+</imgdir>
+</imgdir>

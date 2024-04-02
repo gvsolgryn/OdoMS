@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="01149998.img">
+<imgdir name="info">
+<string name="islot" value="Me"/>
+<string name="vslot" value="Me"/>
+<int name="reqJob" value="0"/>
+<int name="reqLevel" value="0"/>
+<int name="incMHP" value="808"/>
+<int name="incMMP" value="808"/>
+<int name="incPDD" value="808"/>
+<int name="incMDD" value="808"/>
+<int name="tuc" value="0"/>
+<int name="price" value="0"/>
+<int name="tradeBlock" value="1"/>
+<int name="notSale" value="1"/>
+<int name="cash" value="0"/>
+<int name="medalTag" value="9998"/>
+<canvas name="iconRaw" width="31" height="34">
+<vector name="origin" x="0" y="33"/>
+<string name="_hash" value="963bd9a47064355d4531406d83e2eb4c462937ef73e85a096ae88ae05dc9f241"/>
+</canvas>
+<canvas name="icon" width="31" height="34">
+<vector name="origin" x="0" y="33"/>
+<string name="_hash" value="bd511bc6f50b121c5ebb6835f47142ecdf43e5813cf7eef1b1affdb107f429c7"/>
+</canvas>
+<int name="incPAD" value="9000"/>
+<int name="incMAD" value="9000"/>
+<int name="incLUK" value="9000"/>
+<int name="incDEX" value="9000"/>
+<int name="incINT" value="9000"/>
+<int name="incSTR" value="9000"/>
+</imgdir>
+</imgdir>

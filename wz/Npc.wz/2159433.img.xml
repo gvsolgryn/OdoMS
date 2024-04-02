@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="2159433.img">
+<imgdir name="info">
+<int name="forceMove" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="37" y="62"/>
+<int name="z" value="0"/>
+<int name="delay" value="3000"/>
+<string name="_hash" value="d8a32758df8a92d36b5831537799ad4145bb53fa66b0abd77c2356739801026f"/>
+<string name="_outlink" value="Npc/1541158.img/stand/0"/>
+</canvas>
+</imgdir>
+<imgdir name="say">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="37" y="62"/>
+<int name="z" value="0"/>
+<string name="_outlink" value="Npc/1541158.img/stand/0"/>
+</canvas>
+</imgdir>
+<imgdir name="move">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="37" y="62"/>
+<int name="z" value="0"/>
+<int name="delay" value="3000"/>
+<string name="_outlink" value="Npc/1541158.img/stand/0"/>
+</canvas>
+</imgdir>
+</imgdir>

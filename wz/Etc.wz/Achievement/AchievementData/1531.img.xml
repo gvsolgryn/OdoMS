@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1531.img">
+<imgdir name="info">
+<string name="name" value="[불꽃늑대] 때론 늑대처럼 때론 불꽃처럼"/>
+<string name="desc" value="익스트림 불꽃늑대 레이드 적당한/상당한/치명적인 데미지 등급 달성 후 보상 수령"/>
+<int name="score" value="30"/>
+<string name="mainCategory" value="battle"/>
+<string name="subCategory" value="field"/>
+<string name="difficulty" value="epic"/>
+<imgdir name="uiType">
+<string name="uiForm" value="mission"/>
+</imgdir>
+</imgdir>
+<imgdir name="mission">
+<imgdir name="0">
+<string name="name" value="적당한 데미지 등급 달성 후 보상 수령"/>
+<string name="keyword" value="적당한 데미지 등급 달성"/>
+<imgdir name="subMission">
+<imgdir name="script">
+<imgdir name="score">
+<long name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+</imgdir>
+<imgdir name="checkValue">
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="1">
+<string name="name" value="상당한 데미지 등급 달성 후 보상 수령"/>
+<string name="keyword" value="상당한 데미지 등급 달성"/>
+<imgdir name="subMission">
+<imgdir name="script">
+<imgdir name="score">
+<long name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+</imgdir>
+<imgdir name="checkValue">
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="2">
+<string name="name" value="치명적인 데미지 등급 달성 후 보상 수령"/>
+<string name="keyword" value="치명적인 데미지 등급 달성"/>
+<imgdir name="subMission">
+<imgdir name="script">
+<imgdir name="score">
+<long name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+</imgdir>
+<imgdir name="checkValue">
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

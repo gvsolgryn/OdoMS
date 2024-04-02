@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="603.img">
+<imgdir name="info">
+<string name="name" value="[불꽃늑대] 불을 먹는 사냥꾼"/>
+<string name="desc" value="불꽃늑대 마지막 타격 후 보상 수령"/>
+<string name="keyword" value="불꽃늑대 마지막 타격"/>
+<int name="score" value="40"/>
+<string name="block" value="block"/>
+<string name="mainCategory" value="memory"/>
+<string name="subCategory" value="memory"/>
+<string name="difficulty" value="unique"/>
+<imgdir name="uiType">
+<string name="gauge" value="submission_info"/>
+<string name="gaugeSubMission" value="script"/>
+</imgdir>
+</imgdir>
+<imgdir name="mission">
+<imgdir name="0">
+<string name="name" value="[불꽃늑대] 불꽃늑대 마지막 타격하기"/>
+<imgdir name="subMission">
+<imgdir name="script">
+<imgdir name="score">
+<long name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+</imgdir>
+<imgdir name="checkValue">
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

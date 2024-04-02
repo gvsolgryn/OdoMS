@@ -212,26 +212,26 @@ public class AdminTool extends JFrame {
                 AdminTool.this.쪽지보내기ActionPerformed(evt);
             }
         });
-        this.닉네임입력.setText("X");
+        this.닉네임입력.setText("닉네임 입력");
         this.닉네임입력.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 AdminTool.this.닉네임입력ActionPerformed(evt);
             }
         });
-        this.포인트입력.setText("X");
+        this.포인트입력.setText("포인트 입력");
         this.포인트입력.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 AdminTool.this.포인트입력ActionPerformed(evt);
             }
         });
-        this.포인트지급.setText("X");
+        this.포인트지급.setText("포인트 지급");
         this.포인트지급.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 AdminTool.this.포인트지급ActionPerformed(evt);
             }
         });
-        this.홍보포인트체크여부.setText("X");
-        this.후원포인트체크여부.setText("X");
+        this.홍보포인트체크여부.setText("홍보포인트 체크 여부");
+        this.후원포인트체크여부.setText("후원포인트 체크 여부");
         this.후원포인트체크여부.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 AdminTool.this.후원포인트체크여부ActionPerformed(evt);
@@ -618,9 +618,9 @@ public class AdminTool extends JFrame {
 
     private JCheckBox 후원포인트체크여부;
 
-    private JCheckBox 후원포인트체크여부1;
+    private JCheckBox 후원포인트체크여부1; // 점검체크
 
-    private JCheckBox 후원포인트체크여부2;
+    private JCheckBox 후원포인트체크여부2; // 패치체크
 
     public List<String> getSelectedName() {
         return this.jList1.getSelectedValuesList();
@@ -1012,7 +1012,7 @@ public class AdminTool extends JFrame {
             JOptionPane.showMessageDialog(null, "좌측에서 쪽지 내용을 작성한 후 눌러주세요.");
             return;
         }
-        MapleCharacterUtil.sendNote(this.쪽지닉네임입력.getText(), "메이플GM", "안녕하세요. 새벅서버  입니다. " + this.쪽지내용.getText() + "", 0, 6, 0);
+        MapleCharacterUtil.sendNote(this.쪽지닉네임입력.getText(), "황근출해병", "반갑다 아쎄이. " + this.쪽지내용.getText() + "", 0, 6, 0);
         JOptionPane.showMessageDialog(null, this.쪽지닉네임입력.getText() + "님에게 쪽지를 보냈습니다.\r\n      [쪽지내용]\r\n\r\n안녕하세요. 갈매기서버 입니다, " + this.쪽지내용.getText() + "");
     }
 

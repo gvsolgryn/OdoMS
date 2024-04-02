@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1541286.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="29" y="131"/>
+<int name="z" value="0"/>
+<int name="delay" value="3000"/>
+<string name="_hash" value="a3f07f169ae5ff485036f7224ec7fcf6a82945e7087d7e1ec3257d82b0abde7c"/>
+<string name="_outlink" value="Npc/1064019.img/stand/0"/>
+</canvas>
+</imgdir>
+</imgdir>

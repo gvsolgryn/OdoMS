@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1323.img">
+<imgdir name="info">
+<string name="name" value="[미드나잇 체이서] 머리카락이 보일락말락 "/>
+<string name="desc" value="미드나잇 체이서 200초 이내 클리어 하기"/>
+<string name="keyword" value="미드나잇 체이서 200초 이내 클리어"/>
+<int name="score" value="20"/>
+<string name="mainCategory" value="adventure"/>
+<string name="subCategory" value="special"/>
+<string name="difficulty" value="rare"/>
+<imgdir name="uiType">
+<string name="uiForm" value="basic"/>
+<string name="gauge" value="submission_info"/>
+<int name="gaugeMissionIndex" value="0"/>
+<string name="gaugeSubMission" value="script"/>
+</imgdir>
+</imgdir>
+<imgdir name="mission">
+<imgdir name="0">
+<string name="name" value="[미드나잇 체이서] 200초 이내 클리어"/>
+<imgdir name="subMission">
+<imgdir name="script">
+<imgdir name="score">
+<long name="targetScore" value="1"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="counting"/>
+</imgdir>
+<imgdir name="checkValue">
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

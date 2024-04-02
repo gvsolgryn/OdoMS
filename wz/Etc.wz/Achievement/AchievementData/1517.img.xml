@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1517.img">
+<imgdir name="info">
+<string name="name" value="[유니온 공격대] 놀라운걸요, 대단한 전투력입니다!"/>
+<string name="desc" value="유니온 공격대 전투력 6억 달성"/>
+<int name="sync" value="1"/>
+<int name="score" value="40"/>
+<string name="mainCategory" value="growth"/>
+<string name="subCategory" value="union"/>
+<string name="difficulty" value="unique"/>
+<imgdir name="uiType">
+<string name="uiForm" value="mission"/>
+</imgdir>
+<imgdir name="prior">
+<int name="achievement_id" value="1516"/>
+</imgdir>
+</imgdir>
+<imgdir name="mission">
+<imgdir name="0">
+<string name="name" value="유니온 공격대 전투력 6억 달성"/>
+<imgdir name="subMission">
+<imgdir name="union_attacker_power_change">
+<imgdir name="score">
+<long name="targetScore" value="600000000"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+<string name="type" value="set"/>
+<string name="setGroup" value="union_info"/>
+<string name="setValue" value="union_attacker_power_total"/>
+</imgdir>
+<imgdir name="checkValue">
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

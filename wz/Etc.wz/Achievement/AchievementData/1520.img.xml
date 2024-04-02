@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1520.img">
+<imgdir name="info">
+<int name="parentId" value="1525"/>
+<string name="name" value="[유니온 코인] 드래곤을 잡았습니다"/>
+<string name="desc" value="유니온 코인 누적 1000개 획득"/>
+<string name="keyword" value="유니온 코인 누적 획득"/>
+<int name="score" value="10"/>
+<string name="mainCategory" value="growth"/>
+<string name="subCategory" value="union"/>
+<imgdir name="uiType">
+<string name="gauge" value="submission_info"/>
+<string name="gaugeSubMission" value="script"/>
+</imgdir>
+</imgdir>
+<imgdir name="mission">
+<imgdir name="0">
+<string name="name" value="[유니온] 유니온 코인 누적 1000개 획득"/>
+<imgdir name="subMission">
+<imgdir name="script">
+<imgdir name="score">
+<long name="targetScore" value="1000"/>
+<string name="compare" value="greater_than_or_equal_to"/>
+</imgdir>
+<imgdir name="checkValue">
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>
+</imgdir>

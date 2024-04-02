@@ -250,8 +250,8 @@ public class MapleSaveHandler implements Runnable {
       } 
       for (MapleCharacter chr2 : chrs) {
         chr2.gainCabinetItem(2434311, 1);
-        chr2.dropMessage(1, "[HOT] 갈매기 핫타임 - 접속 보상이 지급되었습니다. 메이플 보관함을 확인해주세요.");
-        chr2.dropMessage(6, "[HOT] 갈매기 핫타임 - 접속 보상이 지급되었습니다. 메이플 보관함을 확인해주세요.");
+        chr2.dropMessage(1, "[HOT] 핫타임 - 접속 보상이 지급되었습니다. 메이플 보관함을 확인해주세요.");
+        chr2.dropMessage(6, "[HOT] 핫타임 - 접속 보상이 지급되었습니다. 메이플 보관함을 확인해주세요.");
       } 
       
     } else if ((new Date()).getHours() != 21 && (new Date()).getMinutes() != 0 && this.give == true) {

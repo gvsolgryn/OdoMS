@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062760.img">
+<imgdir name="info">
+<imgdir name="speak">
+<string name="0" value="n0"/>
+<string name="1" value="n1"/>
+</imgdir>
+<imgdir name="script">
+<imgdir name="0">
+<string name="script" value="npc_9062760"/>
+</imgdir>
+</imgdir>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="41" y="81"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="c3fac420f2544b8dfc684844aeff7ee6b23de5a6053f7ca18fd24d53681cd4c0"/>
+<string name="_outlink" value="Npc/9062755.img/stand/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="41" y="80"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="fbdf4c19cc7ab0ed134f014e4e1f6509dfdc5e52fc5f94b0713d9671766ed11c"/>
+<string name="_outlink" value="Npc/9062755.img/stand/1"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="41" y="78"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="3d6bdfc644e19cc5f80fba7a4697f447be56563caa69659d5aeb7cd5dab46880"/>
+<string name="_outlink" value="Npc/9062755.img/stand/2"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="41" y="79"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_hash" value="4224dd0e02705b6aa28406871362a4d5140e2f569a7d014dc672ef3d0579fb36"/>
+<string name="_outlink" value="Npc/9062755.img/stand/3"/>
+</canvas>
+<canvas name="4" width="1" height="1">
+<vector name="origin" x="41" y="81"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/0"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="41" y="80"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/1"/>
+</canvas>
+<canvas name="6" width="1" height="1">
+<vector name="origin" x="41" y="78"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/2"/>
+</canvas>
+<canvas name="7" width="1" height="1">
+<vector name="origin" x="41" y="79"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/3"/>
+</canvas>
+</imgdir>
+<imgdir name="eye">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="41" y="81"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="41" y="80"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/1"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="41" y="78"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/2"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="41" y="79"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/3"/>
+</canvas>
+<canvas name="4" width="1" height="1">
+<vector name="origin" x="41" y="81"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/0"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="41" y="80"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/1"/>
+</canvas>
+<canvas name="6" width="1" height="1">
+<vector name="origin" x="41" y="78"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/2"/>
+</canvas>
+<canvas name="7" width="1" height="1">
+<vector name="origin" x="41" y="79"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/3"/>
+</canvas>
+</imgdir>
+<imgdir name="say">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="41" y="81"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/0"/>
+</canvas>
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="41" y="80"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/1"/>
+</canvas>
+<canvas name="2" width="1" height="1">
+<vector name="origin" x="41" y="78"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/2"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="41" y="79"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/3"/>
+</canvas>
+<canvas name="4" width="1" height="1">
+<vector name="origin" x="41" y="81"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/0"/>
+</canvas>
+<canvas name="5" width="1" height="1">
+<vector name="origin" x="41" y="80"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/1"/>
+</canvas>
+<canvas name="6" width="1" height="1">
+<vector name="origin" x="41" y="78"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/2"/>
+</canvas>
+<canvas name="7" width="1" height="1">
+<vector name="origin" x="41" y="79"/>
+<int name="z" value="0"/>
+<int name="delay" value="210"/>
+<string name="_outlink" value="Npc/9062755.img/stand/3"/>
+</canvas>
+</imgdir>
+<imgdir name="condition2">
+<int name="hide" value="1"/>
+<imgdir name="502363">
+<imgdir name="0">
+<string name="key" value="hide"/>
+<string name="value" value="0"/>
+</imgdir>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+</canvas>
+</imgdir>
+<imgdir name="eye">
+<canvas name="0" width="1" height="1">
+</canvas>
+</imgdir>
+<imgdir name="say">
+<canvas name="0" width="1" height="1">
+</canvas>
+</imgdir>
+<imgdir name="dance">
+<canvas name="0" width="1" height="1">
+</canvas>
+</imgdir>
+</imgdir>
+</imgdir>

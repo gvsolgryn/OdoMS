@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062711.img">
+<imgdir name="info">
+<imgdir name="script">
+<imgdir name="0">
+<string name="script" value="npc_9062711"/>
+</imgdir>
+</imgdir>
+<imgdir name="speak">
+<string name="0" value="n0"/>
+<string name="1" value="n1"/>
+</imgdir>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="55" height="89">
+<vector name="origin" x="27" y="89"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="04625f118805f2ea9b87895d7c722783f97397e794825448d65e0c5646306d30"/>
+</canvas>
+<canvas name="1" width="55" height="90">
+<vector name="origin" x="27" y="90"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="7b7e5b9b6d1d108835e30403e758f52d4a2ad733b435c3217079e9ac2defc8b6"/>
+</canvas>
+<canvas name="2" width="55" height="90">
+<vector name="origin" x="27" y="90"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="c0ad06333716f2388bbdfe5e26922eb3273b55b6adec4798c708b1a13c374148"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="27" y="90"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_inlink" value="stand/1"/>
+</canvas>
+</imgdir>
+<imgdir name="eye">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="27" y="89"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+<canvas name="1" width="55" height="90">
+<vector name="origin" x="27" y="90"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="9f4a2def6e0b5ca026d5fac0783dcddbcaad330dee45d994100b6f3f02095d7f"/>
+</canvas>
+<canvas name="2" width="55" height="90">
+<vector name="origin" x="27" y="90"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="e6c56045d504b7ff3c15a0ad96abd270a3e831e297269c5068d4b828908a7790"/>
+</canvas>
+</imgdir>
+<imgdir name="say">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="27" y="89"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+<canvas name="1" width="55" height="90">
+<vector name="origin" x="27" y="90"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="68bf879ea19c53539be37d8f825934aa8e7a24c46d5b16043d8d212cead70ffd"/>
+</canvas>
+<canvas name="2" width="55" height="90">
+<vector name="origin" x="27" y="90"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="5836d24e6065cd0658b33a9fdc5dde2f3959a940883d4d3d904b160c13e73df8"/>
+</canvas>
+<canvas name="3" width="1" height="1">
+<vector name="origin" x="27" y="90"/>
+<int name="z" value="0"/>
+<int name="delay" value="180"/>
+<string name="_inlink" value="say/1"/>
+</canvas>
+</imgdir>
+</imgdir>

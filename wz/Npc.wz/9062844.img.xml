@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="9062844.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="150" y="200"/>
+<int name="z" value="0"/>
+<string name="_hash" value="2a9d36aa737cc57e171920f250231a837d10a33767f7aa424fe5a36a0b9a65a2"/>
+<string name="_outlink" value="Npc/9062843.img/stand/0"/>
+</canvas>
+</imgdir>
+<imgdir name="special1">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="150" y="200"/>
+<int name="z" value="0"/>
+<string name="_hash" value="d4fb3e680d814e33850587391af9e40dcea7e7897b39584fb1392a16d7fb72a0"/>
+<string name="_outlink" value="Npc/9062843.img/condition1/stand/0"/>
+</canvas>
+<int name="special" value="1"/>
+</imgdir>
+<imgdir name="special2">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="150" y="200"/>
+<int name="z" value="0"/>
+<string name="_hash" value="305daab2833c8ccbd2e70f6baeaf97a23781d7281452af39b467c1cde3491cff"/>
+<string name="_outlink" value="Npc/9062843.img/condition2/stand/0"/>
+</canvas>
+<int name="special" value="1"/>
+</imgdir>
+<imgdir name="special3">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="150" y="200"/>
+<int name="z" value="0"/>
+<string name="_hash" value="5f86c8c41d43185df85682cdbf1220cb100a11092841e343d41cc5bab86ed1f4"/>
+<string name="_outlink" value="Npc/9062843.img/condition3/stand/0"/>
+</canvas>
+<int name="special" value="1"/>
+</imgdir>
+</imgdir>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1541235.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="59" height="80">
+<vector name="origin" x="26" y="80"/>
+<int name="z" value="0"/>
+<string name="_hash" value="6736d2bfcde010e15a1e227f7a9b086bc71a8a5dea909f927ab68d7d77b69c42"/>
+</canvas>
+</imgdir>
+<imgdir name="eye">
+<canvas name="0" width="1" height="1">
+<vector name="origin" x="26" y="80"/>
+<int name="z" value="0"/>
+<string name="_inlink" value="stand/0"/>
+</canvas>
+<canvas name="1" width="59" height="80">
+<vector name="origin" x="26" y="80"/>
+<int name="z" value="0"/>
+<string name="_hash" value="4b13046ec686d018240e784aa767b2fad8c0c9fc9153feed3701ff7c67bf0114"/>
+</canvas>
+<canvas name="2" width="59" height="80">
+<vector name="origin" x="26" y="80"/>
+<int name="z" value="0"/>
+<string name="_hash" value="1e894d091a89a3ee56ebee61a87d8bdd080114fa5bd23cabb7f836998a604bc2"/>
+</canvas>
+</imgdir>
+</imgdir>

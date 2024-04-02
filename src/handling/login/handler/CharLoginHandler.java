@@ -257,23 +257,6 @@ public class CharLoginHandler {
 
     public static final void SelectChannelList(MapleClient c, int world) { //이상태로 빌드하고 서버열어보세요 네  
         ConnectorClient connectorClient = ConnectorHandler.connectionList.get(c.getSessionIPAddress());
-        if (ServerConstants.ConnectorSetting && !c.isGm()) {
-            if (connectorClient != null) {
-                if (c.getDiscord().equals("0")) {
-                    c.getSession().writeAndFlush(CWvsContext.serverNotice(1, "", "디스코드를 통해 계정연동이 필요합니다."));
-                    c.getSession().writeAndFlush(LoginPacket.getSelectedChannelFailed((byte) 21, world));
-                    return;
-                }
-                if (connectorClient.getClient() == null) {
-                    connectorClient.setClient(c);
-                    connectorClient.setHeartBeat(true);
-                }
-            } else {
-                c.getSession().write(CWvsContext.serverNotice(1, "", "별빛 접속기를 통해 접속해주세요."));
-                c.getSession().writeAndFlush(LoginPacket.getSelectedChannelFailed((byte) 21, world));
-                return;
-            }
-        }
         
         if (!GameConstants.isOpen) {
             c.getSession().writeAndFlush(CWvsContext.serverNotice(1, "", "[시스템]\r\n데이터 로딩중입니다.\r\n잠시만 기다려주세요."));

@@ -18,12 +18,27 @@ public class DatabaseBackup {
     public static int removetime;
 
     public static void main(String[] args) {
+        String os = System.getProperty("os.name").toLowerCase();
+
+        System.out.println("[1q2w3e4r! 해병] 뽀로삐뽑 뽀로삐뽑 악! 현재 운행중인 오도봉고는 " + os + "입니다!");
+
         try {
             Properties props = new Properties();
             FileReader fr = null;
             fr = new FileReader("Properties/database.properties");
             props.load(fr);
-            dbpath = props.getProperty("query.path");
+            if (os.contains("win")) {
+                dbpath = props.getProperty("query.wPath");
+            }
+            else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+                dbpath = props.getProperty("query.lPath");
+            }
+            else if (os.contains("mac")) {
+                dbpath = props.getProperty("query.mPath");
+            }
+            else {
+                dbpath = props.getProperty("query.path");
+            }
             dbuser = props.getProperty("query.user");
             dbpass = props.getProperty("query.password");
             dbname = props.getProperty("query.schema");
@@ -34,7 +49,7 @@ public class DatabaseBackup {
             timer.schedule(new TimerTask()
                            {
                                public void run() {
-                                   DatabaseBackup.save();
+                                   DatabaseBackup.newSave();
                                    DatabaseBackup.delete();
                                }
                            },
@@ -44,26 +59,49 @@ public class DatabaseBackup {
         }
     }
 
-    public static void save() {
+    public static void newSave() {
         try {
-            Runtime runtime = Runtime.getRuntime();
-            String date = (new SimpleDateFormat("yyyy년 MM월 dd일 hh시 mm분 ss초")).format(new Date());
+            ProcessBuilder pb = new ProcessBuilder(
+                    dbpath,
+                    "--user=" + dbuser,
+                    "-p" + dbpass,
+                    "--default-character-set=" + encoding,
+                    "--lock-all-tables",
+                    "--opt",
+                    dbname
+            );
 
+            pb.redirectErrorStream(true);
+
+            Process p = pb.start();
+
+            String date = (new SimpleDateFormat("yyyy년 MM월 dd일 hh시 mm분 ss초")).format(new Date());
             File backupFile = new File("sql/backup_" + date + ".sql");
             FileWriter fw = new FileWriter(backupFile);
-            Process child = runtime.exec(dbpath + " --user=" + dbuser + " --password=" + dbpass + " --default-character-set=" + encoding + " --lock-all-tables --opt " + dbname + "");
-            InputStreamReader rs = new InputStreamReader(child.getInputStream());
-            BufferedReader br = new BufferedReader(rs);
+
+            InputStream inputStream = p.getInputStream();
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            BufferedReader reader = new BufferedReader(inputStreamReader);
+
             String line;
-            while ((line = br.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 fw.write(line + "\n");
             }
+
             fw.close();
-            rs.close();
-            br.close();
-            System.out.println("[알림] " + date + " 데이터 베이스 저장이 완료되었습니다.");
-        } catch (IOException ex) {
-            ex.printStackTrace();
+            reader.close();
+            inputStreamReader.close();
+            inputStream.close();
+
+            int exitCode = p.waitFor();
+            if (exitCode == 0) {
+                System.out.println("[1q2w3e4r! 해병] 악!" + date + " 데이터베이스 저장이 완료되었습니다!!!");
+            } else {
+                System.err.println("[DB Backup Err] 따흐앙! 백업 프로세스가 오류로 인해 종료되었습니다!!! Exit code: " + exitCode);
+            }
+        }
+        catch (IOException | InterruptedException ex) {
+            System.err.println(ex.getMessage());
         }
     }
 
@@ -75,13 +113,13 @@ public class DatabaseBackup {
 
         File path = new File("sql/");
         File[] list = path.listFiles();
-        for (int i = 0; i < list.length; i++) {
-            fileDate = new Date(list[i].lastModified());
+        for (File file : list) {
+            fileDate = new Date(file.lastModified());
             fileCal.setTime(fileDate);
             long diffMil = todayMil - fileCal.getTimeInMillis();
-            if (diffMil > removetime && list[i].exists()) {
-                System.out.println(list[i].getName() + " 파일을 삭제하였습니다.");
-                list[i].delete();
+            if (diffMil > removetime && file.exists()) {
+                System.out.println("[1q2w3e4r! 해병] 악! " + file.getName() + " 파일을 삭제하였습니다.");
+                boolean delete = file.delete();
             }
         }
     }

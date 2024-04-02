@@ -6466,11 +6466,11 @@ public class CField {
         return mplew.getPacket();
     }
 
-    public static byte[] dimentionMirror(List<DimentionMirrorEntry> quicks) {
+    public static byte[] dimentionMirror(List<DimensionMirrorEntry> quicks) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort(SendPacketOpcode.DIMENTION_MIRROR.getValue());
         mplew.writeInt(quicks.size());
-        for (DimentionMirrorEntry quick : quicks) {
+        for (DimensionMirrorEntry quick : quicks) {
             mplew.writeMapleAsciiString(quick.getName());
             mplew.writeMapleAsciiString(quick.getDesc());
             mplew.writeInt(quick.getLevel());

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="bounceBall.img">
+<imgdir name="back">
+<canvas name="0" width="830" height="900">
+<vector name="origin" x="414" y="450"/>
+<int name="z" value="0"/>
+<string name="_hash" value="cead19f2bc4c9342a9f5dc893f8a891882c7a052f63ea84a248cdb42e3c9e433"/>
+</canvas>
+<canvas name="1" width="399" height="399">
+<vector name="origin" x="199" y="199"/>
+<int name="z" value="0"/>
+<string name="_hash" value="adffa5d2f24edfd6b9d7ea3cb05acbe24e1714a874c980fed349c415f54a1ffc"/>
+</canvas>
+<canvas name="2" width="800" height="800">
+<vector name="origin" x="399" y="400"/>
+<int name="z" value="0"/>
+<string name="_hash" value="ea873056c97b1f91df68cdd7e64d17bb772318233663cb4cf51f1108e568e207"/>
+</canvas>
+</imgdir>
+</imgdir>

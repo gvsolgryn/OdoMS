@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="1541182.img">
+<imgdir name="info">
+<int name="hideName" value="1"/>
+</imgdir>
+<imgdir name="stand">
+<canvas name="0" width="104" height="95">
+<vector name="origin" x="58" y="83"/>
+<vector name="head" x="-2" y="-76"/>
+<vector name="lt" x="-58" y="-83"/>
+<vector name="rb" x="46" y="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="374b1a67a3d2fd24be48f88a56b01890cb624ce37c2643dfcc63d3012267d1e6"/>
+</canvas>
+<canvas name="1" width="104" height="95">
+<vector name="origin" x="58" y="83"/>
+<vector name="head" x="-2" y="-76"/>
+<vector name="lt" x="-58" y="-83"/>
+<vector name="rb" x="46" y="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="885fa1ff0b83fd77b16c927190365c294dae4fca870739ec12c164bc2785cdb8"/>
+</canvas>
+<canvas name="2" width="104" height="95">
+<vector name="origin" x="58" y="83"/>
+<vector name="head" x="-2" y="-76"/>
+<vector name="lt" x="-58" y="-83"/>
+<vector name="rb" x="46" y="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="ccd210fae8ea57f1135e872681fb4d5c0ecf058260635230b22cfe088a2aaa6e"/>
+</canvas>
+<canvas name="3" width="104" height="95">
+<vector name="origin" x="58" y="83"/>
+<vector name="head" x="-2" y="-76"/>
+<vector name="lt" x="-58" y="-83"/>
+<vector name="rb" x="46" y="0"/>
+<int name="delay" value="180"/>
+<string name="_hash" value="ebcbd74192359d5dcf5f68809d45ebef3bf0973bb2b15fbf101f5d2efc48b6d2"/>
+</canvas>
+</imgdir>
+</imgdir>

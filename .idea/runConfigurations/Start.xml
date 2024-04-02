@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Start" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="server.Start" />
+    <module name="OdoMS" />
+    <option name="PROGRAM_PARAMETERS" value="-Dnet.sf.odinms.wzpath=wz" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

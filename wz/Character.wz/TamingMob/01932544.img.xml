@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="01932544.img">
+<imgdir name="info">
+<canvas name="icon" width="32" height="32">
+<vector name="origin" x="0" y="32"/>
+<string name="_hash" value="32fb15dc728e13aface8c181e466a7f049b03509db7a27666b109f3b96eb1464"/>
+</canvas>
+<uol name="iconRaw" value="icon"/>
+<string name="islot" value="Tm"/>
+<string name="vslot" value="Tm"/>
+<int name="slotMax" value="1"/>
+<int name="reqJob" value="0"/>
+<int name="reqLevel" value="1"/>
+<int name="tuc" value="0"/>
+<int name="tamingMob" value="2"/>
+<int name="tradeBlock" value="1"/>
+<int name="notSale" value="1"/>
+<int name="only" value="1"/>
+<int name="vehicleNewFlyingLevel" value="1"/>
+<int name="vehicleSkillIsTown" value="1"/>
+<int name="removeJobWing" value="1"/>
+<int name="invisibleCape" value="1"/>
+</imgdir>
+<imgdir name="walk1">
+<imgdir name="0">
+<canvas name="0" width="155" height="164">
+<vector name="origin" x="61" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-35"/>
+</imgdir>
+<string name="_hash" value="06e6f3dd8ab52f29a9a171f3d984ed904efbcd052264d51a7f10aec7b51bf884"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="1">
+<canvas name="0" width="153" height="164">
+<vector name="origin" x="61" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-36"/>
+</imgdir>
+<string name="_hash" value="d04f82763efef887b4d628a60d993d2629a336e53f758ec0553e925fd5636d65"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="2">
+<canvas name="0" width="151" height="164">
+<vector name="origin" x="60" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-37"/>
+</imgdir>
+<string name="_hash" value="29158f3867dc9f7ef95812c3346878721aaa0fe6666369342473f1b22bb93acc"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="3">
+<canvas name="0" width="148" height="163">
+<vector name="origin" x="59" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-38"/>
+</imgdir>
+<string name="_hash" value="4225530ebf95b165337f38100a256899964064e2af416decb8854564d5087c76"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="4">
+<canvas name="0" width="135" height="163">
+<vector name="origin" x="54" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-37"/>
+</imgdir>
+<string name="_hash" value="2050bebc104cdcba42701952a7ea1b56750c7ecba0f846bf868991c4c70ffbab"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="5">
+<canvas name="0" width="135" height="163">
+<vector name="origin" x="54" y="123"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-36"/>
+</imgdir>
+<string name="_hash" value="bc633720123b50cda4bc26cc2fb085274d7251ae9248d08859eefcd3ed23d567"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="6">
+<canvas name="0" width="140" height="164">
+<vector name="origin" x="55" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-36"/>
+</imgdir>
+<string name="_hash" value="44271e77b7b841c30e3fc3ccf39302b2993bf16e2ebc4a421a194f82cce0d78f"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="7">
+<canvas name="0" width="145" height="164">
+<vector name="origin" x="55" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-35"/>
+</imgdir>
+<string name="_hash" value="25b82176d1600ef047041895d516683467182c0421c6b3777c06020d8148d311"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="8">
+<canvas name="0" width="155" height="164">
+<vector name="origin" x="61" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-35"/>
+</imgdir>
+<string name="_hash" value="4ff09c662e264da2c9909a981560c78233254cf9ebef71530b5bf2ff52bb014e"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="9">
+<canvas name="0" width="153" height="164">
+<vector name="origin" x="61" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-36"/>
+</imgdir>
+<string name="_hash" value="fd9d7d9a8c1f193747a6b42c02c0c4a2488450ddfbd3b14fa62cc5d69b4e9b73"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="10">
+<canvas name="0" width="151" height="164">
+<vector name="origin" x="60" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-37"/>
+</imgdir>
+<string name="_hash" value="c9587af2202c9d36b51a3c32e060324c9b37b30f3f4d819f3f3166b35c11bf24"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="11">
+<canvas name="0" width="148" height="163">
+<vector name="origin" x="58" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-38"/>
+</imgdir>
+<string name="_hash" value="bfb808bd5362aeadbddbef171029bd786b5c1a7770a5ff1f883dacd8a7644663"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="12">
+<canvas name="0" width="135" height="163">
+<vector name="origin" x="54" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-38"/>
+</imgdir>
+<string name="_hash" value="b5c7768ded82b800e6e073f1c6dcc0b94e6cf9a9ed03f0a8ab6e79eb9ba3be33"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="13">
+<canvas name="0" width="135" height="163">
+<vector name="origin" x="54" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-37"/>
+</imgdir>
+<string name="_hash" value="05019a5a4c6daeaea58f20814456fef106ae707b0e20a0497f0525968114e742"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="14">
+<canvas name="0" width="140" height="164">
+<vector name="origin" x="53" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-36"/>
+</imgdir>
+<string name="_hash" value="7ae427b57b8fa1f3bb6ea804c5964a3c7957c327162215ed6ae18cbff443110b"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+<imgdir name="15">
+<canvas name="0" width="145" height="164">
+<vector name="origin" x="55" y="124"/>
+<string name="z" value="tamingMobRear"/>
+<vector name="lt" x="-65" y="-137"/>
+<vector name="rb" x="73" y="8"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-35"/>
+</imgdir>
+<string name="_hash" value="66c40c818dde3d40610184d902da9b1075bdd4f9d91db3f58fcc792b0692ba5a"/>
+</canvas>
+<int name="delay" value="150"/>
+</imgdir>
+</imgdir>
+<imgdir name="walk2">
+<uol name="0" value="../walk1/0"/>
+<uol name="1" value="../walk1/1"/>
+<uol name="2" value="../walk1/2"/>
+<uol name="3" value="../walk1/3"/>
+<uol name="4" value="../walk1/4"/>
+<uol name="5" value="../walk1/5"/>
+<uol name="6" value="../walk1/6"/>
+<uol name="7" value="../walk1/7"/>
+<uol name="8" value="../walk1/8"/>
+<uol name="9" value="../walk1/9"/>
+<uol name="10" value="../walk1/10"/>
+<uol name="11" value="../walk1/11"/>
+<uol name="12" value="../walk1/12"/>
+<uol name="13" value="../walk1/13"/>
+<uol name="14" value="../walk1/14"/>
+<uol name="15" value="../walk1/15"/>
+</imgdir>
+<imgdir name="stand1">
+<uol name="0" value="../walk1/0"/>
+<uol name="1" value="../walk1/1"/>
+<uol name="2" value="../walk1/2"/>
+<uol name="3" value="../walk1/3"/>
+<uol name="4" value="../walk1/4"/>
+<uol name="5" value="../walk1/5"/>
+<uol name="6" value="../walk1/6"/>
+<uol name="7" value="../walk1/7"/>
+<uol name="8" value="../walk1/8"/>
+<uol name="9" value="../walk1/9"/>
+<uol name="10" value="../walk1/10"/>
+<uol name="11" value="../walk1/11"/>
+<uol name="12" value="../walk1/12"/>
+<uol name="13" value="../walk1/13"/>
+<uol name="14" value="../walk1/14"/>
+<uol name="15" value="../walk1/15"/>
+</imgdir>
+<imgdir name="stand2">
+<uol name="0" value="../walk1/0"/>
+<uol name="1" value="../walk1/1"/>
+<uol name="2" value="../walk1/2"/>
+<uol name="3" value="../walk1/3"/>
+<uol name="4" value="../walk1/4"/>
+<uol name="5" value="../walk1/5"/>
+<uol name="6" value="../walk1/6"/>
+<uol name="7" value="../walk1/7"/>
+<uol name="8" value="../walk1/8"/>
+<uol name="9" value="../walk1/9"/>
+<uol name="10" value="../walk1/10"/>
+<uol name="11" value="../walk1/11"/>
+<uol name="12" value="../walk1/12"/>
+<uol name="13" value="../walk1/13"/>
+<uol name="14" value="../walk1/14"/>
+<uol name="15" value="../walk1/15"/>
+</imgdir>
+<imgdir name="tired">
+<uol name="0" value="../walk1/0"/>
+<uol name="1" value="../walk1/1"/>
+<uol name="2" value="../walk1/2"/>
+<uol name="3" value="../walk1/3"/>
+<uol name="4" value="../walk1/4"/>
+<uol name="5" value="../walk1/5"/>
+<uol name="6" value="../walk1/6"/>
+<uol name="7" value="../walk1/7"/>
+<uol name="8" value="../walk1/8"/>
+<uol name="9" value="../walk1/9"/>
+<uol name="10" value="../walk1/10"/>
+<uol name="11" value="../walk1/11"/>
+<uol name="12" value="../walk1/12"/>
+<uol name="13" value="../walk1/13"/>
+<uol name="14" value="../walk1/14"/>
+<uol name="15" value="../walk1/15"/>
+</imgdir>
+<imgdir name="jump">
+<uol name="0" value="../walk1/0"/>
+<uol name="1" value="../walk1/1"/>
+<uol name="2" value="../walk1/2"/>
+<uol name="3" value="../walk1/3"/>
+<uol name="4" value="../walk1/4"/>
+<uol name="5" value="../walk1/5"/>
+<uol name="6" value="../walk1/6"/>
+</imgdir>
+<imgdir name="prone">
+<uol name="0" value="../walk1/0"/>
+<uol name="1" value="../walk1/1"/>
+<uol name="2" value="../walk1/2"/>
+<uol name="3" value="../walk1/3"/>
+<uol name="4" value="../walk1/4"/>
+<uol name="5" value="../walk1/5"/>
+<uol name="6" value="../walk1/6"/>
+<uol name="7" value="../walk1/7"/>
+<uol name="8" value="../walk1/8"/>
+<uol name="9" value="../walk1/9"/>
+<uol name="10" value="../walk1/10"/>
+<uol name="11" value="../walk1/11"/>
+<uol name="12" value="../walk1/12"/>
+<uol name="13" value="../walk1/13"/>
+<uol name="14" value="../walk1/14"/>
+<uol name="15" value="../walk1/15"/>
+</imgdir>
+<imgdir name="ladder">
+<imgdir name="0">
+<canvas name="0" width="149" height="151">
+<vector name="origin" x="68" y="131"/>
+<string name="z" value="tamingMobMid"/>
+<vector name="lt" x="-41" y="-135"/>
+<vector name="rb" x="48" y="-17"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-48"/>
+</imgdir>
+<string name="_hash" value="d91acaf6fc7d3f42894de4b1f882640f56f72cf0485758382e3d49ac8515998b"/>
+</canvas>
+<int name="delay" value="180"/>
+</imgdir>
+<imgdir name="1">
+<canvas name="1" width="144" height="151">
+<vector name="origin" x="66" y="131"/>
+<string name="z" value="tamingMobMid"/>
+<vector name="lt" x="-41" y="-135"/>
+<vector name="rb" x="48" y="-17"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-48"/>
+</imgdir>
+<string name="_hash" value="7da366b56298d7ff562d512829c37debbb7edd47d14a41be04edcc7867f9b72c"/>
+</canvas>
+<int name="delay" value="180"/>
+</imgdir>
+</imgdir>
+<imgdir name="rope">
+<imgdir name="0">
+<canvas name="0" width="149" height="151">
+<vector name="origin" x="68" y="131"/>
+<string name="z" value="tamingMobMid"/>
+<vector name="lt" x="-41" y="-135"/>
+<vector name="rb" x="48" y="-17"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-48"/>
+</imgdir>
+<string name="_hash" value="16a29482b8c83f9900de100c9700dfad22a6d7e2c0f0aa66f65da8544a00dc78"/>
+</canvas>
+<int name="delay" value="180"/>
+</imgdir>
+<imgdir name="1">
+<canvas name="1" width="1" height="1">
+<vector name="origin" x="66" y="131"/>
+<string name="z" value="tamingMobMid"/>
+<vector name="lt" x="-41" y="-135"/>
+<vector name="rb" x="48" y="-17"/>
+<imgdir name="map">
+<vector name="navel" x="2" y="-48"/>
+</imgdir>
+<string name="_inlink" value="ladder/1/1"/>
+</canvas>
+<int name="delay" value="180"/>
+</imgdir>
+</imgdir>
+<imgdir name="fly">
+<uol name="0" value="../walk1/0"/>
+<uol name="1" value="../walk1/1"/>
+<uol name="2" value="../walk1/2"/>
+<uol name="3" value="../walk1/3"/>
+<uol name="4" value="../walk1/4"/>
+<uol name="5" value="../walk1/5"/>
+<uol name="6" value="../walk1/6"/>
+<uol name="7" value="../walk1/7"/>
+<uol name="8" value="../walk1/8"/>
+<uol name="9" value="../walk1/9"/>
+<uol name="10" value="../walk1/10"/>
+<uol name="11" value="../walk1/11"/>
+<uol name="12" value="../walk1/12"/>
+<uol name="13" value="../walk1/13"/>
+<uol name="14" value="../walk1/14"/>
+<uol name="15" value="../walk1/15"/>
+</imgdir>
+<imgdir name="characterAction">
+<string name="prone" value="fly"/>
+<string name="walk1" value="fly"/>
+<string name="walk2" value="fly"/>
+<string name="stand1" value="fly"/>
+<string name="stand2" value="fly"/>
+<string name="jump" value="fly"/>
+<string name="alert" value="fly"/>
+</imgdir>
+</imgdir>
