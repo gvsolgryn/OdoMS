@@ -18185,19 +18185,23 @@ public class MapleCharacter extends AnimatedMapleMapObject implements Serializab
         try {
             con = DatabaseConnection.getConnection();
             if (type == 0) {
+                /*
                 dbline = "SELECT * FROM characters WHERE gm = 0 ORDER BY bounsfish DESC LIMIT 10";
                 ps = con.prepareStatement(dbline);
                 rs = ps.executeQuery();
                 while (rs.next()) {
                     data.add(new Triple<>(String.valueOf(rs.getInt("bounsfish")), rs.getString("name"), ""));
                 }
+                */
             } else if (type == 1) {
+                /*
                 dbline = "SELECT * FROM characters WHERE gm = 0 ORDER BY bounsvdance DESC LIMIT 10";
                 ps = con.prepareStatement(dbline);
                 rs = ps.executeQuery();
                 while (rs.next()) {
                     data.add(new Triple<>(HelpTools.CalcComa(rs.getInt("bounsvdance")), rs.getString("name"), ""));
                 }
+                 */
             } else if (type == 2) {
                 dbline = "SELECT * FROM characters WHERE gm = 0 ORDER BY meso DESC LIMIT 10";
                 ps = con.prepareStatement(dbline);

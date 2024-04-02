@@ -1,10 +1,4 @@
-/*
- * 
- */
-
 function enter(pi) {
-
-        pi.openNpc(2007, "jinHillah_enter")
-        return true;
-
+    pi.openNpcCustom(pi.getClient(), 1540446, "jinHillah_enter")
+    // return true;
 }

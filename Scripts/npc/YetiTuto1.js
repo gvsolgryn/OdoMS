@@ -331,6 +331,7 @@ function action(mode, type, selection) {
 	}
 }
 
+/*
 function sendByType(type, type2, text) {
 	switch (type) {
 		case "next":
@@ -347,6 +348,7 @@ function sendByType(type, type2, text) {
 			break;
 	}
 }
+*/
 
 function sendByType(type, type2, text, npc) {
 	switch (type) {

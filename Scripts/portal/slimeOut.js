@@ -4,7 +4,7 @@
 
 function enter(pi) {
 
-        pi.openNpc(9091025);
+        pi.openNpc(9091027);
         return true;
 
 }

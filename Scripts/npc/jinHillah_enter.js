@@ -25,8 +25,8 @@ function action(mode, type, selection) {
         talk += "#L2##b진 힐라 #Cgray#(익스트림) #k#r(레벨 250이상)#k#l\r\n";
         talk += "#L3##b진 힐라 #Cgray#(헬) #k#r(레벨 250이상)#k#l\r\n";
          cm.sendSimpleS(talk, 0x26);
-
-    } else if (status == 1) {
+    }
+    else if (status == 1) {
         st = selection;
         if (cm.getParty() == null) {
             cm.sendOkS("1인 이상 파티를 맺어야만 입장할 수 있습니다.", 0x26);
@@ -46,26 +46,27 @@ function action(mode, type, selection) {
             return;
         }
 
-                        	getData();
-                             	time = new Date();
-                                	year = time.getFullYear() % 100;
-                                	month2 = time.getMonth() + 1;
-                                	month = time.getMonth() + 1 < 10 ?  "0"+month2 : month2;
-                             	date2 = time.getDate() < 10 ? "0"+time.getDate() : time.getDate();
-                               	date = year+"/"+month+"/"+date2;
-                               	if (cm.getPlayer().getV_boss(""+setting[st][0]+"_" +date) == null) {
-                                 cm.getPlayer().addKV_boss(""+setting[st][0]+"_" +date, "0");
-                                 }
-                             	var it = cm.getPlayer().getParty().getMembers().iterator();
-                             	while (it.hasNext()) {
-                             	    var chr = it.next();
-                             	    var pchr = cm.getClient().getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
-                             	    if (pchr.getPlayer().getV_boss(""+setting[st][0]+"_" +date) >= 1) {
-                             	        cm.sendOk("파티원의 입장 횟수를 확인해주시길 바랍니다.");
-                             	        cm.dispose();
-                             	        return;
-                             	    }
-                             	}
+        getData();
+        time = new Date();
+        year = time.getFullYear() % 100;
+        month2 = time.getMonth() + 1;
+        month = time.getMonth() + 1 < 10 ?  "0"+month2 : month2;
+        date2 = time.getDate() < 10 ? "0"+time.getDate() : time.getDate();
+        date = year+"/"+month+"/"+date2;
+        if (cm.getPlayer().getV_boss(""+setting[st][0]+"_" +date) == null) {
+            cm.getPlayer().addKV_boss(""+setting[st][0]+"_" +date, "0");
+        }
+        var it = cm.getPlayer().getParty().getMembers().iterator();
+        while (it.hasNext()) {
+            var chr = it.next();
+            var pchr = cm.getClient().getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
+            if (pchr.getPlayer().getV_boss(""+setting[st][0]+"_" +date) >= 1) {
+                cm.sendOk("파티원의 입장 횟수를 확인해주시길 바랍니다.");
+                cm.dispose();
+
+                return;
+            }
+        }
 //        if (!cm.isBossAvailable(setting[st][0], setting[st][1])) {
 //            cm.sendOkS(cm.isBossString(setting[st][0]), 0x04, 9010061);
 //            cm.dispose();
@@ -86,51 +87,48 @@ function action(mode, type, selection) {
             cm.dispose();
             return;
         } else {
-             if (st == 0 || st == 1) {
-
-
-
-                     	    var it = cm.getPlayer().getParty().getMembers().iterator();
-                     	    while (it.hasNext()) {
-                     	    var chr = it.next();
-                     	    var pchr = cm.getClient().getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
-                     	    // pchr.getClient().setKeyValue_Boss(setting[st][0] + "_" + date, 1);
-                     	      pchr.getPlayer().addKV_boss(""+setting[st][0]+"_" +date, 1);
-                     	      cm.getPlayer().dropMessage(-1, " 보스 입장 : == " + (pchr.getV_boss(""+setting[st][0]+"_" +date)) + " || " + setting[st][0] );
-                            	}
-                                 em = cm.getEventManager(setting[st][0]);
-                                 if (em != null) {
-                                     cm.getEventManager(setting[st][0]).startInstance_Party(setting[st][2] + "", cm.getPlayer());
-                                 }
-                                 cm.addBoss(setting[st][0]);
-                                 cm.dispose();
+            if (st == 0 || st == 1) {
+                var it = cm.getPlayer().getParty().getMembers().iterator();
+                while (it.hasNext()) {
+                    var chr = it.next();
+                    var pchr = cm.getClient().getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
+                    // pchr.getClient().setKeyValue_Boss(setting[st][0] + "_" + date, 1);
+                    pchr.getPlayer().addKV_boss(""+setting[st][0]+"_" +date, 1);
+                    cm.getPlayer().dropMessage(-1, " 보스 입장 : == " + (pchr.getV_boss(""+setting[st][0]+"_" +date)) + " || " + setting[st][0] );
+                }
+                em = cm.getEventManager(setting[st][0]);
+                if (em != null) {
+                    cm.getEventManager(setting[st][0]).startInstance_Party(setting[st][2] + "", cm.getPlayer());
+                }
+                cm.addBoss(setting[st][0]);
+                cm.dispose();
             } else if (st == 2) {
                 cm.sendYesNoS("익스트림 모드에 입장을 선택하셨습니다. 익스트림 모드에서는 데미지가 50% 감소하지만, #b#e보다 강력한 장비 보상이 추가옵션과 함께 드롭됩니다.#n#k 해당 장비의 추가옵션은 #b#e이노센트 주문서 이용 시 함께 사라지며, 이는 복구가 불가능합니다.#k#n 입장하시겠습니까?", 4, 2007);
             } else if (st == 3) {
-	    cm.sendYesNoS("헬 모드에 입장을 선택하셨습니다. 헬 모드에서는 데미지가 90% 감소하지만, #b#e보다 강력한 장비 보상이 추가옵션과 함께 드롭됩니다.#n#k 해당 장비의 추가옵션은 #b#e이노센트 주문서 이용 시 함께 사라지며, 이는 복구가 불가능합니다.#k#n 입장하시겠습니까?", 4, 2007);
-	}
+	            cm.sendYesNoS("헬 모드에 입장을 선택하셨습니다. 헬 모드에서는 데미지가 90% 감소하지만, #b#e보다 강력한 장비 보상이 추가옵션과 함께 드롭됩니다.#n#k 해당 장비의 추가옵션은 #b#e이노센트 주문서 이용 시 함께 사라지며, 이는 복구가 불가능합니다.#k#n 입장하시겠습니까?", 4, 2007);
+	        }
         }
 
-    } else if (status == 2) {
+    }
+    else if (status == 2) {
         if (st == 2 || st == 3) {
-         	    var it = cm.getPlayer().getParty().getMembers().iterator();
-                         	    while (it.hasNext()) {
-                         	    var chr = it.next();
-                         	    var pchr = cm.getClient().getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
-                         	    // pchr.getClient().setKeyValue_Boss(setting[st][0] + "_" + date, 1);
-                         	      pchr.getPlayer().addKV_boss(""+setting[st][0]+"_" +date, 1);
-                         	      cm.getPlayer().dropMessage(-1, " 보스 입장 : == " + (pchr.getV_boss(""+setting[st][0]+"_" +date)) + " || " + setting[st][0] );
-                                	}
-                                     em = cm.getEventManager(setting[st][0]);
-                                     if (em != null) {
-                                         cm.getEventManager(setting[st][0]).startInstance_Party(setting[st][2] + "", cm.getPlayer());
-                                     }
-                                     cm.addBoss(setting[st][0]);
-                                     cm.dispose();
-	            }
+            var it = cm.getPlayer().getParty().getMembers().iterator();
+            while (it.hasNext()) {
+                var chr = it.next();
+                var pchr = cm.getClient().getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
+                // pchr.getClient().setKeyValue_Boss(setting[st][0] + "_" + date, 1);
+                pchr.getPlayer().addKV_boss(""+setting[st][0]+"_" +date, 1);
+                cm.getPlayer().dropMessage(-1, " 보스 입장 : == " + (pchr.getV_boss(""+setting[st][0]+"_" +date)) + " || " + setting[st][0] );
+            }
+            em = cm.getEventManager(setting[st][0]);
+            if (em != null) {
+                cm.getEventManager(setting[st][0]).startInstance_Party(setting[st][2] + "", cm.getPlayer());
+            }
+            cm.addBoss(setting[st][0]);
+            cm.dispose();
         }
     }
-
+}
 
 function getData() {
     time = new Date();
