@@ -3,6 +3,7 @@ var status = -1;
 importPackage(Packages.server.quest);
 bossname = [
     ["상위보스", 13, 33126, "Normal_Boss", 33303, "lasttime", "Hard_Boss", 1000000001, 1000000101, 1000000006, 1000000106, 1000000002, 1000000102, 1000000004, 1000000104, 1000000003, 1000000103, 1000000005, 1000000105, 1000000017, 1000000117, 1000000016, 1000000116, 1000000015, 1000000115],
+    ["스우", 13, 33126, "Normal_Lotus", 33303, "lasttime", "Hard_Lotus"],
     ["데미안", 15, 34016, "Normal_Demian", 34017, "lasttime", "Hard_Demian", 1000000006, 1000000106],
     ["루시드", 19, 34364, "Easy_Lucid", 3685, "lasttime", "Normal_Lucid", "Hard_Lucid", 1000000002, 1000000102],
     ["윌", 23, 35100, "Normal_Will", 3658, "lasttime", "Hard_Will", 1000000004, 1000000104],
@@ -20,7 +21,7 @@ function start() {
 
 function action(mode, type, selection) {
 
-    if (mode == -1) {
+    if (mode == -1) {ㅋ
         cm.dispose();
         return;
     }
