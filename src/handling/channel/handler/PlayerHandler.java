@@ -7769,10 +7769,10 @@ public class PlayerHandler {
         if (state == 1) {
             c.getPlayer().dropMessage(6, "보스 입장이 시작됩니다.");
         }
-        for (List<Pair<Integer, MapleCharacter>> souls : c.getChannelServer().getSoulmatch()) {
+        for (List<Pair<Integer, MapleCharacter>> souls : c.getChannelServer().getSoulMatch()) {
             for (Pair<Integer, MapleCharacter> soulz : souls) {
                 if (((MapleCharacter) soulz.right).equals(c.getPlayer())) {
-                    c.getChannelServer().getSoulmatch().remove(souls);
+                    c.getChannelServer().getSoulMatch().remove(souls);
                 }
             }
         }

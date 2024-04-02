@@ -3607,7 +3607,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
     }
 
     public void UserSoulHandle(int selection) {
-        for (List<Pair<Integer, MapleCharacter>> souls : (Iterable<List<Pair<Integer, MapleCharacter>>>) this.c.getChannelServer().getSoulmatch()) {
+        for (List<Pair<Integer, MapleCharacter>> souls : (Iterable<List<Pair<Integer, MapleCharacter>>>) this.c.getChannelServer().getSoulMatch()) {
             this.c.getPlayer().dropMessageGM(6, "1");
             if (souls.size() == 1 && ((Integer) ((Pair) souls.get(0)).left).intValue() == 0 && selection == 0) {
                 souls.add(new Pair(Integer.valueOf(selection), this.c.getPlayer()));
@@ -3622,7 +3622,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         this.c.getSession().writeAndFlush(CWvsContext.onUserSoulMatching(selection, chrs));
         if (selection == 0) {
             this.c.getPlayer().dropMessageGM(6, "4");
-            this.c.getChannelServer().getSoulmatch().add(chrs);
+            this.c.getChannelServer().getSoulMatch().add(chrs);
         }
     }
 

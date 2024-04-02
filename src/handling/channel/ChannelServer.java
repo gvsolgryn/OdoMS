@@ -67,15 +67,15 @@ public class ChannelServer {
   
   private EventScriptManager eventSM;
   
-  private AramiaFireWorks works = new AramiaFireWorks();
+  private final AramiaFireWorks works = new AramiaFireWorks();
   
   private static final Map<Integer, ChannelServer> instances = new HashMap<>();
   
   private final List<PlayerNPC> playerNPCs = new LinkedList<>();
   
-  private int eventmap = -1;
+  private int eventMap = -1;
   
-  private final List<List<Pair<Integer, MapleCharacter>>> soulmatch = new ArrayList<>();
+  private final List<List<Pair<Integer, MapleCharacter>>> soulMatch = new ArrayList<>();
   
   private final Map<MapleEventType, MapleEvent> events = new EnumMap<>(MapleEventType.class);
   
@@ -97,7 +97,7 @@ public class ChannelServer {
   }
   
   public final void loadEvents() {
-    if (this.events.size() != 0)
+    if (!this.events.isEmpty())
       return; 
     this.events.put(MapleEventType.CokePlay, new MapleCoconut(this.channel, MapleEventType.CokePlay));
     this.events.put(MapleEventType.Coconut, new MapleCoconut(this.channel, MapleEventType.Coconut));
@@ -113,6 +113,7 @@ public class ChannelServer {
     try {
       this.expRate = Integer.parseInt(ServerProperties.getProperty("world.exp"));
       this.mesoRate = Integer.parseInt(ServerProperties.getProperty("world.meso"));
+      this.dropRate = Integer.parseInt(ServerProperties.getProperty("world.drop"));
       this.serverMessage = ServerProperties.getProperty("world.serverMessage");
       this.serverName = ServerProperties.getProperty("login.serverName");
       this.flags = Integer.parseInt(ServerProperties.getProperty("world.flags", "0"));
@@ -124,32 +125,30 @@ public class ChannelServer {
       throw new RuntimeException(e);
     }
 
-    //this.ip = "185.213.243.67:" + this.port;
     this.ip = ServerProperties.getProperty("world.host") + ":" + this.port;
 
     NioEventLoopGroup nioEventLoopGroup1 = new NioEventLoopGroup();
     NioEventLoopGroup nioEventLoopGroup2 = new NioEventLoopGroup();
     try {
       bootstrap = new ServerBootstrap();
-      ((ServerBootstrap)((ServerBootstrap)bootstrap.group((EventLoopGroup)nioEventLoopGroup1, (EventLoopGroup)nioEventLoopGroup2)
-        .channel(NioServerSocketChannel.class))
-        .childHandler((ChannelHandler)new ChannelInitializer<SocketChannel>() {
+      bootstrap.group(nioEventLoopGroup1, nioEventLoopGroup2)
+        .channel(NioServerSocketChannel.class)
+        .childHandler(new ChannelInitializer<SocketChannel>() {
             public void initChannel(SocketChannel ch) throws Exception {
-              ch.pipeline().addLast("decoder", (ChannelHandler)new MapleNettyDecoder());
-              ch.pipeline().addLast("encoder", (ChannelHandler)new MapleNettyEncoder());
-              ch.pipeline().addLast("handler", (ChannelHandler)new MapleNettyHandler(ServerType.CHANNEL, ChannelServer.this.channel));
+              ch.pipeline().addLast("decoder", new MapleNettyDecoder());
+              ch.pipeline().addLast("encoder", new MapleNettyEncoder());
+              ch.pipeline().addLast("handler", new MapleNettyHandler(ServerType.CHANNEL, ChannelServer.this.channel));
             }
-          }).option(ChannelOption.SO_BACKLOG, Integer.valueOf(128)))
-        .childOption(ChannelOption.SO_SNDBUF, Integer.valueOf(4194304))
-        .childOption(ChannelOption.SO_KEEPALIVE, Boolean.valueOf(true));
+          }).option(ChannelOption.SO_BACKLOG, 128)
+        .childOption(ChannelOption.SO_SNDBUF, 4194304)
+        .childOption(ChannelOption.SO_KEEPALIVE, Boolean.TRUE);
       ChannelFuture f = bootstrap.bind(this.port).sync();
             System.out.println(
         "[알림] 채널 " + (getChannel() == 1 ? 1 : getChannel() == 2 ? "20세이상"
         : getChannel() - 1) + " 서버가 " + port + " 포트를 성공적으로 개방했습니다.");
       this.eventSM.init();
     } catch (InterruptedException e) {
-      System.out.println("[오류] 채널서버가 " + this.port + " 포트를 개방하는데 실패했습니다.");
-      e.printStackTrace();
+      System.out.println("[오류] 채널서버가 " + this.port + " 포트를 개방하는데 실패했습니다.\r\n" + e.getMessage());
     } 
   }
   
@@ -161,7 +160,7 @@ public class ChannelServer {
     System.out.println("Channel " + this.channel + ", Saving characters...");
     getPlayerStorage().disconnectAll();
     System.out.println("Channel " + this.channel + ", Unbinding...");
-    instances.remove(Integer.valueOf(this.channel));
+    instances.remove(this.channel);
     setFinishShutdown();
   }
   
@@ -177,12 +176,12 @@ public class ChannelServer {
     return this.mapFactory;
   }
   
-  public static final ChannelServer newInstance(int channel) {
+  public static ChannelServer newInstance(int channel) {
     return new ChannelServer(channel);
   }
   
-  public static final ChannelServer getInstance(int channel) {
-    return instances.get(Integer.valueOf(channel));
+  public static ChannelServer getInstance(int channel) {
+    return instances.get(channel);
   }
   
   public final void addPlayer(MapleCharacter chr) {
@@ -289,8 +288,7 @@ public class ChannelServer {
       for (int i = 0; i < Integer.parseInt(ServerProperties.getProperty("channel.count", "0")); i++)
         newInstance(i + 1).run_startup_configurations(); 
     } catch (Exception e) {
-      System.out.println("[오류] 채널 서버 오픈이 실패했습니다.");
-      e.printStackTrace();
+      System.out.println("[오류] 채널 서버 오픈이 실패했습니다.\r\n" + e.getMessage());
     } 
   }
   
@@ -303,11 +301,11 @@ public class ChannelServer {
   }
   
   public int getEvent() {
-    return this.eventmap;
+    return this.eventMap;
   }
   
   public final void setEvent(int ze) {
-    this.eventmap = ze;
+    this.eventMap = ze;
   }
   
   public MapleEvent getEvent(MapleEventType t) {
@@ -348,7 +346,7 @@ public class ChannelServer {
     return this.port;
   }
   
-  public static final Set<Integer> getChannelServer() {
+  public static Set<Integer> getChannelServer() {
     return new HashSet<>(instances.keySet());
   }
   
@@ -366,7 +364,7 @@ public class ChannelServer {
     return this.adminOnly;
   }
   
-  public static final int getChannelCount() {
+  public static int getChannelCount() {
     return instances.size();
   }
   
@@ -377,7 +375,7 @@ public class ChannelServer {
   public static Map<Integer, Integer> getChannelLoad() {
     Map<Integer, Integer> ret = new HashMap<>();
     for (ChannelServer cs : instances.values())
-      ret.put(Integer.valueOf(cs.getChannel()), Integer.valueOf(cs.getConnectedClients())); 
+      ret.put(cs.getChannel(), cs.getConnectedClients());
     return ret;
   }
   
@@ -418,13 +416,11 @@ public class ChannelServer {
   }
   
   public boolean isMyChannelConnected(String charName) {
-    if (getPlayerStorage().getCharacterByName(charName) != null)
-      return true; 
-    return false;
+    return getPlayerStorage().getCharacterByName(charName) != null;
   }
   
-  public List<List<Pair<Integer, MapleCharacter>>> getSoulmatch() {
-    return this.soulmatch;
+  public List<List<Pair<Integer, MapleCharacter>>> getSoulMatch() {
+    return this.soulMatch;
   }
   
   public boolean 얼리기() {
