@@ -7,7 +7,7 @@ function start() {
 
 function action(mode, type, selection) {
     setting = [
-        ["Normal_GES", 1, 160020000, 290]
+        ["Normal_GES", 1, 160020000, 210]
     ]
     if (mode == -1 || mode == 0) {
         cm.dispose();
