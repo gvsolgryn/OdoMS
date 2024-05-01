@@ -1,85 +1,102 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package server.shops;
 
+import java.util.List;
 import client.MapleCharacter;
 import client.MapleClient;
+
+import server.shops.AbstractPlayerStore.BoughtItem;
 import tools.Pair;
 
-import java.util.List;
-
 public interface IMaplePlayerShop {
-  public static final byte HIRED_MERCHANT = 1;
-  
-  public static final byte PLAYER_SHOP = 2;
-  
-  public static final byte OMOK = 3;
-  
-  public static final byte MATCH_CARD = 4;
-  
-  public static final byte MARRIAGE = 8;
-  
-  String getOwnerName();
-  
-  String getDescription();
-  
-  List<Pair<Byte, MapleCharacter>> getVisitors();
-  
-  List<MaplePlayerShopItem> getItems();
-  
-  boolean isOpen();
-  
-  boolean removeItem(int paramInt);
-  
-  boolean isOwner(MapleCharacter paramMapleCharacter);
-  
-  byte getShopType();
-  
-  byte getVisitorSlot(MapleCharacter paramMapleCharacter);
-  
-  byte getFreeSlot();
-  
-  int getItemId();
-  
-  long getMeso();
-  
-  int getOwnerId();
-  
-  int getOwnerAccId();
-  
-  void setOpen(boolean paramBoolean);
-  
-  void setMeso(long paramLong);
-  
-  void addItem(MaplePlayerShopItem paramMaplePlayerShopItem);
-  
-  void removeFromSlot(int paramInt);
-  
-  void broadcastToVisitors(byte[] paramArrayOfbyte);
-  
-  void addVisitor(MapleCharacter paramMapleCharacter);
-  
-  void removeVisitor(MapleCharacter paramMapleCharacter);
-  
-  void removeAllVisitors(int paramInt1, int paramInt2);
-  
-  void buy(MapleClient paramMapleClient, int paramInt, short paramShort);
-  
-  void closeShop(boolean paramBoolean1, boolean paramBoolean2);
-  
-  String getPassword();
-  
-  int getMaxSize();
-  
-  int getSize();
-  
-  int getGameType();
-  
-  void update();
-  
-  void setAvailable(boolean paramBoolean);
-  
-  boolean isAvailable();
-  
-  List<AbstractPlayerStore.BoughtItem> getBoughtItems();
-  
-  String getMemberNames();
+
+    public final static byte HIRED_MERCHANT = 1;
+    public final static byte PLAYER_SHOP = 2;
+    public final static byte OMOK = 3;
+    public final static byte MATCH_CARD = 4;
+
+    public String getOwnerName();
+
+    public String getDescription();
+
+    public List<Pair<Byte, MapleCharacter>> getVisitors();
+
+    public List<MaplePlayerShopItem> getItems();
+
+    public boolean isOpen();
+
+    public boolean removeItem(int item);
+
+    public boolean isOwner(MapleCharacter chr);
+
+    public byte getShopType();
+
+    public byte getVisitorSlot(MapleCharacter visitor);
+
+    public byte getFreeSlot();
+
+    public int getItemId();
+
+    public int getMeso();
+
+    public int getOwnerId();
+
+    public int getOwnerAccId();
+
+    public void setOpen(boolean open);
+
+    public void setMeso(int meso);
+
+    public void addItem(MaplePlayerShopItem item);
+
+    public void removeFromSlot(int slot);
+
+    public void broadcastToVisitors(byte[] packet);
+
+    public void addVisitor(MapleCharacter visitor);
+
+    public void removeVisitor(MapleCharacter visitor, boolean sendPacket);
+
+    public void removeAllVisitors(int error, int type);
+
+    public void buy(MapleClient c, int item, short quantity);
+
+    public void closeShop(boolean saveItems, boolean remove, boolean soldout);
+
+    public String getPassword();
+
+    public int getMaxSize();
+
+    public int getSize();
+
+    public int getGameType();
+
+    public void update();
+
+    public void setAvailable(boolean b);
+
+    public boolean isAvailable();
+
+    public List<BoughtItem> getBoughtItems();
+
+    public String getMemberNames();
 }

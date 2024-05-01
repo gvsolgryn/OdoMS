@@ -1,9 +1,14 @@
 package client.messages.commands;
 
-import constants.ServerConstants;
+import constants.ServerConstants.PlayerGMRank;
 
+/**
+ *
+ * @author Emilyx3
+ */
 public class DonatorCommand {
-  public static ServerConstants.PlayerGMRank getPlayerLevelRequired() {
-    return ServerConstants.PlayerGMRank.DONATOR;
-  }
+
+    public static PlayerGMRank getPlayerLevelRequired() {
+        return PlayerGMRank.DONATOR;
+    }
 }

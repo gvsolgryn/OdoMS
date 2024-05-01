@@ -1,32 +1,40 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package server.maps;
 
+import java.awt.Rectangle;
 import client.MapleClient;
 import scripting.ReactorScriptManager;
-import server.Timer;
+import server.Timer.MapTimer;
+import tools.MaplePacketCreator;
 import tools.Pair;
-import tools.packet.CField;
-
-import java.awt.*;
 
 public class MapleReactor extends MapleMapObject {
+
     private int rid;
-
     private MapleReactorStats stats;
-
-    private byte state = 0;
-
-    private byte facingDirection = 0;
-
+    private byte state = 0, facingDirection = 0;
     private int delay = -1;
-
-    private int rank = 0;
-
-    private int spawnPointNum;
-
     private MapleMap map;
-
     private String name = "";
-
     private boolean timerActive = false, alive = true, custom = false;
 
     public MapleReactor(MapleReactorStats stats, int rid) {
@@ -39,15 +47,15 @@ public class MapleReactor extends MapleMapObject {
     }
 
     public boolean isCustom() {
-        return this.custom;
+        return custom;
     }
 
-    public final void setFacingDirection(byte facingDirection) {
+    public final void setFacingDirection(final byte facingDirection) {
         this.facingDirection = facingDirection;
     }
 
     public final byte getFacingDirection() {
-        return this.facingDirection;
+        return facingDirection;
     }
 
     public void setTimerActive(boolean active) {
@@ -55,11 +63,11 @@ public class MapleReactor extends MapleMapObject {
     }
 
     public boolean isTimerActive() {
-        return this.timerActive;
+        return timerActive;
     }
 
     public int getReactorId() {
-        return this.rid;
+        return rid;
     }
 
     public void setState(byte state) {
@@ -67,11 +75,11 @@ public class MapleReactor extends MapleMapObject {
     }
 
     public byte getState() {
-        return this.state;
+        return state;
     }
 
     public boolean isAlive() {
-        return this.alive;
+        return alive;
     }
 
     public void setAlive(boolean alive) {
@@ -83,19 +91,20 @@ public class MapleReactor extends MapleMapObject {
     }
 
     public int getDelay() {
-        return this.delay;
+        return delay;
     }
 
+    @Override
     public MapleMapObjectType getType() {
         return MapleMapObjectType.REACTOR;
     }
 
     public int getReactorType() {
-        return this.stats.getType(this.state);
+        return stats.getType(state);
     }
 
     public byte getTouch() {
-        return this.stats.canTouch(this.state);
+        return stats.canTouch(state);
     }
 
     public void setMap(MapleMap map) {
@@ -103,96 +112,82 @@ public class MapleReactor extends MapleMapObject {
     }
 
     public MapleMap getMap() {
-        return this.map;
+        return map;
     }
 
     public Pair<Integer, Integer> getReactItem() {
-        return this.stats.getReactItem(this.state);
+        return stats.getReactItem(state);
     }
 
+    @Override
     public void sendDestroyData(MapleClient client) {
-        client.getSession().writeAndFlush(CField.destroyReactor(this));
+        client.getSession().write(MaplePacketCreator.destroyReactor(this));
     }
 
+    @Override
     public void sendSpawnData(MapleClient client) {
-        client.getSession().writeAndFlush(CField.spawnReactor(this));
+        client.getSession().write(MaplePacketCreator.spawnReactor(this));
     }
 
     public void forceStartReactor(MapleClient c) {
         ReactorScriptManager.getInstance().act(c, this);
     }
 
-    public void forceHitReactor(byte newState, int cid) {
-        setState(newState);
-        setTimerActive(false);
-        this.map.broadcastMessage(CField.triggerReactor(this, 0, cid));
-    }
-
-    public void forceHitReactor1(final byte newState) {
+    public void forceHitReactor(final byte newState) {
         setState((byte) newState);
         setTimerActive(false);
-        map.broadcastMessage(CField.triggerReactor1(this, (short) 0));
+        map.broadcastMessage(MaplePacketCreator.triggerReactor(this, (short) 0));
     }
 
+    //hitReactor command for item-triggered reactors
     public void hitReactor(MapleClient c) {
         hitReactor(0, (short) 0, c);
     }
 
+    public void forceTrigger() {
+        map.broadcastMessage(MaplePacketCreator.triggerReactor(this, (short) 0));
+    }
+
     public void delayedDestroyReactor(long delay) {
-        Timer.MapTimer.getInstance().schedule(new Runnable() {
+        MapTimer.getInstance().schedule(new Runnable() {
+
+            @Override
             public void run() {
-                MapleReactor.this.map.destroyReactor(MapleReactor.this.getObjectId());
+                map.destroyReactor(getObjectId());
             }
         }, delay);
     }
 
     public void hitReactor(int charPos, short stance, MapleClient c) {
-        if (this.stats.getType(this.state) < 999 && this.stats.getType(this.state) != -1) {
-            byte oldState = this.state;
-            if (this.stats.getType(this.state) != 2 || (charPos != 0 && charPos != 2)) {
-                if (this.rid == 2618000)
-                    c.getPlayer().removeItem(4001132, -1);
-                this.state = this.stats.getNextState(this.state);
-                if (this.stats.getNextState(this.state) == -1 || this.stats.getType(this.state) == 999) {
-                    if ((this.stats.getType(this.state) < 100 || this.stats.getType(this.state) == 999) && this.delay > 0) {
-                        if (this.delay > 0) {
-                            this.map.destroyReactor(getObjectId());
-                        } else {
-                            this.map.broadcastMessage(CField.triggerReactor(this, stance, c.getPlayer().getId()));
-                        }
-                    } else {
-                        this.map.broadcastMessage(CField.triggerReactor(this, stance, c.getPlayer().getId()));
+        if (stats.getType(state) < 999 && stats.getType(state) != -1) {
+            //type 2 = only hit from right (kerning swamp plants), 00 is air left 02 is ground left
+            final byte oldState = state;
+            if (!(stats.getType(state) == 2 && (charPos == 0 || charPos == 2))) { // next state
+                state = stats.getNextState(state);
+
+                if (stats.getNextState(state) == -1 || stats.getType(state) == 999) { //end of reactor
+                    if ((stats.getType(state) < 100 || stats.getType(state) == 999) && delay > 0) { //reactor broken
+                        map.destroyReactor(getObjectId());
+                    } else { //item-triggered on final step
+                        map.broadcastMessage(MaplePacketCreator.triggerReactor(this, stance));
                     }
-                    if (this.rid > 200015)
-                        ReactorScriptManager.getInstance().act(c, this);
-                } else {
+                    //if (rid > 200011) {
+                    ReactorScriptManager.getInstance().act(c, this);
+                    //}
+                } else { //reactor not broken yet
                     boolean done = false;
-                    this.map.broadcastMessage(CField.triggerReactor(this, stance, c.getPlayer().getId()));
-                    if (this.state == this.stats.getNextState(this.state) || this.rid == 2618000 || this.rid == 2309000) {
-                        if (this.rid > 200015)
+                    map.broadcastMessage(MaplePacketCreator.triggerReactor(this, stance)); //magatia is weird cause full beaker can be activated by gm hat o.o
+                    if (state == stats.getNextState(state) || rid == 2618000 || rid == 2309000) { //current state = next state, looping reactor
+                        if (rid > 200011) {
                             ReactorScriptManager.getInstance().act(c, this);
+                        }
                         done = true;
                     }
-                    if (this.rid == 3009000) {
-                        c.getPlayer().removeItem(4001162, -1);
-                    }
-
-                    if (this.rid == 3002000) {
-                        c.getPlayer().removeItem(4001161, -1);
-                        c.getPlayer().gainItem(4001162, 1);
-                    }
-
-                    if (this.rid == 3002001) {
-                        c.getPlayer().gainItem(4001163, 1);
-                    }
-
-                    if (this.stats.getTimeOut(this.state) > 0) {
-                        if (!done && this.rid > 200015) {
+                    if (stats.getTimeOut(state) > 0) {
+                        if (!done && rid > 200011) {
                             ReactorScriptManager.getInstance().act(c, this);
-                            setDelay(5000);
-                            this.map.destroyReactor(getObjectId());
                         }
-                        scheduleSetState(this.state, oldState, this.stats.getTimeOut(this.state), c);
+                        scheduleSetState(state, oldState, stats.getTimeOut(state));
                     }
                 }
             }
@@ -200,54 +195,45 @@ public class MapleReactor extends MapleMapObject {
     }
 
     public Rectangle getArea() {
-        int height = (this.stats.getBR()).y - (this.stats.getTL()).y;
-        int width = (this.stats.getBR()).x - (this.stats.getTL()).x;
-        int origX = (getTruePosition()).x + (this.stats.getTL()).x;
-        int origY = (getTruePosition()).y + (this.stats.getTL()).y;
+        int height = stats.getBR().y - stats.getTL().y;
+        int width = stats.getBR().x - stats.getTL().x;
+        int origX = getTruePosition().x + stats.getTL().x;
+        int origY = getTruePosition().y + stats.getTL().y;
+
         return new Rectangle(origX, origY, width, height);
     }
 
     public String getName() {
-        return this.name;
+        return name;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public void setRank(int r) {
-        this.rank = r;
-    }
-
-    public int getRank() {
-        return this.rank;
-    }
-
-    public int getSpawnPointNum() {
-        return this.spawnPointNum;
-    }
-
-    public void setSpawnPointNum(int spawnPointNum) {
-        this.spawnPointNum = spawnPointNum;
-    }
-
+    @Override
     public String toString() {
-        return "Reactor " + getObjectId() + " of id " + this.rid + " at position " + getPosition().toString() + " state" + this.state + " type " + this.stats.getType(this.state);
+        return "Reactor " + getObjectId() + " of id " + rid + " at position " + getPosition().toString() + " state" + state + " type " + stats.getType(state);
     }
 
     public void delayedHitReactor(final MapleClient c, long delay) {
-        Timer.MapTimer.getInstance().schedule(new Runnable() {
+        MapTimer.getInstance().schedule(new Runnable() {
+
+            @Override
             public void run() {
-                MapleReactor.this.hitReactor(c);
+                hitReactor(c);
             }
         }, delay);
     }
 
-    public void scheduleSetState(final byte oldState, final byte newState, long delay, final MapleClient c) {
-        Timer.MapTimer.getInstance().schedule(new Runnable() {
+    public void scheduleSetState(final byte oldState, final byte newState, long delay) {
+        MapTimer.getInstance().schedule(new Runnable() {
+
+            @Override
             public void run() {
-                if (MapleReactor.this.state == oldState)
-                    MapleReactor.this.forceHitReactor(newState, c.getPlayer().getId());
+                if (MapleReactor.this.state == oldState) {
+                    forceHitReactor(newState);
+                }
             }
         }, delay);
     }

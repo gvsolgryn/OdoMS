@@ -1,17 +1,42 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package scripting;
 
-import client.MapleClient;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.io.File;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import client.MapleClient;
+import tools.FileoutputUtil;
+
+/**
+ *
+ * @author Matze
+ */
 public abstract class AbstractScriptManager {
+
     private static final ScriptEngineManager sem = new ScriptEngineManager();
 
     protected Invocable getInvocable(String path, MapleClient c) {
@@ -19,31 +44,38 @@ public abstract class AbstractScriptManager {
     }
 
     protected Invocable getInvocable(String path, MapleClient c, boolean npc) {
-        path = "Scripts/" + path;
-        ScriptEngine engine = null;
-        if (c != null) {
-            engine = c.getScriptEngine(path);
-        }
+        FileReader fr = null;
+        try {
+            path = "scripts/" + path;
+            ScriptEngine engine = null;
 
-        if (engine == null) {
-            File scriptFile = new File(path);
-            if (!scriptFile.exists()) {
-                return null;
-            }
-
-            engine = sem.getEngineByName("nashorn");
             if (c != null) {
-                c.setScriptEngine(path, engine);
+                engine = c.getScriptEngine(path);
             }
-
-            try (Stream<String> stream = Files.lines(scriptFile.toPath(), Charset.forName("UTF-8"))) {
-                engine.eval("load('nashorn:mozilla_compat.js');" + System.lineSeparator());
-                engine.eval(stream.collect(Collectors.joining(System.lineSeparator())));
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
+            if (engine == null) {
+                File scriptFile = new File(path);
+                if (!scriptFile.exists()) {
+                    return null;
+                }
+                engine = sem.getEngineByName("rhino");
+                if (c != null) {
+                    c.setScriptEngine(path, engine);
+                }
+                fr = new FileReader(scriptFile);
+                engine.eval(fr);
+            }
+            return (Invocable) engine;
+        } catch (Exception e) {
+            System.err.println("Error executing script. Path: " + path + "\nException " + e);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Error executing script. Path: " + path + "\nException " + e);
+            return null;
+        } finally {
+            try {
+                if (fr != null) {
+                    fr.close();
+                }
+            } catch (IOException ignore) {
             }
         }
-        return (Invocable) engine;
     }
 }

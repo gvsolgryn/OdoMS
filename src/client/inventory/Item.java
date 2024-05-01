@@ -1,262 +1,226 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package client.inventory;
 
 import constants.GameConstants;
-import server.enchant.StarForceStats;
-import server.maps.BossReward;
-
 import java.io.Serializable;
 
 public class Item implements Comparable<Item>, Serializable {
-  private int id;
-  
-  private short position;
-  
-  private short quantity;
-  
-  private int flag;
-  
-  private long expiration = -1L;
-  
-  private long inventoryitemid = 0L;
-  
-  private MaplePet pet = null;
-  
-  private MapleAndroid android = null;
-  
-  private long uniqueid;
-  
-  private String owner = "";
-  
-  private String GameMaster_log = "";
-  
-  private String giftFrom = "";
-  
-  private MapleRing ring = null;
-  
-  private int marriageId = 0, bossid = 0;
-  
-  private BossReward reward;
-  
-  private StarForceStats showScrollOption = null;
-  
-  public Item(int id, short position, short quantity, int flag, long uniqueid) {
-    this.id = id;
-    this.position = position;
-    this.quantity = quantity;
-    this.flag = flag;
-    this.uniqueid = uniqueid;
-  }
-  
-  public Item(int id, short position, short quantity, int flag) {
-    this.id = id;
-    this.position = position;
-    this.quantity = quantity;
-    this.flag = flag;
-    this.uniqueid = -1L;
-  }
-  
-  public Item(int id, short position, short quantity) {
-    this.id = id;
-    this.position = position;
-    this.quantity = quantity;
-    this.uniqueid = -1L;
-  }
-  
-  public Item copy() {
-    Item ret = new Item(this.id, this.position, this.quantity, this.flag, this.uniqueid);
-    ret.inventoryitemid = this.inventoryitemid;
-    ret.pet = this.pet;
-    ret.android = this.android;
-    ret.owner = this.owner;
-    ret.GameMaster_log = this.GameMaster_log;
-    ret.expiration = this.expiration;
-    ret.giftFrom = this.giftFrom;
-    ret.marriageId = this.marriageId;
-    ret.reward = this.reward;
-    return ret;
-  }
-  
-  public Item copyWithQuantity(short qq) {
-    Item ret = new Item(this.id, this.position, qq, this.flag, this.uniqueid);
-    ret.pet = this.pet;
-    ret.owner = this.owner;
-    ret.GameMaster_log = this.GameMaster_log;
-    ret.expiration = this.expiration;
-    ret.marriageId = this.marriageId;
-    ret.giftFrom = this.giftFrom;
-    ret.reward = this.reward;
-    return ret;
-  }
-  
-  public final void setPosition(short position) {
-    this.position = position;
-    if (this.pet != null)
-      this.pet.setInventoryPosition(position); 
-  }
-  
-  public void setQuantity(short quantity) {
-    this.quantity = quantity;
-  }
-  
-  public final int getItemId() {
-    return this.id;
-  }
-  
-  public final int setItemId(int id) {
-    this.id = id;
-    return id;
-  }
-  
-  public final short getPosition() {
-    return this.position;
-  }
-  
-  public final int getFlag() {
-    return this.flag;
-  }
-  
-  public void setMarriageId(int m) {
-    this.marriageId = m;
-  }
-  
-  public int getMarriageId() {
-    return this.marriageId;
-  }
-  
-  public final short getQuantity() {
-    return this.quantity;
-  }
-  
-  public byte getType() {
-    return 2;
-  }
-  
-  public final String getOwner() {
-    return this.owner;
-  }
-  
-  public final void setOwner(String owner) {
-    this.owner = owner;
-  }
-  
-  public final void setFlag(int flag) {
-    this.flag = flag;
-  }
-  
-  public final long getExpiration() {
-    return this.expiration;
-  }
-  
-  public final void setExpiration(long expire) {
-    this.expiration = expire;
-  }
-  
-  public final String getGMLog() {
-    return this.GameMaster_log;
-  }
-  
-  public void setGMLog(String GameMaster_log) {
-    this.GameMaster_log = GameMaster_log;
-  }
-  
-  public final long getUniqueId() {
-    return this.uniqueid;
-  }
-  
-  public void setUniqueId(long ui) {
-    this.uniqueid = ui;
-  }
-  
-  public MapleRing getRing() {
-    if (!GameConstants.isEffectRing(getItemId()) || getUniqueId() <= 0L)
-      return null; 
-    if (this.ring == null)
-      this.ring = MapleRing.loadFromDb(getUniqueId(), (getPosition() < 0)); 
-    return this.ring;
-  }
-  
-  public void setRing(MapleRing ring) {
-    this.ring = ring;
-  }
-  
-  public final long getInventoryId() {
-    return this.inventoryitemid;
-  }
-  
-  public void setInventoryId(long ui) {
-    this.inventoryitemid = ui;
-  }
-  
-  public final MaplePet getPet() {
-    return this.pet;
-  }
-  
-  public final void setPet(MaplePet pet) {
-    this.pet = pet;
-    if (pet != null)
-      this.uniqueid = pet.getUniqueId(); 
-  }
-  
-  public final MapleAndroid getAndroid() {
-    if (getItemId() / 10000 != 166 || getUniqueId() <= 0L)
-      return null; 
-    if (this.android == null)
-      this.android = MapleAndroid.loadFromDb(getItemId(), getUniqueId()); 
-    return this.android;
-  }
-  
-  public final void setAndroid(MapleAndroid android) {
-    this.android = android;
-  }
-  
-  public void setGiftFrom(String gf) {
-    this.giftFrom = gf;
-  }
-  
-  public String getGiftFrom() {
-    return this.giftFrom;
-  }
-  
-  public StarForceStats getShowScrollOption() {
-    return this.showScrollOption;
-  }
-  
-  public void setShowScrollOption(StarForceStats showScrollOption) {
-    this.showScrollOption = showScrollOption;
-  }
-  
-  public int compareTo(Item other) {
-    if (Math.abs(this.position) < Math.abs(other.getPosition()))
-      return -1; 
-    if (Math.abs(this.position) == Math.abs(other.getPosition()))
-      return 0; 
-    return 1;
-  }
-  
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Item))
-      return false; 
-    Item ite = (Item)obj;
-    return (this.uniqueid == ite.getUniqueId() && this.id == ite.getItemId() && this.quantity == ite.getQuantity() && Math.abs(this.position) == Math.abs(ite.getPosition()));
-  }
-  
-  public String toString() {
-    return "Item: " + this.id + " quantity: " + this.quantity;
-  }
-  
-    public BossReward getReward() {
-         return this.reward;
+
+    private final int id;
+    private short position;
+    private short quantity;
+    private short flag;
+    private long expiration = -1, inventoryitemid = 0;
+    private MaplePet pet = null;
+    private int uniqueid;
+    private String owner = "";
+    private String GameMaster_log = "";
+    private int marriageId;  
+    private String giftFrom = ""; 
+    private MapleRing ring = null;
+
+    public Item(final int id, final short position, final short quantity, final short flag, final int uniqueid) {
+        super();
+        this.id = id;
+        this.position = position;
+        this.quantity = quantity;
+        this.flag = flag;
+        this.uniqueid = uniqueid;
     }
 
-    public void setReward(BossReward reward) {
-         this.reward = reward;
+    public Item(final int id, final short position, final short quantity, final short flag) {
+        super();
+        this.id = id;
+        this.position = position;
+        this.quantity = quantity;
+        this.flag = flag;
+        this.uniqueid = -1;
     }
 
-    public int getBossid() {
-        return bossid;
+    public Item(int id, byte position, short quantity) {
+        super();
+        this.id = id;
+        this.position = position;
+        this.quantity = quantity;
+        this.uniqueid = -1;
     }
 
-    public void setBossid(int bossid) {
-        this.bossid = bossid;
+    public Item copy() {
+        final Item ret = new Item(id, position, quantity, flag, uniqueid);
+        ret.pet = pet;
+        ret.owner = owner;
+        ret.GameMaster_log = GameMaster_log;
+        ret.expiration = expiration;
+        ret.giftFrom = giftFrom;
+        return ret;
+    }
+
+    public final void setPosition(final short position) {
+        this.position = position;
+
+        if (pet != null) {
+            pet.setInventoryPosition(position);
+        }
+    }
+    
+    public void setGiftFrom(String gf) {
+        this.giftFrom = gf;
+    }
+
+    public String getGiftFrom() {
+        return giftFrom;
+    }
+
+    public void setMarriageId(int m) {
+        this.marriageId = m;
+    }
+
+    public int getMarriageId() {
+        return marriageId;
+    }
+    
+
+    public long getEquippedTime() {
+        return 0;
+    }
+
+    public void setEquippedTime(long equippedTime) {
+    }
+
+    public void setQuantity(final short quantity) {
+        this.quantity = quantity;
+    }
+
+    public final int getItemId() {
+        return id;
+    }
+
+    public final short getPosition() {
+        return position;
+    }
+
+    public final short getFlag() {
+        return flag;
+    }
+
+    public final short getQuantity() {
+        return quantity;
+    }
+
+    public byte getType() {
+        return 2; // An Item
+    }
+
+    public final String getOwner() {
+        return owner;
+    }
+
+    public final void setOwner(final String owner) {
+        this.owner = owner;
+    }
+
+    public final void setFlag(final short flag) {
+        this.flag = flag;
+    }
+
+    public final long getExpiration() {
+        return expiration;
+    }
+
+    public final void setExpiration(final long expire) {
+        this.expiration = expire;
+    }
+
+    public final String getGMLog() {
+        return GameMaster_log;
+    }
+
+    public void setGMLog(final String GameMaster_log) {
+        this.GameMaster_log = GameMaster_log;
+    }
+
+    public final int getUniqueId() {
+        return uniqueid;
+    }
+
+    public void setUniqueId(int ui) {
+        this.uniqueid = ui;
+    }
+
+    public final long getInventoryId() { //this doesn't need to be 100% accurate, just different
+        return inventoryitemid;
+    }
+
+    public void setInventoryId(long ui) {
+        this.inventoryitemid = ui;
+    }
+
+    public final MaplePet getPet() {
+        return pet;
+    }
+
+    public final void setPet(final MaplePet pet) {
+        this.pet = pet;
+        if (pet != null) {
+            this.uniqueid = pet.getUniqueId();
+        }
+    }
+
+    @Override
+    public int compareTo(Item other) {
+        if (Math.abs(position) < Math.abs(other.getPosition())) {
+            return -1;
+        } else if (Math.abs(position) == Math.abs(other.getPosition())) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Item)) {
+            return false;
+        }
+        final Item ite = (Item) obj;
+        return uniqueid == ite.getUniqueId() && id == ite.getItemId() && quantity == ite.getQuantity() && Math.abs(position) == Math.abs(ite.getPosition());
+    }
+
+    public MapleRing getRing() {
+        if (!GameConstants.isEffectRing(getItemId()) || getUniqueId() <= 0) {
+            return null;
+        }
+        if (ring == null) {
+            ring = MapleRing.loadFromDb(getUniqueId(), getPosition() < 0);
+        }
+        return ring;
+    }
+
+    public void setRing(MapleRing ring) {
+        this.ring = ring;
+    }
+
+    @Override
+    public String toString() {
+        return "Item: " + id + " quantity: " + quantity;
     }
 }

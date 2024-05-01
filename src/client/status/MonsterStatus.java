@@ -1,189 +1,139 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package client.status;
 
+import client.MapleDisease;
+import constants.GameConstants;
+import handling.Buffstat;
 import java.io.Serializable;
 
-public enum MonsterStatus implements Serializable {
-    MS_IndiePdr(0),
-    MS_IndieMdr(1),
-    MS_IndieUNK(2),
-    MS_IndieUNK2(3),
-    MS_Pad(5),
-    MS_Pdr(6),
-    MS_Mad(7),
-    MS_Mdr(8),
-    MS_Acc(9),
-    MS_Eva(10),
-    MS_Speed(11),
-    MS_Stun(12),
-    MS_Freeze(13), //361 13 +1
-    MS_Poison(14),
-    MS_Seal(15),
-    MS_Darkness(16),
-    MS_Powerup(17),
-    MS_Magicup(18),
-    MS_PGuardup(19),
-    MS_MGuardup(20),
-    MS_PImmune(21),
-    MS_MImmune(22),
-    MS_Web(23),
-    MS_Hardskin(24),
-    MS_Ambush(25),
-    MS_Venom(26),
-    MS_Blind(27), //362 sniffer 27 ok
-    MS_SealSkill(28),
-    MS_Dazil(29),
-    MS_PCounter(30),
-    MS_MCounter(31),
-    MS_RiseByToss(32),
-    MS_BodyPressure(33),
-    MS_Weakness(34),
-    MS_Showdown(35), //362 ok 35 +1
-    MS_MagicCrash(36), 
-    MS_Puriaus(39), //362 sniffer 39 ok
-    MS_AdddamParty(39),
-    MS_HitCritDamR(40),
-    MS_Lifting(41),
-    MS_LandCrash(42),
-    MS_DeadlyCharge(43),
-    MS_Smite(44), //362 sniffer 44 ..
-    MS_AdddamSkill(45),
-    MS_Incizing(46), //362 sniffer 46 ..
-    MS_DodgeBodyAttack(47), 
-    MS_DebuffHealing(48),
-    MS_AdddamSkill2(49), 
-    MS_BodyAttack(50),
-    MS_TempMoveAbility(51),
-    MS_FixAtkRBuff(52),
-    MS_FixdamRBuff(53),
-    MS_ElementDarkness(54),
-    MS_AreaInstallByHit(55),
-    MS_BMageDebuff(56),
-    MS_JaguarProvoke(57),
-    MS_JaguarBleeding(58), //362 sniffer 58 ok
-    MS_DarkLightning(59),
-    MS_PinkbeanFlowerPot(60),
-    MS_PvPHelenaMark(59),
-    MS_PsychicLock(61),
-    MS_PsychicLockCooltime(62),
-    MS_PsychicGroundMark(63), //362 sniffer 63 ok
-    MS_PowerImmune(64),
-    MS_MultiPMDR(65),
-    MS_UnkFlameWizard(66),
-    MS_ElementResetBySummon(67),
-    MS_CurseMark(68), //361 sniffer ok
-    MS_Unk1(69),
-    MS_DragonStrike(70),
-    MS_Unk2(71),
-    MS_BlessterDamage(72),
-    MS_Unk4(73),
-    MS_Unk5(74),
-    MS_PopulatusTimer(75),
-    MS_PopulatusRing(76),
-    MS_PVPRude_Stack(79),
+public enum MonsterStatus implements Serializable, Buffstat {
 
-    // 362 -> 366 [0+]
-    MS_BahamutLightElemAddDam(80), //366 sniffer ok 80
-    MS_BossPropPlus(81),
-    MS_MultiDamSkill(82),
-    MS_RWLiftPress(83),
-    MS_RWChoppingHammer(84),
-    MS_TimeBomb(85),
-    MS_Treasure(86),
-    MS_AddEffect(87),
-    MS_TheSeedBuff(88),
-
-    // 아직
-    MS_CriticalBind_N(92),
-    MS_HillaCount(94),
-    MS_Invincible(95),
-
-    // 362 -> 366 [1+]
-    MS_Explosion(97), //366 sniffer 97 ok
-    MS_HangOver(98),
-    MS_PopulatusInvincible(99),
-    MS_UNK9(100),
-    MS_Burned(101), // 366 sniffer 101 ok
-    MS_BalogDisable(102), // 1.2.1143
-    MS_ExchangeAttack(103), // 1.2.1143
-    MS_AddBuffStat(104), // 1.2.1143
-    MS_LinkTeam(105), // 1.2.1143
-    MS_SoulExplosion(106), // 1.2.1143
-    MS_SeperateSoulP(107),
-    MS_SeperateSoulC(108),
-    MS_TrueSight(109), // 1.2.1143 -1
-    MS_Laser(110), // 1.2.1143 -1
-    MS_StatResetSkill(111), // 1.2.1143 -1
-    MS_Unk10(112), // 1.2.1143 -1
-    MS_Unk11(113), // 1.2.1143 -1
-    MS_Unk12(114), // 1.2.1143 -1
-    MS_Unk13(115), // 1.2.1143 -1
-    MS_Unk14(116), // 1.2.1143 -1
-    MS_Unk15(117), // 1.2.1143 -1
-    MS_Unk16(118), // 1.2.1143 -1
-    MS_Unk17(120),
-    MS_Unk18(119), // 1.2.1143 -2
-    MS_Unk19(122);
-
+    WATK(0x1, 1),
+    WDEF(0x2, 1),
+    MATK(0x4, 1),
+    MDEF(0x8, 1),
+    ACC(0x10, 1),
+    AVOID(0x20, 1),
+    SPEED(0x40, 1),
+    STUN(0x80, 1),
+    FREEZE(0x100, 1),
+    POISON(0x200, 1),
+    SEAL(0x400, 1),
+    SHOWDOWN(0x800, 1),
+    WEAPON_ATTACK_UP(0x1000, 1), //PAD
+    MAGIC_ATTACK_UP(0x2000, 1), //MAD
+    WEAPON_DEFENSE_UP(0x4000, 1), //PDD 일단 이 버프스탯부터 잘못 됨
+    MAGIC_DEFENSE_UP(0x8000, 1), //MDD 이게 맞음
+    DOOM(0x10000, 1),
+    SHADOW_WEB(0x20000, 1),
+    WEAPON_IMMUNITY(0x40000, 1),
+    MAGIC_IMMUNITY(0x80000, 1),
+    DAMAGE_IMMUNITY(0x200000, 1),
+    NINJA_AMBUSH(0x400000, 1),
+    BURN(0x1000000, 1),
+    DARKNESS(0x2000000, 1),
+    HYPNOTIZE(0x10000000, 1),
+    WEAPON_DAMAGE_REFLECT(0x20000000, 1),
+    MAGIC_DAMAGE_REFLECT(0x40000000, 1),
+    NEUTRALISE(0x2, 2), // first int on v.87 or else it won't work.
+    IMPRINT(0x4, 2),
+    BLIND(33554432, 1),
+    MONSTER_BOMB(0x8, 2),
+    MAGIC_CRASH(0x10, 2),
+    SLOW(0x1000, 3),
+    //speshul comes after
+    EMPTY(0x8000000, 1, true),
+    SUMMON(0x80000000, 1, true), //all summon bag mobs have.
+    EMPTY_1(0x20, 2, !GameConstants.GMS), //chaos
+    EMPTY_2(0x40, 2, true),
+    EMPTY_3(0x80, 2, true),
+    EMPTY_4(0x100, 2, GameConstants.GMS), //jump
+    EMPTY_5(0x200, 2, GameConstants.GMS),
+    EMPTY_6(0x400, 2, GameConstants.GMS),;
     static final long serialVersionUID = 0L;
-
     private final int i;
-
     private final int first;
-
-    private final int flag;
-
     private final boolean end;
 
-    private boolean stacked;
-
-    MonsterStatus(int flag) {
-        this.i = 1 << 31 - flag % 32;
-        this.first = 4 - (byte) (int) Math.floor((flag / 32));
-        this.flag = flag;
+    private MonsterStatus(int i, int first) {
+        this.i = i;
+        this.first = first;
         this.end = false;
-        setStacked(name().startsWith("MS_Indie"));
+    }
+
+    private MonsterStatus(int i, int first, boolean end) {
+        this.i = i;
+        this.first = first;
+        this.end = end;
     }
 
     public int getPosition() {
-        return this.first;
+        return first;
     }
 
     public boolean isEmpty() {
-        return this.end;
+        return end;
     }
 
     public int getValue() {
-        return this.i;
+        return i;
     }
 
-    public int getFlag() {
-        return this.flag;
-    }
-
-    public boolean isStacked() {
-        return this.stacked;
-    }
-
-    public void setStacked(boolean stacked) {
-        this.stacked = stacked;
-    }
-
-    public static boolean IsMovementAffectingStat(MonsterStatus skill) {
+    public static final MonsterStatus getBySkill_Pokemon(final int skill) {
         switch (skill) {
-            case MS_Stun:
-            case MS_Speed:
-            case MS_Freeze:
-            case MS_RiseByToss:
-            case MS_Lifting:
-            case MS_Smite:
-            case MS_TempMoveAbility:
-            case MS_StatResetSkill:
-            case MS_RWLiftPress:
-            case MS_AdddamSkill2:
-            case MS_PCounter:
-            case MS_MCounter:
-                return true;
+            case 120:
+                return SEAL;
+            case 121:
+                return DARKNESS;
+            case 123:
+                return STUN;
+            case 125:
+                return POISON;
+            case 126:
+                return SPEED;
+            case 137:
+                return FREEZE;
         }
-        return false;
+        return null;
+    }
+
+    public static final MapleDisease getLinkedDisease(final MonsterStatus skill) {
+        switch (skill) {
+            case STUN:
+            case SHADOW_WEB:
+                return MapleDisease.STUN;
+            case POISON:
+            case BURN:
+                return MapleDisease.POISON;
+            case SEAL:
+            case MAGIC_CRASH:
+                return MapleDisease.SEAL;
+            case FREEZE:
+                return MapleDisease.FREEZE;
+            case DARKNESS:
+                return MapleDisease.DARKNESS;
+            case SPEED:
+                return MapleDisease.SLOW;
+        }
+        return null;
     }
 }

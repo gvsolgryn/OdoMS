@@ -1,3 +1,23 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package client;
 
 import constants.GameConstants;
@@ -5,11 +25,12 @@ import server.life.MapleLifeFactory;
 import server.quest.MapleQuest;
 
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class MapleQuestStatus implements Serializable {
+
     private static final long serialVersionUID = 91795419934134L;
     private transient MapleQuest quest;
     private byte status;
@@ -19,24 +40,29 @@ public class MapleQuestStatus implements Serializable {
     private int forfeited = 0;
     private String customData;
 
-    public MapleQuestStatus(MapleQuest quest, int status) {
+    /**
+     * Creates a new instance of MapleQuestStatus
+     */
+    public MapleQuestStatus(final MapleQuest quest, final int status) {
         this.quest = quest;
-        setStatus((byte) status);
+        this.setStatus((byte) status);
         this.completionTime = System.currentTimeMillis();
-        if (status == 1 && !quest.getRelevantMobs().isEmpty()) {
-            registerMobs();
+        if (status == 1) { // Started
+            if (!quest.getRelevantMobs().isEmpty()) {
+                registerMobs();
+            }
         }
     }
 
-    public MapleQuestStatus(MapleQuest quest, byte status, int npc) {
+    public MapleQuestStatus(final MapleQuest quest, final byte status, final int npc) {
         this.quest = quest;
-        setStatus(status);
-        setNpc(npc);
-
+        this.setStatus(status);
+        this.setNpc(npc);
         this.completionTime = System.currentTimeMillis();
-
-        if (status == 1 && !quest.getRelevantMobs().isEmpty()) {
-            registerMobs();
+        if (status == 1) { // Started
+            if (!quest.getRelevantMobs().isEmpty()) {
+                registerMobs();
+            }
         }
     }
 
@@ -45,90 +71,77 @@ public class MapleQuestStatus implements Serializable {
     }
 
     public final MapleQuest getQuest() {
-        return this.quest;
+        return quest;
     }
 
     public final byte getStatus() {
-        return this.status;
+        return status;
     }
 
-    public final void setStatus(byte status) {
+    public final void setStatus(final byte status) {
         this.status = status;
     }
 
     public final int getNpc() {
-        return this.npc;
+        return npc;
     }
 
-    public final void setNpc(int npc) {
+    public final void setNpc(final int npc) {
         this.npc = npc;
     }
 
     public boolean isCustom() {
-        return GameConstants.isCustomQuest(this.quest.getId());
+        return GameConstants.isCustomQuest(quest.getId());
     }
 
     private final void registerMobs() {
-        this.killedMobs = new LinkedHashMap<>();
-        for (Iterator<Integer> iterator = this.quest.getRelevantMobs().keySet().iterator(); iterator.hasNext(); ) {
-            int i = ((Integer) iterator.next()).intValue();
-            this.killedMobs.put(Integer.valueOf(i), Integer.valueOf(0));
+        killedMobs = new LinkedHashMap<Integer, Integer>();
+        for (final int i : quest.getRelevantMobs().keySet()) {
+            killedMobs.put(i, 0);
         }
     }
 
-    private final int maxMob(int mobid) {
-        for (Map.Entry<Integer, Integer> qs : (Iterable<Map.Entry<Integer, Integer>>) this.quest.getRelevantMobs().entrySet()) {
-            if (((Integer) qs.getKey()).intValue() == mobid) {
-                return ((Integer) qs.getValue()).intValue();
+    private final int maxMob(final int mobid) {
+        for (final Map.Entry<Integer, Integer> qs : quest.getRelevantMobs().entrySet()) {
+            if (qs.getKey() == mobid) {
+                return qs.getValue();
             }
         }
         return 0;
     }
 
-    public final boolean mobKilled(int id, int skillID, MapleCharacter chr) {
-        if (this.quest != null && this.quest.getSkillID() > 0 && this.quest.getSkillID() != skillID) {
-            return false;
-        }
-        Integer mob = this.killedMobs.get(Integer.valueOf(id));
-        if (mob != null) {
-            int mo = maxMob(id);
-            if (mob.intValue() >= mo) {
+    public final boolean mobKilled(final int id, final int skillID) {
+        if (quest != null && quest.getSkillID() > 0) {
+            if (quest.getSkillID() != skillID) {
                 return false;
             }
-            this.killedMobs.put(Integer.valueOf(id), Integer.valueOf(Math.min(mob.intValue() + 1, mo)));
+        }
+        final Integer mob = killedMobs.get(id);
+        if (mob != null) {
+            final int mo = maxMob(id);
+            if (mob >= mo) {
+                return false; //nothing happened
+            }
+            killedMobs.put(id, Math.min(mob + 1, mo));
             return true;
         }
-        for (Map.Entry<Integer, Integer> mo : this.killedMobs.entrySet()) {
-            if (questCount(((Integer) mo.getKey()).intValue(), id)) {
-                int mobb = maxMob(((Integer) mo.getKey()).intValue());
-                if (((Integer) mo.getValue()).intValue() >= mobb) {
-                    return false;
+        for (Entry<Integer, Integer> mo : killedMobs.entrySet()) {
+            if (questCount(mo.getKey(), id)) {
+                final int mobb = maxMob(mo.getKey());
+                if (mo.getValue() >= mobb) {
+                    return false; //nothing
                 }
-                if (((Integer) mo.getKey()).intValue() == 9101025) {
-                    int reqLevel = MapleLifeFactory.getMonster(id).getStats().getLevel();
-                    if (reqLevel >= chr.getLevel() - 20 && reqLevel <= chr.getLevel() + 20) {
-                        this.killedMobs.put(mo.getKey(), Integer.valueOf(Math.min(((Integer) mo.getValue()).intValue() + 1, mobb)));
-                    }
-
-                } else if (((Integer) mo.getKey()).intValue() == 9101067) {
-                    int scale = MapleLifeFactory.getMonster(id).getScale();
-                    if (scale > 100) {
-                        this.killedMobs.put(mo.getKey(), Integer.valueOf(Math.min(((Integer) mo.getValue()).intValue() + 1, mobb)));
-                    }
-                } else {
-                    this.killedMobs.put(mo.getKey(), Integer.valueOf(Math.min(((Integer) mo.getValue()).intValue() + 1, mobb)));
-                }
+                killedMobs.put(mo.getKey(), Math.min(mo.getValue() + 1, mobb));
                 return true;
             }
-        }
+        } //i doubt this
         return false;
     }
 
-    private final boolean questCount(int mo, int id) {
+    private final boolean questCount(final int mo, final int id) {
         if (MapleLifeFactory.getQuestCount(mo) != null) {
-            for (Iterator<Integer> iterator = MapleLifeFactory.getQuestCount(mo).iterator(); iterator.hasNext(); ) {
-                int i = ((Integer) iterator.next()).intValue();
-                if (i == id || mo == 9101025) {
+            for (int i : MapleLifeFactory.getQuestCount(mo)) {
+                if (i == id) {
                     return true;
                 }
             }
@@ -136,46 +149,45 @@ public class MapleQuestStatus implements Serializable {
         return false;
     }
 
-    public final void setMobKills(int id, int count) {
-        if (this.killedMobs == null) {
-            registerMobs();
+    public final void setMobKills(final int id, final int count) {
+        if (killedMobs == null) {
+            registerMobs(); //lol
         }
-        this.killedMobs.put(Integer.valueOf(id), Integer.valueOf(count));
+        killedMobs.put(id, count);
     }
 
     public final boolean hasMobKills() {
-        if (this.killedMobs == null) {
+        if (killedMobs == null) {
             return false;
         }
-        return (this.killedMobs.size() > 0);
+        return killedMobs.size() > 0;
     }
 
-    public final int getMobKills(int id) {
-        Integer mob = this.killedMobs.get(Integer.valueOf(id));
-
+    public final int getMobKills(final int id) {
+        final Integer mob = killedMobs.get(id);
         if (mob == null) {
             return 0;
         }
-        return mob.intValue();
+        return mob;
     }
 
     public final Map<Integer, Integer> getMobKills() {
-        return this.killedMobs;
+        return killedMobs;
     }
 
     public final long getCompletionTime() {
-        return this.completionTime;
+        return completionTime;
     }
 
-    public final void setCompletionTime(long completionTime) {
+    public final void setCompletionTime(final long completionTime) {
         this.completionTime = completionTime;
     }
 
     public final int getForfeited() {
-        return this.forfeited;
+        return forfeited;
     }
 
-    public final void setForfeited(int forfeited) {
+    public final void setForfeited(final int forfeited) {
         if (forfeited >= this.forfeited) {
             this.forfeited = forfeited;
         } else {
@@ -183,11 +195,11 @@ public class MapleQuestStatus implements Serializable {
         }
     }
 
-    public final void setCustomData(String customData) {
+    public final void setCustomData(final String customData) {
         this.customData = customData;
     }
 
     public final String getCustomData() {
-        return this.customData;
+        return customData;
     }
 }

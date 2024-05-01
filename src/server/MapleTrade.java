@@ -1,369 +1,391 @@
 package server;
 
-import client.MapleCharacter;
-import client.MapleClient;
-import client.inventory.Equip;
-import client.inventory.Item;
-import client.inventory.ItemFlag;
-import client.inventory.MapleInventoryType;
-import client.messages.CommandProcessor;
-import constants.GameConstants;
-import constants.ServerConstants;
-import handling.world.World;
-import log.DBLogger;
-import log.LogType;
-import tools.FileoutputUtil;
-import tools.StringUtil;
-import tools.packet.CField;
-import tools.packet.CWvsContext;
-import tools.packet.PlayerShopPacket;
-
-import java.lang.ref.WeakReference;
 import java.util.LinkedList;
 import java.util.List;
+import client.inventory.Item;
+import client.inventory.ItemFlag;
+import constants.GameConstants;
+import client.MapleCharacter;
+import client.MapleClient;
+import client.inventory.MapleInventoryType;
+import client.messages.CommandProcessor;
+import constants.ServerConstants.CommandType;
+import handling.world.World;
+import java.lang.ref.WeakReference;
+import server.log.LogType;
+import server.log.ServerLogger;
+import tools.MaplePacketCreator;
+import tools.packet.PlayerShopPacket;
 
 public class MapleTrade {
-  private MapleTrade partner = null;
-  
-  private final List<Item> items = new LinkedList<>();
-  
-  private List<Item> exchangeItems;
-  
-  private long meso = 0L;
-  
-  private long exchangeMeso = 0L;
-  
-  private boolean locked = false;
-  
-  private boolean inTrade = false;
-  
-  private final WeakReference<MapleCharacter> chr;
-  
-  private final byte tradingslot;
-  
-  private byte rps = 0;
-  
-  public MapleTrade(byte tradingslot, MapleCharacter chr) {
-    this.tradingslot = tradingslot;
-    this.chr = new WeakReference<>(chr);
-  }
-  
-  public final void CompleteTrade() {
-    if (this.exchangeItems != null) {
-      List<Item> itemz = new LinkedList<>(this.exchangeItems);
-      for (Item item : itemz) {
-        item.setGMLog(StringUtil.getAllCurrentTime() + "에 " + this.partner.getChr().getName() + "과의 교환으로 얻은 아이템.");
-        if (ItemFlag.KARMA_EQUIP.check(item.getFlag()))
-          item.setFlag(item.getFlag() - ItemFlag.KARMA_EQUIP.getValue()); 
-        if (ItemFlag.KARMA_USE.check(item.getFlag()))
-          item.setFlag(item.getFlag() - ItemFlag.KARMA_USE.getValue()); 
-        MapleInventoryManipulator.addbyItem(((MapleCharacter)this.chr.get()).getClient(), item, false, false);
-        FileoutputUtil.log(FileoutputUtil.교환로그, "[교환 완료] " + ((MapleCharacter)this.chr.get()).getName() + "이 " + this.partner.getChr().getName() + "의 교환 창에서 " + MapleItemInformationProvider.getInstance().getName(item.getItemId()) + "을 " + item.getQuantity() + "개 획득.");
-      } 
-      this.exchangeItems.clear();
-    } 
-    if (this.exchangeMeso > 0L) {
-      ((MapleCharacter)this.chr.get()).gainMeso(this.exchangeMeso - GameConstants.getTaxAmount(this.exchangeMeso), false, false);
-      FileoutputUtil.log(FileoutputUtil.교환메소로그, "[교환 완료] " + ((MapleCharacter)this.chr.get()).getName() + "이 " + this.partner.getChr().getName() + "의 교환 창에서 " + (this.exchangeMeso - GameConstants.getTaxAmount(this.exchangeMeso)) + "를 획득.");
-    } 
-    this.exchangeMeso = 0L;
-    ((MapleCharacter)this.chr.get()).getClient().getSession().writeAndFlush(CField.InteractionPacket.TradeMessage(this.tradingslot, (byte)7));
-  }
-  
-  public final void cancel(MapleClient c, MapleCharacter chr) {
-    if (this.items != null) {
-      List<Item> itemz = new LinkedList<>(this.items);
-      for (Item item : itemz)
-        MapleInventoryManipulator.addbyItem(c, item, true, false); 
-      this.items.clear();
-    } 
-    if (this.meso > 0L)
-      chr.gainMeso(this.meso, false, false); 
-    this.meso = 0L;
-    c.getSession().writeAndFlush(CField.InteractionPacket.getTradeCancel(this.tradingslot));
-  }
-  
-  public final boolean isLocked() {
-    return this.locked;
-  }
-  
-  public final void setMeso(long meso) {
-    if (this.locked || this.partner == null || meso <= 0L || this.meso + meso <= 0L)
-      return; 
-    if (((MapleCharacter)this.chr.get()).getMeso() >= meso) {
-      ((MapleCharacter)this.chr.get()).gainMeso(-meso, false, false);
-      this.meso += meso;
-      ((MapleCharacter)this.chr.get()).getClient().getSession().writeAndFlush(CField.InteractionPacket.getTradeMesoSet((byte)0, this.meso));
-      if (this.partner != null)
-        this.partner.getChr().getClient().getSession().writeAndFlush(CField.InteractionPacket.getTradeMesoSet((byte)1, this.meso)); 
-      FileoutputUtil.log(FileoutputUtil.교환메소로그, "[교환 메소 올림] " + ((MapleCharacter)this.chr.get()).getName() + "이 " + this.partner.getChr().getName() + "의 교환 창에서 " + this.meso + "를 올림.");
-    } 
-  }
-  
-  public final void addItem(Item item) {
-    if (this.locked || this.partner == null)
-      return; 
-    this.items.add(item);
-    ((MapleCharacter)this.chr.get()).getClient().getSession().writeAndFlush(CField.InteractionPacket.getTradeItemAdd((byte)0, item));
-    if (this.partner != null)
-      this.partner.getChr().getClient().getSession().writeAndFlush(CField.InteractionPacket.getTradeItemAdd((byte)1, item)); 
-    FileoutputUtil.log(FileoutputUtil.교환로그, "[교환 아이템 올림] " + ((MapleCharacter)this.chr.get()).getName() + "이 " + this.partner.getChr().getName() + "의 교환 창에서 " + MapleItemInformationProvider.getInstance().getName(item.getItemId()) + "을 " + item.getQuantity() + "개 올림.");
-  }
-  
-  public final void chat(String message) {
-    if (!CommandProcessor.processCommand(((MapleCharacter)this.chr.get()).getClient(), message, ServerConstants.CommandType.TRADE)) {
-      ((MapleCharacter)this.chr.get()).getClient().getSession().writeAndFlush(PlayerShopPacket.shopChat(this.chr.get(), ((MapleCharacter)this.chr.get()).getName(), ((MapleCharacter)this.chr.get()).getId(), message, (((MapleCharacter)this.chr.get()).getTrade()).tradingslot));
-      if (this.partner != null)
-        this.partner.getChr().getClient().getSession().writeAndFlush(PlayerShopPacket.shopChat(this.chr.get(), ((MapleCharacter)this.chr.get()).getName(), ((MapleCharacter)this.chr.get()).getId(), message, (((MapleCharacter)this.chr.get()).getTrade()).tradingslot)); 
-    } 
-    DBLogger.getInstance().logChat(LogType.Chat.Trade, ((MapleCharacter)this.chr.get()).getId(), ((MapleCharacter)this.chr.get()).getName(), message, "수신 : " + this.partner.getChr().getName());
-    if (((MapleCharacter)this.chr.get()).getClient().isMonitored()) {
-      World.Broadcast.broadcastGMMessage(CWvsContext.serverNotice(6, ((MapleCharacter)this.chr.get()).getName(), ((MapleCharacter)this.chr.get()).getName() + " said in trade with " + this.partner.getChr().getName() + ": " + message));
-    } else if (this.partner != null && this.partner.getChr() != null && this.partner.getChr().getClient().isMonitored()) {
-      World.Broadcast.broadcastGMMessage(CWvsContext.serverNotice(6, ((MapleCharacter)this.chr.get()).getName(), ((MapleCharacter)this.chr.get()).getName() + " said in trade with " + this.partner.getChr().getName() + ": " + message));
-    } 
-  }
-  
-  public final void chatAuto(String message) {
-    ((MapleCharacter)this.chr.get()).dropMessage(-2, message);
-    if (this.partner != null)
-      this.partner.getChr().getClient().getSession().writeAndFlush(PlayerShopPacket.shopChat(this.partner.getChr(), this.partner.getChr().getName(), this.partner.getChr().getId(), message, 1)); 
-    if (((MapleCharacter)this.chr.get()).getClient().isMonitored()) {
-      World.Broadcast.broadcastGMMessage(CWvsContext.serverNotice(6, ((MapleCharacter)this.chr.get()).getName(), ((MapleCharacter)this.chr.get()).getName() + " said in trade [Automated] with " + this.partner.getChr().getName() + ": " + message));
-    } else if (this.partner != null && this.partner.getChr() != null && this.partner.getChr().getClient().isMonitored()) {
-      World.Broadcast.broadcastGMMessage(CWvsContext.serverNotice(6, ((MapleCharacter)this.chr.get()).getName(), ((MapleCharacter)this.chr.get()).getName() + " said in trade [Automated] with " + this.partner.getChr().getName() + ": " + message));
-    } 
-  }
-  
-  public final MapleTrade getPartner() {
-    return this.partner;
-  }
-  
-  public final void setPartner(MapleTrade partner) {
-    if (this.locked)
-      return; 
-    this.partner = partner;
-  }
-  
-  public final MapleCharacter getChr() {
-    return this.chr.get();
-  }
-  
-  public final int getNextTargetSlot() {
-    if (this.items.size() >= 9)
-      return -1; 
-    int ret = 1;
-    for (Item item : this.items) {
-      if (item.getPosition() == ret)
-        ret++; 
-    } 
-    return ret;
-  }
-  
-  public boolean inTrade() {
-    return this.inTrade;
-  }
-  
-  public final boolean setItems(MapleClient c, Item item, byte targetSlot, int quantity) {
-    int target = getNextTargetSlot();
-    MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-    if (this.partner == null || target == -1 || isLocked() || ((GameConstants.getInventoryType(item.getItemId()) == MapleInventoryType.EQUIP || GameConstants.getInventoryType(item.getItemId()) == MapleInventoryType.CODY) && quantity != 1))
-      return false; 
-    int flag = item.getFlag();
-    if (ItemFlag.LOCK.check(flag)) {
-      c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-      return false;
-    } 
-    if ((ItemFlag.UNTRADEABLE.check(flag) || GameConstants.isPet(item.getItemId()) || ii.isDropRestricted(item.getItemId()) || ii.isAccountShared(item.getItemId())) && 
-      !ItemFlag.KARMA_EQUIP.check(flag) && !ItemFlag.KARMA_USE.check(flag)) {
-      c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-      return false;
-    } 
-    if (item.getType() == 1) {
-      Equip equip = (Equip)item;
-      if ((equip.getEnchantBuff() & 0x88) != 0) {
-        c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-        c.getPlayer().dropMessage(1, "장비의 흔적은 교환하실 수 없습니다.");
-        return false;
-      } 
-    } 
-    Item tradeItem = item.copy();
-    if (GameConstants.isThrowingStar(item.getItemId()) || GameConstants.isBullet(item.getItemId())) {
-      tradeItem.setQuantity(item.getQuantity());
-      MapleInventoryManipulator.removeFromSlot(c, GameConstants.getInventoryType(item.getItemId()), item.getPosition(), item.getQuantity(), true);
-    } else {
-      tradeItem.setQuantity((short)quantity);
-      MapleInventoryManipulator.removeFromSlot(c, GameConstants.getInventoryType(item.getItemId()), item.getPosition(), (short)quantity, true);
-    } 
-    if (targetSlot < 0) {
-      targetSlot = (byte)target;
-    } else {
-      for (Item itemz : this.items) {
-        if (itemz.getPosition() == targetSlot) {
-          targetSlot = (byte)target;
-          break;
-        } 
-      } 
-    } 
-    tradeItem.setPosition((short)targetSlot);
-    addItem(tradeItem);
-    return true;
-  }
-  
-  private final int check() {
-    if (((MapleCharacter)this.chr.get()).getMeso() + this.exchangeMeso < 0L)
-      return 1; 
-    if (this.exchangeItems != null) {
-      MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-      byte eq = 0, use = 0, setup = 0, etc = 0, cash = 0;
-      for (Item item : this.exchangeItems) {
-        switch (GameConstants.getInventoryType(item.getItemId())) {
-          case EQUIP:
-            eq = (byte)(eq + 1);
-            break;
-          case USE:
-            use = (byte)(use + 1);
-            break;
-          case SETUP:
-            setup = (byte)(setup + 1);
-            break;
-          case ETC:
-            etc = (byte)(etc + 1);
-            break;
-          case CASH:
-            cash = (byte)(cash + 1);
-            break;
-        } 
-        if (ii.isPickupRestricted(item.getItemId()) && ((MapleCharacter)this.chr.get()).haveItem(item.getItemId(), 1, true, true))
-          return 2; 
-      } 
-      if (((MapleCharacter)this.chr.get()).getInventory(MapleInventoryType.EQUIP).getNumFreeSlot() < eq || ((MapleCharacter)this.chr.get()).getInventory(MapleInventoryType.USE).getNumFreeSlot() < use || ((MapleCharacter)this.chr.get()).getInventory(MapleInventoryType.SETUP).getNumFreeSlot() < setup || ((MapleCharacter)this.chr.get()).getInventory(MapleInventoryType.ETC).getNumFreeSlot() < etc || ((MapleCharacter)this.chr.get()).getInventory(MapleInventoryType.CASH).getNumFreeSlot() < cash)
-        return 1; 
-    } 
-    return 0;
-  }
-  
-  public static final void completeTrade(MapleCharacter c) {
-    MapleTrade local = c.getTrade();
-    MapleTrade partner = local.getPartner();
-    if (partner == null || local.locked)
-      return; 
-    local.locked = true;
-    partner.getChr().getClient().getSession().writeAndFlush(CField.InteractionPacket.getTradeConfirmation());
-    partner.exchangeItems = new LinkedList<>(local.items);
-    partner.exchangeMeso = local.meso;
-    if (partner.isLocked()) {
-      int lz = local.check(), lz2 = partner.check();
-      if (lz == 0 && lz2 == 0) {
-        local.CompleteTrade();
-        partner.CompleteTrade();
-      } else {
-        partner.cancel(partner.getChr().getClient(), partner.getChr());
-        local.cancel(c.getClient(), c);
-      } 
-      partner.getChr().setTrade(null);
-      c.setTrade(null);
-    } 
-  }
-  
-  public static final void cancelTrade(MapleTrade Localtrade, MapleClient c, MapleCharacter chr) {
-    Localtrade.cancel(c, chr);
-    MapleTrade partner = Localtrade.getPartner();
-    if (partner != null && partner.getChr() != null) {
-      partner.cancel(partner.getChr().getClient(), partner.getChr());
-      partner.getChr().setTrade(null);
-    } 
-    chr.setTrade(null);
-  }
-  
-  public static final void startTrade(MapleCharacter c, boolean isTrade) {
-    if (c.getTrade() == null) {
-      c.setTrade(new MapleTrade((byte)0, c));
-      c.getClient().getSession().writeAndFlush(CField.InteractionPacket.getTradeStart(c.getClient(), c.getTrade(), (byte)0, isTrade));
-      c.isTrade = isTrade;
-    } else {
-      c.getClient().getSession().writeAndFlush(CWvsContext.serverNotice(5, "", "다른 유저와 교환중인 유저입니다."));
-    } 
-  }
-  
-  public static final void startCashTrade(MapleCharacter c) {
-    if (c.getTrade() == null) {
-      c.setTrade(new MapleTrade((byte)0, c));
-      c.getClient().getSession().writeAndFlush(CField.InteractionPacket.getCashTradeStart(c.getClient(), c.getTrade(), (byte)0));
-    } else {
-      c.getClient().getSession().writeAndFlush(CWvsContext.serverNotice(5, "", "다른 유저와 교환중인 유저입니다."));
-    } 
-  }
-  
-  public static final void inviteTrade(MapleCharacter c1, MapleCharacter c2, boolean isTrade) {
-    if (c1 == null || c1.getTrade() == null)
-      return; 
-    if (c2 != null && c2.getTrade() == null) {
-      c2.setTrade(new MapleTrade((byte)1, c2));
-      c2.getTrade().setPartner(c1.getTrade());
-      c1.getTrade().setPartner(c2.getTrade());
-      c2.getClient().getSession().writeAndFlush(CField.InteractionPacket.getTradeInvite(c1, isTrade));
-    } else {
-      c1.getClient().getSession().writeAndFlush(CWvsContext.serverNotice(5, "", "다른 유저와 교환중인 유저입니다."));
-      cancelTrade(c1.getTrade(), c1.getClient(), c1);
-    } 
-  }
-  
-  public static final void inviteCashTrade(MapleCharacter c1, MapleCharacter c2) {
-    if (c1 == null || c1.getTrade() == null)
-      return; 
-    if (c2 != null && c2.getTrade() == null) {
-      c2.setTrade(new MapleTrade((byte)1, c2));
-      c2.getTrade().setPartner(c1.getTrade());
-      c1.getTrade().setPartner(c2.getTrade());
-      c2.getClient().getSession().writeAndFlush(CField.InteractionPacket.getCashTradeInvite(c1));
-    } else {
-      c1.getClient().getSession().writeAndFlush(CWvsContext.serverNotice(5, "", "다른 유저와 교환중인 유저입니다."));
-      cancelTrade(c1.getTrade(), c1.getClient(), c1);
-    } 
-  }
-  
-  public static final void visitTrade(MapleCharacter c1, MapleCharacter c2, boolean isTrade) {
-    if (c2 != null && c1.getTrade() != null && c1.getTrade().getPartner() == c2.getTrade() && c2.getTrade() != null && c2.getTrade().getPartner() == c1.getTrade()) {
-      (c1.getTrade()).inTrade = true;
-      c2.getClient().getSession().writeAndFlush(PlayerShopPacket.shopVisitorAdd(c1, 1));
-      c1.getClient().getSession().writeAndFlush(CField.InteractionPacket.getTradeStart(c1.getClient(), c1.getTrade(), (byte)1, isTrade));
-    } else {
-      c1.getClient().getSession().writeAndFlush(CWvsContext.serverNotice(5, "", "다른 유저와 교환중인 유저입니다."));
-    } 
-  }
-  
-  public static final void visitCashTrade(MapleCharacter c1, MapleCharacter c2) {
-    if (c2 != null && c1.getTrade() != null && c1.getTrade().getPartner() == c2.getTrade() && c2.getTrade() != null && c2.getTrade().getPartner() == c1.getTrade()) {
-      (c1.getTrade()).inTrade = true;
-      c2.getClient().getSession().writeAndFlush(PlayerShopPacket.shopVisitorAdd(c1, 1));
-      c1.getClient().getSession().writeAndFlush(CField.InteractionPacket.getCashTradeStart(c1.getClient(), c1.getTrade(), (byte)1));
-    } else {
-      c1.getClient().getSession().writeAndFlush(CWvsContext.serverNotice(5, "", "다른 유저와 교환중인 유저입니다."));
-    } 
-  }
-  
-  public static final void declineTrade(MapleCharacter c) {
-    MapleTrade trade = c.getTrade();
-    if (trade != null) {
-      if (trade.getPartner() != null) {
-        MapleCharacter other = trade.getPartner().getChr();
-        if (other != null && other.getTrade() != null) {
-          other.getTrade().cancel(other.getClient(), other);
-          other.setTrade(null);
-          other.dropMessage(5, c.getName() + "님이 교환을 취소했습니다.");
-        } 
-      } 
-      trade.cancel(c.getClient(), c);
-      c.setTrade(null);
-    } 
-  }
-  
-  public byte getPRS() {
-    return this.rps;
-  }
-  
-  public void setRPS(byte rps) {
-    this.rps = rps;
-  }
+
+    private MapleTrade partner = null;
+    private final List<Item> items = new LinkedList<Item>();
+    private List<Item> exchangeItems;
+    private int meso = 0, exchangeMeso = 0;
+    private boolean locked = false, inTrade = false;
+    private final WeakReference<MapleCharacter> chr;
+    private final byte tradingslot;
+
+    public MapleTrade(final byte tradingslot, final MapleCharacter chr) {
+        this.tradingslot = tradingslot;
+        this.chr = new WeakReference<MapleCharacter>(chr);
+    }
+
+    public final void CompleteTrade() {
+        if (exchangeItems != null) { // just to be on the safe side...
+            List<Item> itemz = new LinkedList<Item>(exchangeItems);
+            for (final Item item : itemz) {
+                short flag = item.getFlag();
+
+                if (ItemFlag.KARMA_EQ.check(flag)) {
+                    item.setFlag((short) (flag - ItemFlag.KARMA_EQ.getValue()));
+                } else if (ItemFlag.KARMA_USE.check(flag)) {
+                    item.setFlag((short) (flag - ItemFlag.KARMA_USE.getValue()));
+                }
+                MapleInventoryManipulator.addFromDrop(chr.get().getClient(), item, false);
+                ServerLogger.getInstance().logTrade(LogType.Trade.Trade, chr.get().getId(), chr.get().getName(), partner.chr.get().getName(), MapleItemInformationProvider.getInstance().getName(item.getItemId()) + " (" + item.getItemId() + ") " + item.getQuantity() + "개", "");
+            }
+            exchangeItems.clear();
+        }
+        if (exchangeMeso > 0) {
+            ServerLogger.getInstance().logTrade(LogType.Trade.Trade, chr.get().getId(), chr.get().getName(), partner.chr.get().getName(), (exchangeMeso - GameConstants.getTaxAmount(exchangeMeso)) + " 메소", "");
+            chr.get().gainMeso(exchangeMeso - GameConstants.getTaxAmount(exchangeMeso), false, false);
+        }
+        exchangeMeso = 0;
+
+        chr.get().getClient().getSession().write(MaplePacketCreator.TradeMessage(tradingslot, (byte) 0x07));
+     //   chr.get().rosySymbol();
+//        chr.get().CustomStatEffect(false);
+        chr.get().customizeStat(0);
+    }
+
+    public final void cancel(final MapleClient c, final MapleCharacter chr) {
+        cancel(c, chr, 0);
+    }
+
+    public final void cancel(final MapleClient c, final MapleCharacter chr, final int unsuccessful) {
+        if (items != null) { // just to be on the safe side...
+            List<Item> itemz = new LinkedList<Item>(items);
+            for (final Item item : itemz) {
+                MapleInventoryManipulator.addFromDrop(c, item, false);
+            }
+            items.clear();
+        }
+        if (meso > 0) {
+            chr.gainMeso(meso, false, false);
+        }
+        meso = 0;
+
+        c.getSession().write(MaplePacketCreator.getTradeCancel(tradingslot, unsuccessful));
+    }
+
+    public final boolean isLocked() {
+        return locked;
+    }
+
+    public final void setMeso(final int meso) {
+        if (locked || partner == null || meso <= 0 || this.meso + meso <= 0) {
+            return;
+        }
+        if (chr.get().getMeso() >= meso) {
+            chr.get().gainMeso(-meso, false, false);
+            this.meso += meso;
+            chr.get().getClient().getSession().write(MaplePacketCreator.getTradeMesoSet((byte) 0, this.meso));
+            if (partner != null) {
+                partner.getChr().getClient().getSession().write(MaplePacketCreator.getTradeMesoSet((byte) 1, this.meso));
+            }
+        }
+        chr.get().getClient().getSession().write(MaplePacketCreator.enableActions());
+    }
+
+    public final void addItem(final Item item) {
+        if (locked || partner == null) {
+            return;
+        }
+        items.add(item);
+        chr.get().getClient().getSession().write(MaplePacketCreator.getTradeItemAdd((byte) 0, item));
+        if (partner != null) {
+            partner.getChr().getClient().getSession().write(MaplePacketCreator.getTradeItemAdd((byte) 1, item));
+        }
+    }
+
+    public final void chat(final String message) {
+        if (!CommandProcessor.processCommand(chr.get().getClient(), message, CommandType.TRADE)) {
+            chr.get().dropMessage(-2, chr.get().getName() + " : " + message);
+            if (partner != null) {
+                partner.getChr().getClient().getSession().write(PlayerShopPacket.shopChat(chr.get().getName() + " : " + message, 1));
+            }
+        }
+        ServerLogger.getInstance().logChat(LogType.Chat.Trade, chr.get().getId(), chr.get().getName(), message, "수신 : " + partner.getChr().getName());
+        if (chr.get().getClient().isMonitored()) { //Broadcast info even if it was a command.
+            World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, chr.get().getName() + " said in trade with " + partner.getChr().getName() + ": " + message));
+        } else if (partner != null && partner.getChr() != null && partner.getChr().getClient().isMonitored()) {
+            World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, chr.get().getName() + " said in trade with " + partner.getChr().getName() + ": " + message));
+        }
+    }
+
+    public final void chatAuto(final String message) {
+        chr.get().dropMessage(-2, message);
+        if (partner != null) {
+            partner.getChr().getClient().getSession().write(PlayerShopPacket.shopChat(message, 1));
+        }
+        if (chr.get().getClient().isMonitored()) { //Broadcast info even if it was a command.
+            World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, chr.get().getName() + " said in trade [Automated] with " + partner.getChr().getName() + ": " + message));
+        } else if (partner != null && partner.getChr() != null && partner.getChr().getClient().isMonitored()) {
+            World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, chr.get().getName() + " said in trade [Automated] with " + partner.getChr().getName() + ": " + message));
+        }
+    }
+
+    public final MapleTrade getPartner() {
+        return partner;
+    }
+
+    public final void setPartner(final MapleTrade partner) {
+        if (locked) {
+            return;
+        }
+        this.partner = partner;
+    }
+
+    public final MapleCharacter getChr() {
+        return chr.get();
+    }
+
+    public final int getNextTargetSlot() {
+        if (items.size() >= 9) {
+            return -1;
+        }
+        int ret = 1; //first slot
+        for (Item item : items) {
+            if (item.getPosition() == ret) {
+                ret++;
+            }
+        }
+        return ret;
+    }
+
+    public boolean inTrade() {
+        return inTrade;
+    }
+
+    public final boolean setItems(final MapleClient c, final Item item, byte targetSlot, final int quantity) {
+        int target = getNextTargetSlot();
+        final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+
+        if (partner == null || target == -1 || GameConstants.isPet(item.getItemId()) || isLocked() || (GameConstants.getInventoryType(item.getItemId()) == MapleInventoryType.EQUIP && quantity != 1)) {
+            return false;
+        }
+
+        final short flag = item.getFlag();
+
+        if (ItemFlag.UNTRADEABLE.check(flag) || ItemFlag.LOCK.check(flag)) {
+            c.getSession().write(MaplePacketCreator.enableActions());
+            return false;
+        }
+        if (ii.isDropRestricted(item.getItemId()) || ii.isAccountShared(item.getItemId())) {
+            if (!(ItemFlag.KARMA_EQ.check(flag) || ItemFlag.KARMA_USE.check(flag))) {
+                c.getSession().write(MaplePacketCreator.enableActions());
+                return false;
+            }
+        }
+        Item tradeItem = item.copy();
+        if (GameConstants.isThrowingStar(item.getItemId()) || GameConstants.isBullet(item.getItemId())) {
+            tradeItem.setQuantity(item.getQuantity());
+            MapleInventoryManipulator.removeFromSlot(c, GameConstants.getInventoryType(item.getItemId()), item.getPosition(), item.getQuantity(), true);
+        } else {
+            tradeItem.setQuantity((short) quantity);
+            MapleInventoryManipulator.removeFromSlot(c, GameConstants.getInventoryType(item.getItemId()), item.getPosition(), (short) quantity, true);
+        }
+        if (targetSlot < 0) {
+            targetSlot = (byte) target;
+        } else {
+            for (Item itemz : items) {
+                if (itemz.getPosition() == targetSlot) {
+                    targetSlot = (byte) target;
+                    break;
+                }
+            }
+        }
+        tradeItem.setPosition(targetSlot);
+        addItem(tradeItem);
+        if (item.getGiftFrom() != null) {
+            String fire = String.valueOf(item.getGiftFrom());
+            if (fire.length() >= 10) {
+                Item to = item.copy();
+                to.setGiftFrom("0");
+                
+//                partner.getChr().getClient().getSession().write(MaplePacketCreator.itemMegaphone(c.getPlayer().getName() + " 님의 교환 : " + "← 환생의 불꽃 사용 전 옵션", false, c.getChannel(), to));
+//                partner.getChr().getClient().getSession().write(MaplePacketCreator.itemMegaphone(c.getPlayer().getName() + " 님의 교환 : " + "← 환생의 불꽃 사용 후 옵션", false, c.getChannel(), item));
+            }
+        }
+        return true;
+    }
+
+    private final int check() { //0 = fine, 1 = invent space not, 2 = pickupRestricted
+        if (chr.get().getMeso() + exchangeMeso < 0) {
+            return 1;
+        }
+
+        if (exchangeItems != null) {
+            final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+            byte eq = 0, use = 0, setup = 0, etc = 0, cash = 0;
+            for (final Item item : exchangeItems) {
+                switch (GameConstants.getInventoryType(item.getItemId())) {
+                    case EQUIP:
+                        eq++;
+                        break;
+                    case USE:
+                        use++;
+                        break;
+                    case SETUP:
+                        setup++;
+                        break;
+                    case ETC:
+                        etc++;
+                        break;
+                    case CASH: // Not allowed, probably hacking
+                        cash++;
+                        break;
+                }
+                if (ii.isPickupRestricted(item.getItemId()) && chr.get().haveItem(item.getItemId(), 1, true, true)) {
+                    return 2;
+                }
+            }
+            if (chr.get().getInventory(MapleInventoryType.EQUIP).getNumFreeSlot() < eq || chr.get().getInventory(MapleInventoryType.USE).getNumFreeSlot() < use || chr.get().getInventory(MapleInventoryType.SETUP).getNumFreeSlot() < setup || chr.get().getInventory(MapleInventoryType.ETC).getNumFreeSlot() < etc || chr.get().getInventory(MapleInventoryType.CASH).getNumFreeSlot() < cash) {
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
+    public final static void completeTrade(final MapleCharacter c) {
+        final MapleTrade local = c.getTrade();
+        final MapleTrade partner = local.getPartner();
+
+        if (partner == null || local.locked) {
+            return;
+        }
+        local.locked = true; // Locking the trade
+        partner.getChr().getClient().getSession().write(MaplePacketCreator.getTradeConfirmation());
+
+        partner.exchangeItems = new LinkedList<Item>(local.items); // Copy this to partner's trade since it's alreadt accepted
+        partner.exchangeMeso = local.meso; // Copy this to partner's trade since it's alreadt accepted
+
+        if (partner.isLocked()) { // Both locked
+            int lz = local.check(), lz2 = partner.check();
+            if (lz == 0 && lz2 == 0) {
+                local.CompleteTrade();
+                partner.CompleteTrade();
+            } else {
+                // NOTE : IF accepted = other party but inventory is full, the item is lost.
+                partner.cancel(partner.getChr().getClient(), partner.getChr(), lz == 0 ? lz2 : lz);
+                local.cancel(c.getClient(), c, lz == 0 ? lz2 : lz);
+            }
+            partner.getChr().setTrade(null);
+            c.setTrade(null);
+        }
+    }
+
+    public static final void cancelTrade(final MapleTrade Localtrade, final MapleClient c, final MapleCharacter chr) {
+        Localtrade.cancel(c, chr);
+
+        final MapleTrade partner = Localtrade.getPartner();
+        if (partner != null && partner.getChr() != null) {
+            partner.cancel(partner.getChr().getClient(), partner.getChr());
+            partner.getChr().setTrade(null);
+        }
+        chr.setTrade(null);
+    }
+
+    public static final void startTrade(final MapleCharacter c) {
+        if (c.getLevel() < 0) {
+            c.dropMessage(1, "교환은 레벨 1부터 이용 가능합니다.");
+            return;
+        }
+        if (c.getTrade() == null) {
+            c.setTrade(new MapleTrade((byte) 0, c));
+            c.getClient().getSession().write(MaplePacketCreator.getTradeStart(c.getClient(), c.getTrade(), (byte) 0));
+        } else {
+            c.getClient().getSession().write(MaplePacketCreator.serverNotice(5, "아직 교환을 시도할 수 없습니다."));
+        }
+    }
+
+    public static final void startCashTrade(final MapleCharacter c) {
+        if (c.getTrade() == null) {
+            c.setTrade(new MapleTrade((byte) 0, c));
+            c.getClient().getSession().write(MaplePacketCreator.getCashTradeStart(c.getClient(), c.getTrade(), (byte) 0));
+        } else {
+            c.getClient().getSession().write(MaplePacketCreator.serverNotice(5, "아직 교환을 시도할 수 없습니다."));
+        }
+    }
+
+    public static final void inviteTrade(final MapleCharacter c1, final MapleCharacter c2) {
+        if (c1 == null || c1.getTrade() == null) {
+            return;
+        }
+        if (c2 != null && c2.getTrade() == null) {
+            c2.setTrade(new MapleTrade((byte) 1, c2));
+            c2.getTrade().setPartner(c1.getTrade());
+            c1.getTrade().setPartner(c2.getTrade());
+            c2.getClient().getSession().write(MaplePacketCreator.getTradeInvite(c1));
+        } else {
+            c1.getClient().getSession().write(MaplePacketCreator.serverNotice(5, "이미 교환 중 입니다."));
+            cancelTrade(c1.getTrade(), c1.getClient(), c1);
+        }
+    }
+
+    public static final void inviteCashTrade(final MapleCharacter c1, final MapleCharacter c2) {
+        if (c1 == null || c1.getTrade() == null) {
+            return;
+        }
+        if (c2 != null && c2.getTrade() == null) {
+            c2.setTrade(new MapleTrade((byte) 1, c2));
+            c2.getTrade().setPartner(c1.getTrade());
+            c1.getTrade().setPartner(c2.getTrade());
+            c2.getClient().getSession().write(MaplePacketCreator.getCashTradeInvite(c1));
+        } else {
+            c1.getClient().getSession().write(MaplePacketCreator.serverNotice(5, "대상은 이미 교환중입니다."));
+            cancelTrade(c1.getTrade(), c1.getClient(), c1);
+        }
+    }
+
+    public static final void visitTrade(final MapleCharacter c1, final MapleCharacter c2) {
+        if (c2 != null && c1.getTrade() != null && c1.getTrade().getPartner() == c2.getTrade() && c2.getTrade() != null && c2.getTrade().getPartner() == c1.getTrade()) {
+            // We don't need to check for map here as the user is found via MapleMap.getCharacterById()
+            c1.getTrade().inTrade = true;
+            c2.getClient().getSession().write(PlayerShopPacket.shopVisitorAdd(c1, 1));
+            c1.getClient().getSession().write(MaplePacketCreator.getTradeStart(c1.getClient(), c1.getTrade(), (byte) 1));
+        } else {
+            c1.getClient().getSession().write(MaplePacketCreator.serverNotice(5, "교환신청이 취소되었습니다."));
+        }
+    }
+
+    public static final void visitCashTrade(final MapleCharacter c1, final MapleCharacter c2) {
+        if (c2 != null && c1.getTrade() != null && c1.getTrade().getPartner() == c2.getTrade() && c2.getTrade() != null && c2.getTrade().getPartner() == c1.getTrade()) {
+            // We don't need to check for map here as the user is found via MapleMap.getCharacterById()
+            c1.getTrade().inTrade = true;
+            c2.getClient().getSession().write(PlayerShopPacket.shopVisitorAdd(c1, 1));
+            c1.getClient().getSession().write(MaplePacketCreator.getCashTradeStart(c1.getClient(), c1.getTrade(), (byte) 1));
+        } else {
+            c1.getClient().getSession().write(MaplePacketCreator.serverNotice(5, "캐시 교환신청이 취소되었습니다."));
+        }
+    }
+
+    public static final void declineTrade(final MapleCharacter c) {
+        final MapleTrade trade = c.getTrade();
+        if (trade != null) {
+            if (trade.getPartner() != null) {
+                MapleCharacter other = trade.getPartner().getChr();
+                if (other != null && other.getTrade() != null) {
+                    other.getTrade().cancel(other.getClient(), other);
+                    other.setTrade(null);
+                    other.dropMessage(5, c.getName() + " 님이 교환신청을 거절했습니다.");
+                }
+            }
+            trade.cancel(c.getClient(), c);
+            c.setTrade(null);
+        }
+    }
 }

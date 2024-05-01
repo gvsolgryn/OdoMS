@@ -1,35 +1,41 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package server.movement;
+
+import java.awt.Point;
 
 import tools.data.MaplePacketLittleEndianWriter;
 
-import java.awt.*;
-
 public class RelativeLifeMovement extends AbstractLifeMovement {
-  private int nAttr;
-  
-  private Point v307;
-  
-  public RelativeLifeMovement(int type, Point position, int duration, int newstate, byte unk) {
-    super(type, position, duration, newstate, (short)0, unk);
-  }
-  
-  public void setAttr(int nAttr) {
-    this.nAttr = nAttr;
-  }
-  
-  public void setV307(Point v307) {
-    this.v307 = v307;
-  }
-  
-  public void serialize(MaplePacketLittleEndianWriter packet) {
-    packet.write(getType());
-    packet.writePos(getPosition());
-    if (getType() == 21 || getType() == 22)
-      packet.writeShort(this.nAttr); 
-    if (getType() == 59)
-      packet.writePos(this.v307); 
-    packet.write(getNewstate());
-    packet.writeShort(getDuration());
-    packet.write(getUnk());
-  }
+
+    public RelativeLifeMovement(int type, Point position, int duration, int newstate) {
+        super(type, position, duration, newstate);
+    }
+
+    @Override
+    public void serialize(MaplePacketLittleEndianWriter lew) {
+        lew.write(getType());
+        lew.writeShort(getPosition().x);
+        lew.writeShort(getPosition().y);
+        lew.write(getNewstate());
+        lew.writeShort(getDuration());
+    }
 }

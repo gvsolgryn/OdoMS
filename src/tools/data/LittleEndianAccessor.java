@@ -1,188 +1,273 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package tools.data;
 
 import java.awt.*;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
+/**
+ * Provides a interface to a Little Endian stream of bytes.
+ *
+ * @author Frz
+ * @version 1.0
+ * @since Revision 323
+ */
 public class LittleEndianAccessor {
-  private final ByteArrayByteStream bs;
-  
-  public int bits = 0;
-  
-  public LittleEndianAccessor(ByteArrayByteStream bs) {
-    this.bs = bs;
-  }
-  
-  public final byte[] getByteArray() {
-    return this.bs.getByteArray();
-  }
-  
-  public final int readBit(int bit) throws IOException {
-    byte[] arr = new byte[8];
-    byte b = (byte)(this.bs.getByteArray()[(int)this.bs.getPosition()] & 0xFF);
-    int bb = this.bits;
-    int v = 0;
-    for (int i = 0; i < bit; i++) {
-      arr[this.bits] = (byte)(b >>> this.bits & 0xFF & 0x1);
-      v += arr[this.bits] << i;
-      this.bits++;
-      if (this.bits == 8) {
-        arr = new byte[8];
-        this.bs.seek(this.bs.getPosition() + 1L);
-        this.bits = 0;
-        if (bit - i > 1)
-          b = (byte)(this.bs.getByteArray()[(int)this.bs.getPosition()] & 0xFF); 
-      } 
-    } 
-    return v;
-  }
-  
-  public final byte readByte() {
-    return (byte)this.bs.readByte();
-  }
-  
-  public final int readByteToInt() {
-    return this.bs.readByte();
-  }
-  
-  public final int readInt() {
-    int byte1 = this.bs.readByte();
-    int byte2 = this.bs.readByte();
-    int byte3 = this.bs.readByte();
-    int byte4 = this.bs.readByte();
-    return (byte4 << 24) + (byte3 << 16) + (byte2 << 8) + byte1;
-  }
-  
-  public final short readShort() {
-    int byte1 = this.bs.readByte();
-    int byte2 = this.bs.readByte();
-    return (short)((byte2 << 8) + byte1);
-  }
-  
-  public final int readUShort() {
-    int quest = readShort();
-    if (quest < 0)
-      quest += 65536; 
-    return quest;
-  }
-  
-  public final char readChar() {
-    return (char)readShort();
-  }
-  
-  public final long readLong() {
-    long byte1 = this.bs.readByte();
-    long byte2 = this.bs.readByte();
-    long byte3 = this.bs.readByte();
-    long byte4 = this.bs.readByte();
-    long byte5 = this.bs.readByte();
-    long byte6 = this.bs.readByte();
-    long byte7 = this.bs.readByte();
-    long byte8 = this.bs.readByte();
-    return (byte8 << 56L) + (byte7 << 48L) + (byte6 << 40L) + (byte5 << 32L) + (byte4 << 24L) + (byte3 << 16L) + (byte2 << 8L) + byte1;
-  }
-  
-  public final float readFloat() {
-    return Float.intBitsToFloat(readInt());
-  }
-  
-  public final double readDouble() {
-    return Double.longBitsToDouble(readLong());
-  }
-  
-  public String readAsciiString(int n) {
-    byte[] ret = new byte[n];
-    for (int x = 0; x < n; x++)
-      ret[x] = readByte(); 
-    return new String(ret, Charset.forName("MS949"));
-  }
-  
-  public final String readAsciiString2(int n) {
-    try {
-      byte[] ret = new byte[n];
-      for (int x = 0; x < n; x++)
-        ret[x] = readByte(); 
-      return new String(ret, "UTF-8");
-    } catch (UnsupportedEncodingException ex) {
-      ex.printStackTrace();
-      return null;
-    } 
-  }
-  
-  public final String readMapleAsciiString2() {
-    return readAsciiString2(readShort());
-  }
-  
-  public final String readNullTerminatedAsciiString() {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    while (true) {
-      byte b = readByte();
-      if (b == 0)
-        break; 
-      baos.write(b);
-    } 
-    byte[] buf = baos.toByteArray();
-    char[] chrBuf = new char[buf.length];
-    for (int x = 0; x < buf.length; x++)
-      chrBuf[x] = (char)buf[x]; 
-    return String.valueOf(chrBuf);
-  }
-  
-  public final long getBytesRead() {
-    return this.bs.getBytesRead();
-  }
-  
-    public final String readMapleAsciiString() {
-         return readAsciiString(readShort());
-    }
-  
-  public final Point readPos() {
-    int x = readShort();
-    int y = readShort();
-    return new Point(x, y);
-  }
-  
-  public final Point readIntPos() {
-    int x = readInt();
-    int y = readInt();
-    return new Point(x, y);
-  }
-  
-  public final byte[] read(int num) {
-    byte[] ret = new byte[num];
-    for (int x = 0; x < num; x++)
-      ret[x] = readByte(); 
-    return ret;
-  }
-  
-  public final long available() {
-    return this.bs.available();
-  }
-  
-  public final String toString() {
-    return this.bs.toString();
-  }
-  
-  public final String toString(boolean b) {
-    return this.bs.toString(b);
-  }
-  
-  public final void seek(long offset) {
-    try {
-      this.bs.seek(offset);
-    } catch (IOException e) {
-      System.err.println("Seek failed" + e);
-    } 
-  }
-  
-  public final long getPosition() {
-    return this.bs.getPosition();
-  }
-  
-  public final void skip(int num) {
-    seek(getPosition() + num);
-  }
-}
 
+    private final ByteArrayByteStream bs;
+
+    /**
+     * Class constructor - Wraps the accessor around a stream of bytes.
+     *
+     * @param bs The byte stream to wrap the accessor around.
+     */
+    public LittleEndianAccessor(final ByteArrayByteStream bs) {
+        this.bs = bs;
+    }
+
+    /**
+     * Read a single byte from the stream.
+     *
+     * @return The byte read.
+     * @see net.sf.odinms.tools.data.ByteInputStream#readByte
+     */
+    public final byte readByte() {
+        return (byte) bs.readByte();
+    }
+
+    public final String readAsciiString2(final int n) {
+        try {
+            final byte ret[] = new byte[n];
+            for (int x = 0; x < n; x++) {
+                ret[x] = readByte();
+            }
+            return new String(ret, "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+    
+    public final String readMapleAsciiString2() {
+        return readAsciiString2(readShort());
+    }
+
+    /**
+     * Reads an integer from the stream.
+     *
+     * @return The integer read.
+     */
+    public final int readInt() {
+        final int byte1 = bs.readByte();
+        final int byte2 = bs.readByte();
+        final int byte3 = bs.readByte();
+        final int byte4 = bs.readByte();
+        return (byte4 << 24) + (byte3 << 16) + (byte2 << 8) + byte1;
+    }
+
+    /**
+     * Reads a short integer from the stream.
+     *
+     * @return The short read.
+     */
+    public final short readShort() {
+        final int byte1 = bs.readByte();
+        final int byte2 = bs.readByte();
+        return (short) ((byte2 << 8) + byte1);
+    }
+
+    public final int readUShort() {
+        int quest = readShort();
+        if (quest < 0) { //questid 50000 and above, WILL cast to negative, this was tested.
+            quest += 65536; //probably not the best fix, but whatever
+        }
+        return quest;
+    }
+
+    /**
+     * Reads a single character from the stream.
+     *
+     * @return The character read.
+     */
+    public final char readChar() {
+        return (char) readShort();
+    }
+
+    /**
+     * Reads a long integer from the stream.
+     *
+     * @return The long integer read.
+     */
+    public final long readLong() {
+        long byte1 = bs.readByte();
+        long byte2 = bs.readByte();
+        long byte3 = bs.readByte();
+        long byte4 = bs.readByte();
+        long byte5 = bs.readByte();
+        long byte6 = bs.readByte();
+        long byte7 = bs.readByte();
+        long byte8 = bs.readByte();
+
+        return (byte8 << 56) + (byte7 << 48) + (byte6 << 40) + (byte5 << 32) + (byte4 << 24) + (byte3 << 16)
+                + (byte2 << 8) + byte1;
+    }
+
+    /**
+     * Reads a floating point integer from the stream.
+     *
+     * @return The float-type integer read.
+     */
+    public final float readFloat() {
+        return Float.intBitsToFloat(readInt());
+    }
+
+    /**
+     * Reads a double-precision integer from the stream.
+     *
+     * @return The double-type integer read.
+     */
+    public final double readDouble() {
+        return Double.longBitsToDouble(readLong());
+    }
+
+    /**
+     * Reads an ASCII string from the stream with length <code>n</code>.
+     *
+     * @param n Number of characters to read.
+     * @return The string read.
+     */
+    public final String readAsciiString(final int n) {
+        final byte ret[] = new byte[n];
+        for (int x = 0; x < n; x++) {
+            ret[x] = readByte();
+        }
+        return new String(ret, Charset.forName("MS949"));
+    }
+
+    /**
+     * Gets the number of bytes read from the stream so far.
+     *
+     * @return A long integer representing the number of bytes read.
+     * @see net.sf.odinms.tools.data.ByteInputStream#getBytesRead()
+     */
+    public final long getBytesRead() {
+        return bs.getBytesRead();
+    }
+
+    /**
+     * Reads a MapleStory convention lengthed ASCII string. This consists of a
+     * short integer telling the length of the string, then the string itself.
+     *
+     * @return The string read.
+     */
+    public final String readMapleAsciiString() {
+        return readAsciiString(readShort());
+    }
+
+    /**
+     * Reads a MapleStory Position information. This consists of 2 short
+     * integer.
+     *
+     * @return The Position read.
+     */
+    public final Point readPos() {
+        final int x = readShort();
+        final int y = readShort();
+        return new Point(x, y);
+    }
+
+    /**
+     * Reads <code>num</code> bytes off the stream.
+     *
+     * @param num The number of bytes to read.
+     * @return An array of bytes with the length of <code>num</code>
+     */
+    public final byte[] read(final int num) {
+        byte[] ret = new byte[num];
+        for (int x = 0; x < num; x++) {
+            ret[x] = readByte();
+        }
+        return ret;
+    }
+
+    /**
+     * Skips the current position of the stream <code>num</code> bytes ahead.
+     *
+     * @param num Number of bytes to skip.
+     */
+    //public void skip(final int num) {
+    //    for (int x = 0; x < num; x++) {
+    //        readByte();
+    //    }
+    //}
+    /**
+     * @see net.sf.odinms.tools.data.ByteInputStream#available
+     */
+    public final long available() {
+        return bs.available();
+    }
+
+    /**
+     * @see java.lang.Object#toString
+     */
+    public final String toString() {
+        return bs.toString();
+    }
+
+    public final String toString(final boolean b) {
+        return bs.toString(b);
+    }
+
+    /**
+     * Seek the pointer to <code>offset</code>
+     *
+     * @param offset The offset to seek to.
+     * @see net.sf.odinms.tools.data.SeekableInputStreamBytestream#seek
+     */
+    public final void seek(final long offset) {
+        try {
+            bs.seek(offset);
+        } catch (IOException e) {
+            System.err.println("Seek failed" + e);
+        }
+    }
+
+    /**
+     * Get the current position of the pointer.
+     *
+     * @return The current position of the pointer as a long integer.
+     * @see net.sf.odinms.tools.data.SeekableInputStreamBytestream#getPosition
+     */
+    public final long getPosition() {
+        return bs.getPosition();
+    }
+
+    /**
+     * Skip <code>num</code> number of bytes in the stream.
+     *
+     * @param num The number of bytes to skip.
+     */
+    public final void skip(final int num) {
+        seek(getPosition() + num);
+    }
+}

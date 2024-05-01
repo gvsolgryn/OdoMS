@@ -1,85 +1,91 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package server.life;
 
-import client.MapleCharacter;
 import client.MapleClient;
+import server.MapleShopFactory;
 import server.maps.MapleMapObjectType;
-import server.shops.MapleShopFactory;
-import tools.packet.CField;
+import tools.MaplePacketCreator;
 
 public class MapleNPC extends AbstractLoadedMapleLife {
-  private MapleCharacter owner = null;
-  
-  private boolean left = false;
-  
-  private String name = "MISSINGNO";
-  
-  private boolean custom = false;
-  
-  public MapleNPC(int id, String name) {
-    super(id);
-    this.name = name;
-  }
-  
-  public final boolean hasShop() {
-    return (MapleShopFactory.getInstance().getShopForNPC(getId()) != null);
-  }
-  
-  public final void sendShop(MapleClient c) {
-    MapleShopFactory.getInstance().getShopForNPC(getId()).sendShop(c);
-  }
-  
-  public void sendSpawnData(MapleClient client) {
-    if (getId() >= 9901000)
-      return; 
-    if (this.owner != null) {
-      if (client.getPlayer().getId() == this.owner.getId()) {
-        client.getSession().writeAndFlush(CField.NPCPacket.spawnNPC(this, true));
-        client.getSession().writeAndFlush(CField.NPCPacket.spawnNPCRequestController(this, true));
-      } 
-    } else {
-      client.getSession().writeAndFlush(CField.NPCPacket.spawnNPC(this, true));
-      client.getSession().writeAndFlush(CField.NPCPacket.spawnNPCRequestController(this, true));
-    } 
-  }
-  
-  public final void sendDestroyData(MapleClient client) {
-    client.getSession().writeAndFlush(CField.NPCPacket.removeNPCController(getObjectId()));
-    client.getSession().writeAndFlush(CField.NPCPacket.removeNPC(getObjectId()));
-  }
-  
-  public final MapleMapObjectType getType() {
-    return MapleMapObjectType.NPC;
-  }
-  
-  public final String getName() {
-    return this.name;
-  }
-  
-  public void setName(String n) {
-    this.name = n;
-  }
-  
-  public final boolean isCustom() {
-    return this.custom;
-  }
-  
-  public final void setCustom(boolean custom) {
-    this.custom = custom;
-  }
-  
-  public MapleCharacter getOwner() {
-    return this.owner;
-  }
-  
-  public void setOwner(MapleCharacter owner) {
-    this.owner = owner;
-  }
-  
-  public boolean isLeft() {
-    return this.left;
-  }
-  
-  public void setLeft(boolean left) {
-    this.left = left;
-  }
+
+    private String name = "MISSINGNO";
+    private boolean custom = false;
+    private boolean isMove = false;
+
+    public MapleNPC(final int id, final String name) {
+        super(id);
+        this.name = name;
+    }
+    
+    public boolean isMove() {
+        return isMove;
+    }
+    
+    public void setMove(boolean isMove) {
+        this.isMove = isMove;
+    }
+
+    public final boolean hasShop() {
+        return MapleShopFactory.getInstance().getShopForNPC(getId()) != null;
+    }
+
+    public final void sendShop(final MapleClient c) {
+        MapleShopFactory.getInstance().getShopForNPC(getId()).sendShop(c);
+    }
+
+    @Override
+    public void sendSpawnData(final MapleClient client) {
+        if (getId() >= 9901000) {
+            return;
+        } else {
+            client.getSession().write(MaplePacketCreator.spawnNPC(this, true));
+            client.getSession().write(MaplePacketCreator.spawnNPCRequestController(this, true));
+        }
+    }
+
+    @Override
+    public final void sendDestroyData(final MapleClient client) {
+        client.getSession().write(MaplePacketCreator.removeNPCController(getObjectId()));
+        client.getSession().write(MaplePacketCreator.removeNPC(getObjectId()));
+    }
+
+    @Override
+    public final MapleMapObjectType getType() {
+        return MapleMapObjectType.NPC;
+    }
+
+    public final String getName() {
+        return name;
+    }
+
+    public void setName(String n) {
+        this.name = n;
+    }
+
+    public final boolean isCustom() {
+        return custom;
+    }
+
+    public final void setCustom(final boolean custom) {
+        this.custom = custom;
+    }
 }

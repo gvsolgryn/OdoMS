@@ -1,7 +1,28 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package client.inventory;
 
 import database.DatabaseConnection;
 import server.MapleItemInformationProvider;
+import server.movement.AbsoluteLifeMovement;
 import server.movement.LifeMovement;
 import server.movement.LifeMovementFragment;
 
@@ -11,51 +32,44 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class MaplePet
-        implements Serializable {
+public class MaplePet implements Serializable {
 
-    private static final long serialVersionUID = 9179541993413738569L;
-    private String name;
-    private String ExceptionList;
+    public static enum PetFlag {
 
-    public enum PetFlag {
-        ITEM_PICKUP(1, 5190000, 5191000),
-        EXPAND_PICKUP(2, 5190002, 5191002),
-        AUTO_PICKUP(4, 5190003, 5191003),
-        UNPICKABLE(8, 5190005, -1),
-        LEFTOVER_PICKUP(16, 5190004, 5191004),
-        HP_CHARGE(32, 5190001, 5191001),
-        MP_CHARGE(64, 5190006, -1),
-        PET_BUFF(128, 5190010, -1),
-        PET_TRAINING(256, 5190011, -1),
-        PET_GIANT(512, 5190012, -1),
-        PET_SHOP(1024, 5190013, -1);
-        private final int i;
+        ITEM_PICKUP(0x01, 5190000, 5191000),
+        HP_CHARGE(0x20, 5190001, 5191001),
+        EXPAND_PICKUP(0x02, 5190002, 5191002), //idk
+        AUTO_PICKUP(0x04, 5190003, 5191003), //idk
+        LEFTOVER_PICKUP(0x10, 5190004, 5191004), //idk
+        UNPICKABLE(0x08, 5190005, -1),
+        MP_CHARGE(0x40, 5190006, -1),
+        PET_BUFF(0x80, -1, -1), //idk
+        PET_DRAW(0x100, 5190007, -1), //nfs
+        PET_DIALOGUE(0x200, 5190008, -1); //nfs
+        private final int i, item, remove;
 
-        PetFlag(int i, int item, int remove) {
+        private PetFlag(int i, int item, int remove) {
             this.i = i;
             this.item = item;
             this.remove = remove;
         }
 
-        private final int item;
-        private final int remove;
-
         public final int getValue() {
-            return this.i;
+            return i;
         }
 
         public final boolean check(int flag) {
-            return ((flag & this.i) == this.i);
+            return (flag & i) == i;
         }
 
-        public static final PetFlag getByAddId(int itemId) {
-            for (PetFlag flag : values()) {
+        public static final PetFlag getByAddId(final int itemId) {
+            for (PetFlag flag : PetFlag.values()) {
                 if (flag.item == itemId) {
                     return flag;
                 }
@@ -63,8 +77,8 @@ public class MaplePet
             return null;
         }
 
-        public static final PetFlag getByDelId(int itemId) {
-            for (PetFlag flag : values()) {
+        public static final PetFlag getByDelId(final int itemId) {
+            for (PetFlag flag : PetFlag.values()) {
                 if (flag.remove == itemId) {
                     return flag;
                 }
@@ -73,345 +87,410 @@ public class MaplePet
         }
     }
 
-    private int Fh = 0;
-    private int stance = 0;
-    private int color = -1;
-    private int petitemid;
-    private int secondsLeft = 0;
-    private int buffSkillId = 0;
-    private int buffSkillId2 = 0;
-    private int wonderGrade = -1;
-    private long uniqueid;
+    private static final long serialVersionUID = 9179541993413738569L;
+    private String name;
+    private int Fh = 0, stance = 0, uniqueid, petitemid, secondsLeft = 0;
     private Point pos;
-    private byte fullness = 100;
-    private byte level = 1;
-    private byte summoned = 0;
-    private short inventorypos = 0;
-    private short closeness = 0;
-    private short flags = 0;
-    private short size = 100;
+    private byte fullness = 100, level = 1, summoned = 0, speed = 0;
+    private short inventorypos = 0, closeness = 0, flags = 0;
     private boolean changed = false;
+    private List<Integer> exceptionPickup = null;
+    private int skillid;
 
-    private MaplePet(int petitemid, long uniqueid) {
+    private MaplePet(final int petitemid, final int uniqueid) {
         this.petitemid = petitemid;
         this.uniqueid = uniqueid;
     }
 
-    private MaplePet(int petitemid, long uniqueid, short inventorypos) {
+    private MaplePet(final int petitemid, final int uniqueid, final short inventorypos) {
         this.petitemid = petitemid;
         this.uniqueid = uniqueid;
         this.inventorypos = inventorypos;
     }
 
-    public static final MaplePet loadFromDb(int itemid, long petid, short inventorypos) {
+    public static final MaplePet loadFromDb(final int itemid, final int petid, final short inventorypos) {
         Connection con = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            MaplePet ret = new MaplePet(itemid, petid, inventorypos);
+            final MaplePet ret = new MaplePet(itemid, petid, inventorypos);
 
-            con = DatabaseConnection.getConnection();
-            ps = con.prepareStatement("SELECT * FROM pets WHERE petid = ?");
-            ps.setLong(1, petid);
+            con = DatabaseConnection.getConnection(); // Get a connection to the database
+            ps = con.prepareStatement("SELECT * FROM pets WHERE petid = ?"); // Get pet details..
+            ps.setInt(1, petid);
 
             rs = ps.executeQuery();
             if (!rs.next()) {
-                rs.close();
-                ps.close();
                 return null;
             }
+
             ret.setName(rs.getString("name"));
             ret.setCloseness(rs.getShort("closeness"));
             ret.setLevel(rs.getByte("level"));
             ret.setFullness(rs.getByte("fullness"));
             ret.setSecondsLeft(rs.getInt("seconds"));
             ret.setFlags(rs.getShort("flags"));
-            ret.setBuffSkillId(rs.getInt("petbuff"));
-            ret.setPetSize(rs.getShort("size"));
-            ret.setWonderGrade(rs.getInt("wonderGrade"));
-            ret.setExceptionList(rs.getString("exceptionlist"));
-            ret.setBuffSkillId2(rs.getInt("petbuff2"));
-            ret.setChanged(false);
-            rs.close();
-            ps.close();
-            con.close();
+            ret.setSpeed(rs.getByte("Speed"));
+            ret.setBuffSkill(rs.getInt("buffid"));
+            ret.changed = false;
+
+            if (PetFlag.UNPICKABLE.check(ret.getFlags())) {
+                rs.close();
+                ps.close();
+                ps = con.prepareStatement("SELECT * FROM `pets_expick` WHERE `petsn` = ?");
+                ps.setInt(1, petid);
+                rs = ps.executeQuery();
+                while (rs.next()) {
+                    ret.getPickupExceptionList().add(rs.getInt("itemid"));
+                }
+            }
+
             return ret;
         } catch (SQLException ex) {
-            Logger.getLogger(MaplePet.class.getName()).log(Level.SEVERE, (String) null, ex);
+            Logger.getLogger(MaplePet.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         } finally {
-            try {
-                if (con != null) {
+            if (con != null) {
+                try {
                     con.close();
+                } catch (Exception e) {
                 }
-                if (ps != null) {
+            }
+            if (ps != null) {
+                try {
                     ps.close();
+                } catch (Exception e) {
                 }
-                if (rs != null) {
+            }
+            if (rs != null) {
+                try {
                     rs.close();
+                } catch (Exception e) {
                 }
-            } catch (SQLException se) {
-                se.printStackTrace();
             }
         }
     }
 
-    public final void saveToDb(Connection con) {
-        if (!isChanged()) {
+    public int getBuffSkill() {
+        switch (this.skillid) {
+            case 1101004:
+            case 1101005:
+            case 1201004:
+            case 1201005:
+            case 1301004:
+            case 1301005:
+            case 3101002:
+            case 3201002:
+            case 4101003:
+            case 4201002:
+            case 23101002:
+            case 31001001:
+            case 2111005: // spell booster, do these work the same?
+            case 2211005:
+            case 5101006:
+            case 5201003:
+            case 11101001:
+            case 12101004:
+            case 13101001:
+            case 14101002:
+            case 15101002:
+            case 22141002: // Magic Booster
+            case 4301002:
+            case 32101005:
+            case 33001003:
+            case 35101006:
+            case 5301002:
+            case 21001003:
+            case 2311006:
+                return -1;
+        }
+        return this.skillid;
+    }
+
+    public void setBuffSkill(int id) {
+        this.skillid = id;
+        this.changed = true;
+    }
+
+    public final void saveToDb() {
+        if (!changed) {
             return;
         }
+        Connection con = null;
         PreparedStatement ps = null;
         try {
-            ps = con.prepareStatement("UPDATE pets SET name = ?, level = ?, closeness = ?, fullness = ?, seconds = ?, flags = ?, petbuff = ?, size = ?, wonderGrade = ?, exceptionlist = ?, petbuff2 = ? WHERE petid = ?");
-            ps.setString(1, this.name);
-            ps.setByte(2, this.level);
-            ps.setShort(3, this.closeness);
-            ps.setByte(4, this.fullness);
-            ps.setInt(5, this.secondsLeft);
-            ps.setShort(6, this.flags);
-            ps.setInt(7, this.buffSkillId);
-            ps.setShort(8, this.size);
-            ps.setInt(9, this.wonderGrade);
-            ps.setString(10, (this.ExceptionList == null) ? "" : this.ExceptionList);
-            ps.setInt(11, this.buffSkillId2);
-            ps.setLong(12, this.uniqueid);
-            ps.executeUpdate();
-            ps.close();
-            setChanged(false);
-        } catch (SQLException ex) {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("UPDATE pets SET name = ?, level = ?, closeness = ?, fullness = ?, seconds = ?, flags = ?, speed = ?, buffid = ? WHERE petid = ?");
+            ps.setString(1, name); // Set name
+            ps.setByte(2, level); // Set Level
+            ps.setShort(3, closeness); // Set Closeness
+            ps.setByte(4, fullness); // Set Fullness
+            ps.setInt(5, secondsLeft);
+            ps.setShort(6, flags);
+            ps.setByte(7, speed); // Set ID
+            ps.setInt(8, skillid);
+            ps.setInt(9, uniqueid); // Set ID
+            ps.executeUpdate(); // Execute statement
+
+            if (PetFlag.UNPICKABLE.check(flags)) {
+                ps.close();
+                ps = con.prepareStatement("DELETE FROM `pets_expick` WHERE `petsn` = ?");
+                ps.setInt(1, uniqueid);
+                ps.executeUpdate();
+                ps.close();
+                if (exceptionPickup != null && !getPickupExceptionList().isEmpty()) {
+                    ps = con.prepareStatement("INSERT INTO `pets_expick` (`petsn`, `itemid`) VALUES (?, ?)");
+                    ps.setInt(1, uniqueid);
+                    for (int i : getPickupExceptionList()) {
+                        ps.setInt(2, i);
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+            }
+
+            changed = false;
+        } catch (final SQLException ex) {
             ex.printStackTrace();
         } finally {
-            try {
-                if (ps != null) {
-                    ps.close();
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (Exception e) {
                 }
-            } catch (SQLException se) {
-                se.printStackTrace();
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (Exception e) {
+                }
             }
         }
     }
 
-    public static final MaplePet createPet(int itemid, long uniqueid) {
-        return createPet(itemid, MapleItemInformationProvider.getInstance().getName(itemid), 1, 0, 100, uniqueid, 18000, (short) 0);
+    public static final MaplePet createPet(final int itemid, final int uniqueid) {
+        return createPet(itemid, MapleItemInformationProvider.getInstance().getName(itemid), 1, 0, 100, uniqueid, itemid == 5000054 ? 18000 : 0, (short) 0, 0);
     }
 
-    public static final MaplePet createPet(int itemid, String name, int level, int closeness, int fullness, long uniqueid, int secondsLeft, short flag) {
-        if (uniqueid <= -1L) {
+    public static int getPetFlag(int itemid) {
+        int flag = 0;
+        Map<String, Integer> stats = MapleItemInformationProvider.getInstance().getEquipStats(itemid);
+
+        if (stats.containsKey("pickupAll") && stats.get("pickupAll") == 1) {
+            if ((flag & PetFlag.AUTO_PICKUP.i) == 0) {
+                flag |= PetFlag.AUTO_PICKUP.i;
+            }
+        }
+        if (stats.containsKey("pickupItem") && stats.get("pickupItem") == 1) {
+            if ((flag & PetFlag.ITEM_PICKUP.i) == 0) {
+                flag |= PetFlag.ITEM_PICKUP.i;
+            }
+        }
+        if (stats.containsKey("sweepForDrop") && stats.get("sweepForDrop") == 1) {
+            if ((flag & PetFlag.LEFTOVER_PICKUP.i) == 0) {
+                flag |= PetFlag.LEFTOVER_PICKUP.i;
+            }
+        }
+        if (stats.containsKey("longRange") && stats.get("longRange") == 1) {
+            if ((flag & PetFlag.EXPAND_PICKUP.i) == 0) {
+                flag |= PetFlag.EXPAND_PICKUP.i;
+            }
+        }
+        if (stats.containsKey("consumeHP") && stats.get("consumeHP") == 1) {
+            if ((flag & PetFlag.HP_CHARGE.i) == 0) {
+                flag |= PetFlag.HP_CHARGE.i;
+            }
+        }
+        if (stats.containsKey("consumeMP") && stats.get("consumeMP") == 1) {
+            if ((flag & PetFlag.MP_CHARGE.i) == 0) {
+                flag |= PetFlag.MP_CHARGE.i;
+            }
+        }
+        if (stats.containsKey("autoBuff") && stats.get("autoBuff") == 1) {
+            if ((flag & PetFlag.PET_BUFF.i) == 0) {
+                flag |= PetFlag.PET_BUFF.i;
+            }
+        }
+        /*if (stats.containsKey("multiPet") && stats.get("multiPet") == 1) {
+         if ((flag & PetFlag.PET_DRAW.i) == 0) {
+         flag |= PetFlag.PET_DRAW.i;
+         }
+         }*/
+        return flag + PetFlag.PET_BUFF.i;
+        //return flag; 원본
+        //펫 버프
+    }
+
+    public static final MaplePet createPet(int itemid, String name, int level, int closeness, int fullness, int uniqueid, int secondsLeft, short flag, int speed) {
+        if (uniqueid <= -1) { //wah
             uniqueid = MapleInventoryIdentifier.getInstance();
         }
+
+        flag |= getPetFlag(itemid);
+
         Connection con = null;
         PreparedStatement pse = null;
-        ResultSet rs = null;
-        try {
+        try { // Commit to db first
             con = DatabaseConnection.getConnection();
-            pse = con.prepareStatement("INSERT INTO pets (petid, name, level, closeness, fullness, seconds, flags, size, wonderGrade, exceptionlist) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            pse.setLong(1, uniqueid);
+            pse = con.prepareStatement("INSERT INTO pets (petid, name, level, closeness, fullness, seconds, flags, speed) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            pse.setInt(1, uniqueid);
             pse.setString(2, name);
             pse.setByte(3, (byte) level);
             pse.setShort(4, (short) closeness);
             pse.setByte(5, (byte) fullness);
             pse.setInt(6, secondsLeft);
             pse.setShort(7, flag);
-            pse.setShort(8, (short) 100);
-            pse.setInt(9, PetDataFactory.getWonderGrade(itemid));
-            pse.setString(10, "");
+            pse.setByte(8, (byte) speed);
             pse.executeUpdate();
-            pse.close();
-            con.close();
-        } catch (SQLException ex) {
+        } catch (final SQLException ex) {
             ex.printStackTrace();
             return null;
         } finally {
-            try {
-                if (con != null) {
+            if (con != null) {
+                try {
                     con.close();
+                } catch (Exception e) {
                 }
-                if (pse != null) {
+            }
+            if (pse != null) {
+                try {
                     pse.close();
+                } catch (Exception e) {
                 }
-                if (rs != null) {
-                    rs.close();
-                }
-            } catch (SQLException se) {
-                se.printStackTrace();
             }
         }
-
-        MaplePet pet = new MaplePet(itemid, uniqueid);
-
+        final MaplePet pet = new MaplePet(itemid, uniqueid);
         pet.setName(name);
         pet.setLevel(level);
         pet.setFullness(fullness);
         pet.setCloseness(closeness);
         pet.setFlags(flag);
         pet.setSecondsLeft(secondsLeft);
-        pet.setWonderGrade(PetDataFactory.getWonderGrade(itemid));
-        pet.setPetSize((short) 100);
 
         return pet;
     }
 
     public final String getName() {
-        return this.name;
+        return name;
     }
 
-    public final void setName(String name) {
+    public final void setName(final String name) {
         this.name = name;
-        setChanged(true);
+        this.changed = true;
     }
 
     public final boolean getSummoned() {
-        return (this.summoned > 0);
+        //System.out.println("summoned" + getSummonedValue());
+        return summoned > 0;
     }
 
     public final byte getSummonedValue() {
-        return this.summoned;
+        return summoned;
     }
 
-    public final void setSummoned(byte summoned) {
-        this.summoned = summoned;
+    public final void setSummoned(final int summoned) {
+        this.summoned = (byte) summoned;
     }
 
     public final short getInventoryPosition() {
-        return this.inventorypos;
+        return inventorypos;
     }
 
-    public final void setInventoryPosition(short inventorypos) {
+    public final void setInventoryPosition(final short inventorypos) {
         this.inventorypos = inventorypos;
     }
 
-    public long getUniqueId() {
-        return this.uniqueid;
+    public int getUniqueId() {
+        return uniqueid;
     }
 
     public final short getCloseness() {
-        return this.closeness;
+        return closeness;
     }
 
-    public final void setCloseness(int closeness) {
+    public final void setCloseness(final int closeness) {
         this.closeness = (short) closeness;
-        setChanged(true);
+        this.changed = true;
     }
 
     public final byte getLevel() {
-        return this.level;
+        return level;
     }
 
-    public final void setLevel(int level) {
+    public final void setLevel(final int level) {
         this.level = (byte) level;
-        setChanged(true);
+        this.changed = true;
+    }
+
+    public final byte getSpeed() {
+        return speed;
+    }
+
+    public final void setSpeed(final int level) {
+        this.speed = (byte) level;
+        this.changed = true;
     }
 
     public final byte getFullness() {
-        return 100;
+        return fullness;
     }
 
-    public final void setFullness(int fullness) {
+    public final void setFullness(final int fullness) {
         this.fullness = (byte) fullness;
-        setChanged(true);
+        this.changed = true;
     }
 
     public final short getFlags() {
-        return 503;
+        return flags;
     }
 
-    public final void setFlags(int fffh) {
+    public final void setFlags(final int fffh) {
         this.flags = (short) fffh;
-        setChanged(true);
-    }
-
-    public final int getBuffSkillId() {
-        return this.buffSkillId;
-    }
-
-    public final void setBuffSkillId(int skillId) {
-        this.buffSkillId = skillId;
-        setChanged(true);
-    }
-
-    public final int getBuffSkillId2() {
-        return this.buffSkillId2;
-    }
-
-    public final void setBuffSkillId2(int skillId) {
-        this.buffSkillId2 = skillId;
-        setChanged(true);
-    }
-
-    public final int getWonderGrade() {
-        return this.wonderGrade;
-    }
-
-    public final void setWonderGrade(int grade) {
-        this.wonderGrade = grade;
-        setChanged(true);
-    }
-
-    public final short getPetSize() {
-        return this.size;
-    }
-
-    public final void setPetSize(short size) {
-        this.size = size;
-        setChanged(true);
-    }
-
-    public void addPetSize(short size) {
-        this.size = (short) (this.size + size);
-        setChanged(true);
+        this.changed = true;
     }
 
     public final int getFh() {
-        return this.Fh;
+        return Fh;
     }
 
-    public final void setFh(int Fh) {
+    public final void setFh(final int Fh) {
         this.Fh = Fh;
     }
 
     public final Point getPos() {
-        return this.pos;
+        return pos;
     }
 
-    public final void setPos(Point pos) {
+    public final void setPos(final Point pos) {
         this.pos = pos;
     }
 
     public final int getStance() {
-        return this.stance;
+        return stance;
     }
 
-    public final void setStance(int stance) {
+    public final void setStance(final int stance) {
         this.stance = stance;
     }
 
-    public final int getColor() {
-        return this.color;
-    }
-
-    public final void setColor(int color) {
-        this.color = color;
-    }
-
     public final int getPetItemId() {
-        return this.petitemid;
+        return petitemid;
     }
 
-    public final boolean canConsume(int itemId) {
-        MapleItemInformationProvider mii = MapleItemInformationProvider.getInstance();
-        for (Iterator<Integer> iterator = mii.getItemEffect(itemId).getPetsCanConsume().iterator(); iterator.hasNext(); ) {
-            int petId = ((Integer) iterator.next()).intValue();
-            if (petId == this.petitemid) {
+    public final boolean canConsume(final int itemId) {
+        final MapleItemInformationProvider mii = MapleItemInformationProvider.getInstance();
+        for (final int petId : mii.getItemEffect(itemId).getPetsCanConsume()) {
+            if (petId == petitemid) {
                 return true;
             }
         }
         return false;
     }
 
-    public final void updatePosition(List<LifeMovementFragment> movement) {
-        for (LifeMovementFragment move : movement) {
+    public final void updatePosition(final List<LifeMovementFragment> movement) {
+        for (final LifeMovementFragment move : movement) {
             if (move instanceof LifeMovement) {
-                if (move instanceof server.movement.AbsoluteLifeMovement) {
+                if (move instanceof AbsoluteLifeMovement) {
                     setPos(((LifeMovement) move).getPosition());
                 }
                 setStance(((LifeMovement) move).getNewstate());
@@ -420,28 +499,22 @@ public class MaplePet
     }
 
     public final int getSecondsLeft() {
-        return this.secondsLeft;
+        return secondsLeft;
     }
 
     public final void setSecondsLeft(int sl) {
         this.secondsLeft = sl;
-        setChanged(true);
+        this.changed = true;
     }
 
-    public boolean isChanged() {
-        return this.changed;
+    public List<Integer> getPickupExceptionList() {
+        if (exceptionPickup == null) {
+            exceptionPickup = new ArrayList<>();
+        }
+        return exceptionPickup;
     }
 
-    public void setChanged(boolean changed) {
-        this.changed = changed;
-    }
-
-    public String getExceptionList() {
-        return this.ExceptionList;
-    }
-
-    public void setExceptionList(String ExceptionList) {
-        this.ExceptionList = ExceptionList;
-        setChanged(true);
+    public void changeException() {
+        changed = true;
     }
 }

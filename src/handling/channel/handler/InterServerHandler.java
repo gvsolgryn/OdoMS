@@ -1,1437 +1,573 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package handling.channel.handler;
 
-import client.*;
-import client.inventory.AuctionItem;
-import client.inventory.Equip;
+import client.MapleBuffStat;
+import client.MapleCharacter;
+import client.MapleClient;
+
+import client.MapleQuestStatus;
+import client.Skill;
+import client.SkillFactory;
 import client.inventory.Item;
+import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
+import client.inventory.MaplePet;
+import connector.ConnectorClient;
+import connector.ConnectorServer;
 import constants.GameConstants;
-import constants.KoreaCalendar;
 import constants.ServerConstants;
-import handling.RecvPacketOpcode;
-import handling.auction.AuctionServer;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
 import handling.login.LoginServer;
-import handling.world.*;
+import handling.world.CharacterIdChannelPair;
+import handling.world.CharacterTransfer;
+import handling.world.MapleMessenger;
+import handling.world.MapleMessengerCharacter;
+import handling.world.MapleParty;
+import handling.world.MaplePartyCharacter;
+import handling.world.PartyOperation;
+import handling.world.PlayerBuffStorage;
+import handling.world.World;
+import handling.world.exped.MapleExpedition;
 import handling.world.guild.MapleGuild;
-import handling.world.party.MapleParty;
-import handling.world.party.MaplePartyCharacter;
-import handling.world.party.PartyOperation;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import javax.swing.table.DefaultTableModel;
 import scripting.NPCScriptManager;
 import server.MapleItemInformationProvider;
-import server.Randomizer;
+import server.MapleStatEffect;
+import server.MedalRanking;
+import server.Start;
 import server.maps.FieldLimitType;
-import server.maps.MapleMap;
 import server.quest.MapleQuest;
-import server.quest.QuestCompleteStatus;
-import tools.*;
+import system.BuffHandler;
+import tools.FileoutputUtil;
+import tools.MaplePacketCreator;
+import tools.Pair;
 import tools.data.LittleEndianAccessor;
-import tools.packet.*;
-
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
+import tools.packet.FamilyPacket;
+import tools.packet.LoginPacket;
+import tools.packet.MTSCSPacket;
+import tools.packet.PetPacket;
+import util.FileTime;
 
 public class InterServerHandler {
 
-    public static final void EnterCS(MapleClient c, MapleCharacter chr) {
-        if (c.getPlayer().getMapId() == 180000002) {
-            c.getPlayer().dropMessage(5, "해당 맵에선 이용이 불가능 합니다.");
+    /*public static void EnterCS(MapleClient c) {
+     c.sendPacket(MaplePacketCreator.enableActions());
+     //if (NPCScriptInvoker.runNpc(c, 9900003, 0) != 0) {
+     CashShopEnter(c, c.getPlayer());
+     // }
+     }*/
+    public static void EnterCS(MapleClient c) {
+        c.getSession().write(MaplePacketCreator.enableActions());
+        c.removeClickedNPC();
+        NPCScriptManager.getInstance().start(c, 9000030, "OpenCS");
+    }
+
+    public static final void CashShopEnter(final MapleClient c, final MapleCharacter chr) {
+
+        if (chr.hasBlockedInventory() || chr.getMap() == null || chr.getEventInstance() != null || c.getChannelServer() == null) {
+            c.getSession().write(MaplePacketCreator.serverBlocked(2));
+            c.getSession().write(MaplePacketCreator.enableActions());
             return;
         }
-        chr.getClient().removeClickedNPC();
-        NPCScriptManager.getInstance().dispose(chr.getClient());
-        chr.getClient().getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-        chr.getClient().getSession().writeAndFlush(CField.UIPacket.openUI(1271));
-    }
-
-    public static final void EnterCS(MapleClient c, MapleCharacter chr, boolean npc) {
-        if (npc) {
-            if (c.getPlayer().getMapId() == 180000002) {
-                c.getPlayer().dropMessage(5, "해당 맵에선 이용이 불가능 합니다.");
-                return;
-            }
-            chr.getClient().removeClickedNPC();
-            NPCScriptManager.getInstance().dispose(chr.getClient());
-            chr.getClient().getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-           // NPCScriptManager.getInstance().start(c, ServerConstants.csNpc, "EnterDungeon");
-            c.getSession().writeAndFlush(CField.UIPacket.openUI(1271));
-        } else {
-            if (chr.getMap() == null || chr.getEventInstance() != null || c.getChannelServer() == null) {
-                c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-                return;
-            }
-            if (c.getPlayer().getMapId() == 180000002) {
-                c.getPlayer().dropMessage(5, "해당 맵에선 이용이 불가능 합니다.");
-                return;
-            }
-            if (World.getPendingCharacterSize() >= 10) {
-                chr.dropMessage(1, "현재 서버가 혼잡하여 이동할 수 없습니다.");
-                c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-                return;
-            }
-            ChannelServer ch = ChannelServer.getInstance(c.getChannel());
-            chr.changeRemoval();
-            if (chr.getMessenger() != null) {
-                MapleMessengerCharacter messengerplayer = new MapleMessengerCharacter(chr);
-                World.Messenger.leaveMessenger(chr.getMessenger().getId(), messengerplayer);
-            }
-            PlayerBuffStorage.addBuffsToStorage(chr.getId(), chr.getAllBuffs());
-            PlayerBuffStorage.addCooldownsToStorage(chr.getId(), chr.getCooldowns());
-            World.ChannelChange_Data(new CharacterTransfer(chr), chr.getId(), -10);
-            ch.removePlayer(chr);
-            c.updateLoginState(3, c.getSessionIPAddress());
-            chr.saveToDB(false, false);
-            chr.getMap().removePlayer(chr);
-            c.getSession().writeAndFlush(CField.getChannelChange(c, Integer.parseInt(CashShopServer.getIP().split(":")[1])));
-            c.setPlayer(null);
-            c.setReceiving(false);
+        if (World.getPendingCharacterSize() >= 10) {
+            chr.dropMessage(1, "The server is busy at the moment. Please try again in a minute or less.");
+            c.getSession().write(MaplePacketCreator.enableActions());
+            return;
         }
+        //if (c.getChannel() == 1 && !c.getPlayer().isGM()) {
+        //    c.getPlayer().dropMessage(5, "You may not enter on this channel. Please change channels and try again.");
+        //    c.getSession().write(MaplePacketCreator.enableActions());
+        //    return;
+        //}
+        final ChannelServer ch = ChannelServer.getInstance(c.getChannel());
+
+        chr.changeRemoval();
+        if (chr.checkPcTime()) {
+            c.getSession().write(MaplePacketCreator.enableInternetCafe((byte) 0, chr.getCalcPcTime()));
+        }
+        //PC방
+
+        if (chr.getMessenger() != null) {
+            MapleMessengerCharacter messengerplayer = new MapleMessengerCharacter(chr);
+            World.Messenger.leaveMessenger(chr.getMessenger().getId(), messengerplayer);
+        }
+        PlayerBuffStorage.addBuffsToStorage(chr.getId(), chr.getAllBuffs());
+        PlayerBuffStorage.addCooldownsToStorage(chr.getId(), chr.getCooldowns());
+        PlayerBuffStorage.addDiseaseToStorage(chr.getId(), chr.getAllDiseases());
+        World.ChannelChange_Data(new CharacterTransfer(chr), chr.getId(), -10);
+        ch.removePlayer(chr);
+        c.updateLoginState(MapleClient.CHANGE_CHANNEL, c.getSessionIPAddress());
+        chr.saveToDB(false, false);
+        chr.getMap().removePlayer(chr);
+
+        LoginServer.setCodeHash(chr.getId(), c.getCodeHash());
+        c.getSession().write(MaplePacketCreator.getChannelChange(c, CashShopServer.getPort()));
+        c.setPlayer(null);
+        c.setReceiving(false);
     }
 
-    public static final void Loggedin(int playerid, MapleClient c) {
-        try {
-            MapleCharacter player;
-            ChannelServer channelServer = c.getChannelServer();
-            CharacterTransfer transfer = channelServer.getPlayerStorage().getPendingCharacter(playerid);
-            if (transfer == null) {
-                player = MapleCharacter.loadCharFromDB(playerid, c, true);
-                Pair<String, String> ip = LoginServer.getLoginAuth(playerid);
-                String s = c.getSessionIPAddress();
-                if (ip == null || !s.substring(s.indexOf('/') + 1).equals(ip.left)) {
-                    if (ip != null) {
-                        LoginServer.putLoginAuth(playerid, (String) ip.left, (String) ip.right);
-                    }
-                    c.disconnect(true, false, false);
-                    c.getSession().close();
-                    return;
+    public static final void Loggedin(final int playerid, final MapleClient c) {
+        final ChannelServer channelServer = c.getChannelServer();
+        MapleCharacter player;
+        final CharacterTransfer transfer = channelServer.getPlayerStorage().getPendingCharacter(playerid);
+        boolean newLogin = false;
+        if (transfer == null) { // Player isn't in storage, probably isn't CC
+       
+            player = MapleCharacter.loadCharFromDB(playerid, c, true);
+            Pair<String, String> ip = LoginServer.getLoginAuth(playerid);
+            String s = c.getSessionIPAddress();
+            if (ip == null || !s.substring(s.indexOf('/') + 1, s.length()).equals(ip.left)) {
+                if (ip != null) {
+                    LoginServer.putLoginAuth(playerid, ip.left, ip.right);
                 }
-                if (c.getAccID() != player.getAccountID()) {
-                    c.disconnect(true, false, false);
-                    c.getSession().close();
-                    return;
-                }
-                c.setTempIP((String) ip.right);
-                if (World.Find.findChannel(playerid) >= 0) {
-                    c.disconnect(true, false, false);
-                    c.getSession().close();
-                    return;
-                }
-            } else {
-                player = MapleCharacter.ReconstructChr(transfer, c, true);
-            }
-            c.setPlayer(player);
-            c.setAccID(player.getAccountID());
-
-            if (GameConstants.isZero(c.getPlayer().getJob())) {
-                if (c.getPlayer().getGender() == 1) {
-                    c.getPlayer().setGender((byte) 0);
-                    c.getPlayer().setSecondGender((byte) 1);
-                } else {
-                    c.getPlayer().setGender((byte) 0);
-                    c.getPlayer().setSecondGender((byte) 1);
-                }
-            }
-
-            c.loadKeyValues();
-            c.loadCustomDatas();
-            c.loadCustomKeyValue();
-        c.loadQuest();
-
-            if (!c.CheckIPAddress()) {
-                c.disconnect(true, false, false);
                 c.getSession().close();
                 return;
             }
-            channelServer.removePlayer(player);
-            World.isCharacterListConnected(player.getName(), c.loadCharacterNames(c.getWorld()));
-
-            c.updateLoginState(2, c.getSessionIPAddress());
-            channelServer.addPlayer(player);
-
-            int[] bossquests = {34167, 34165, 34166, 34164, 34561, 38101, 31686, 34966, 38214, 38213, 33565, 31851, 31833, 3496, 3470, 38214, 30007, 3170, 31179, 3521, 31152, 34015, 33294, 34330, 34585, 35632, 35731, 35815, 34478, 36013, 34331, 34478, 100114, 16013, 34120, 34218, 34330, 34331, 34478, 34269, 34272, 34585, 34586, 6500, 1465, 1466, 26607, 1484, 39921, 16059, 16015, 16013, 100114, 34128, 39013, 34772, 39034, 34269, 34271, 34272, 34243, 39204, 15417, 34377, 34477, 34450};
-
-            for (int questid : bossquests) {
-                if (player.getQuestStatus(questid) != 2) {
-                    if (questid == 1465 || questid == 1466) {
-                        if (player.getLevel() >= 200) {
-                            MapleQuest.getInstance(questid).forceComplete(player, 0, false);
-                        }
-                    } else {
-                        MapleQuest.getInstance(questid).forceComplete(player, 0, false);
-                    }
-                }
-            }
-            if (c.getPlayer().getKeyValue(39160, "start") <= 0) {
-                c.getPlayer().setKeyValue(39160, "start", "1");
-                c.getPlayer().setKeyValue(39165, "start", "1");
-            }
-            if (c.getPlayer().getKeyValueStr(34271, "02") == null) {
-                c.getPlayer().setKeyValue(34271, "02", "h0");
-                c.getPlayer().setKeyValue(34271, "20", "h0");
-                c.getPlayer().setKeyValue(34271, "30", "h0");
-                c.getPlayer().setKeyValue(34271, "21", "h0");
-                c.getPlayer().setKeyValue(34271, "31", "h0");
-                c.getPlayer().setKeyValue(34271, "23", "h0");
-                c.getPlayer().setKeyValue(34271, "32", "h1");
-                c.getPlayer().setKeyValue(34271, "33", "h0");
-                c.getPlayer().setKeyValue(34271, "52", "h0");
-                c.getPlayer().setKeyValue(34271, "34", "h0");
-                c.getPlayer().setKeyValue(34271, "35", "h0");
-                c.getPlayer().setKeyValue(34271, "53", "h1");
-                c.getPlayer().setKeyValue(34271, "36", "h0");
-                c.getPlayer().setKeyValue(34271, "18", "h0");
-                c.getPlayer().setKeyValue(34271, "34", "h0");
-                c.getPlayer().setKeyValue(34271, "54", "h0");
-                c.getPlayer().setKeyValue(34271, "28", "h0");
-                c.getPlayer().setKeyValue(34271, "29", "h0");
-            }
-            if (player.getQuestStatus(30023) != 1 && player.getQuestStatus(30024) != 1 && player.getQuestStatus(30025) != 1 && player.getQuestStatus(30026) != 1) {
-                MapleQuest.getInstance(30023).forceStart(player, 0, "10");
-                MapleQuest.getInstance(30024).forceStart(player, 0, "10");
-                MapleQuest.getInstance(30025).forceStart(player, 0, "10");
-                MapleQuest.getInstance(30026).forceStart(player, 0, "10");
-            }
-            if (GameConstants.isEvan(player.getJob())) {
-                if (player.getQuestStatus(22130) != 2 && player.getJob() != 2001) {
-                    MapleQuest.getInstance(22130).forceComplete(player, 0);
-                }
-            } else if (GameConstants.isEunWol(player.getJob())) {
-                if (player.getQuestStatus(1542) != 2) {
-                    MapleQuest.getInstance(1542).forceComplete(player, 0);
-                }
-            } else if (GameConstants.isArk(player.getJob())) {
-                for (int k = 34940; k < 34960; k++) {
-                    MapleQuest.getInstance(k).forceComplete(player, 0);
-                }
-            } else if (GameConstants.isKadena(player.getJob())) {
-                for (int k = 34600; k < 34650; k++) {
-                    MapleQuest.getInstance(k).forceComplete(player, 0);
-                }
-            }
-            if (player.getClient().getKeyValue("LevelUpGive") == null) {
-                player.getClient().setKeyValue("LevelUpGive", "0000000000000000");
-            } else {
-                String[] str = player.getClient().getKeyValue("LevelUpGive").split("");
-                for (int k = 0; k < 16; k++) {
-                    if (Integer.parseInt(str[k]) == 1) {
-                        int questid = 60000 + k;
-                        if (player.getQuestStatus(questid) != 2) {
-                            player.forceCompleteQuest(questid);
-                        }
-                    }
-                }
-            }
-            if (player.getClient().getKeyValue("GrowQuest") == null) {
-                player.getClient().setKeyValue("GrowQuest", "0000000000");
-            } else {
-                String[] str = player.getClient().getKeyValue("GrowQuest").split("");
-                for (int k = 0; k < 10; k++) {
-                    int questid = 50000 + k;
-                    if (Integer.parseInt(str[k]) == 1) {
-                        if (player.getQuestStatus(questid) != 1 && player.getQuestStatus(questid) != 2) {
-                            MapleQuest.getInstance(questid).forceStart(c.getPlayer(), 0, "");
-                        }
-                    } else if (Integer.parseInt(str[k]) == 2 && player.getQuestStatus(questid) != 2) {
-                        player.forceCompleteQuest(questid);
-                    }
-                }
-            }
-
-
-            if (player.getClient().getKeyValue("BloomingTuto") != null) {
-                if (player.getClient().getKeyValue("BloomingSkill") != null) {
-                    String str = player.getClient().getKeyValue("BloomingSkill");
-                    String[] ab = str.split("");
-
-                    int skillid = 80003036;
-
-                    for (int a = 0; a < ab.length; a++) {
-                        player.setKeyValue(501378, a + "", ab[a] + "");
-                        if (Integer.parseInt(ab[a]) > 0) {
-                            player.changeSkillLevel(skillid + a, (byte) Integer.parseInt(ab[a]), (byte) 3);
-                        }
-                    }
-                }
-                if (player.getClient().getKeyValue("Bloomingbloom") != null) {
-                    player.setKeyValue(501367, "bloom", player.getClient().getKeyValue("Bloomingbloom"));
-                }
-
-                if (player.getClient().getKeyValue("BloomingSkillPoint") != null) {
-                    player.setKeyValue(501378, "sp", player.getClient().getKeyValue("BloomingSkillPoint"));
-                }
-
-                if (player.getClient().getKeyValue("BloomingReward") != null) {
-                    player.setKeyValue(501367, "reward", player.getClient().getKeyValue("BloomingReward"));
-                }
-
-                if (player.getClient().getKeyValue("week") != null) {
-                    player.setKeyValue(501367, "week", player.getClient().getKeyValue("week"));
-                }
-
-                if (player.getClient().getKeyValue("getReward") != null) {
-                    player.setKeyValue(501367, "getReward", player.getClient().getKeyValue("getReward"));
-                }
-
-                if (player.getClient().getKeyValue("BloomingSkilltuto") != null) {
-                    player.setKeyValue(501378, "tuto", "1");
-                }
-
-                if (player.getClient().getKeyValue("BloominggiveSun") != null) {
-                    player.setKeyValue(501367, "giveSun", "1");
-                }
-
-                if (player.getClient().getKeyValue("Bloomingflower") != null) {
-                    player.setKeyValue(501387, "flower", player.getClient().getKeyValue("Bloomingflower"));
-                }
-
-                if (Integer.parseInt(player.getClient().getKeyValue("BloomingTuto")) > 1 && player.getQuestStatus(501394) != 2) {
-                    player.forceCompleteQuest(501394);
-                }
-
-                if (Integer.parseInt(player.getClient().getKeyValue("BloomingTuto")) > 2) {
-                    if (player.getQuestStatus(501375) != 2) {
-                        player.forceCompleteQuest(501375);
-                    }
-
-                    if (player.getKeyValue(501375, "start") != 1L) {
-                        player.setKeyValue(501375, "start", "1");
-                    }
-                }
-
-                if (Integer.parseInt(player.getClient().getKeyValue("BloomingTuto")) > 3) {
-                    if (player.getQuestStatus(501376) != 2) {
-                        player.forceCompleteQuest(501376);
-                    }
-
-                    if (player.getKeyValue(501376, "start") != 1L) {
-                        player.setKeyValue(501376, "start", "1");
-                    }
-                }
-            }
-
-            for (Iterator<Integer> iterator = QuestCompleteStatus.completeQuests.iterator(); iterator.hasNext(); ) {
-                int questid = ((Integer) iterator.next()).intValue();
-
-                if (player.getQuestStatus(questid) != 2) {
-                    MapleQuest.getInstance(questid).forceComplete(player, 0, false);
-                }
-            }
-            if (c.getPlayer().getKeyValue(125, "date") != GameConstants.getCurrentDate_NoTime()) {
-                c.getPlayer().setKeyValue(125, "date", String.valueOf(GameConstants.getCurrentDate_NoTime()));
-                int pirodo = 0;
-                switch (1) {
-                    case 1: {
-                        pirodo = 100;
-                        break;
-                    }
-                    case 2: {
-                        pirodo = 120;
-                        break;
-                    }
-                    case 3: {
-                        pirodo = 160;
-                        break;
-                    }
-                    case 4: {
-                        pirodo = 200;
-                        break;
-                    }
-                    case 5: {
-                        pirodo = 240;
-                        break;
-                    }
-                    case 6: {
-                        pirodo = 280;
-                        break;
-                    }
-                    case 7: {
-                        pirodo = 320;
-                        break;
-                    }
-                    case 8: {
-                        pirodo = 360;
-                        break;
-                    }
-                }
-                c.getPlayer().setKeyValue(123, "pp", String.valueOf(pirodo));
-            }
-
-            FileoutputUtil.log(FileoutputUtil.접속로그, "[접속] 계정번호 : " + player.getClient().getAccID() + " | " + player.getName() + "(" + player.getId() + ")이 접속.");
-
-            if (player.getKeyValue(18771, "rank") == -1L || player.getKeyValue(18771, "rank") == 100L) {
-                player.setKeyValue(18771, "rank", "101");
-            }
-
-            if (c.getKeyValue("rank") == null) {
-                c.setKeyValue("rank", String.valueOf(player.getKeyValue(18771, "rank")));
-            }
-
-            if (Integer.parseInt(c.getKeyValue("rank")) < player.getKeyValue(18771, "rank")) {
-                c.setKeyValue("rank", String.valueOf(player.getKeyValue(18771, "rank")));
-            }
-
-            if (Integer.parseInt(c.getKeyValue("rank")) > player.getKeyValue(18771, "rank")) {
-                player.setKeyValue(18771, "rank", c.getKeyValue("rank"));
-            }
-
-            if (player.getInnerSkills().size() == 0) {
-                player.getInnerSkills().add(new InnerSkillValueHolder(70000004, (byte) 1, (byte) 1, (byte) 0));
-                player.getInnerSkills().add(new InnerSkillValueHolder(70000004, (byte) 1, (byte) 1, (byte) 0));
-                player.getInnerSkills().add(new InnerSkillValueHolder(70000004, (byte) 1, (byte) 1, (byte) 0));
-            }
-
-            player.LoadPlatformerRecords();
-            player.giveCoolDowns(PlayerBuffStorage.getCooldownsFromStorage(player.getId()));
-
-            if (player.choicepotential != null && player.memorialcube != null) {
-                Item ordinary = player.getInventory(MapleInventoryType.EQUIP).getItem(player.choicepotential.getPosition());
-                if (ordinary != null) {
-                    player.choicepotential.setInventoryId(ordinary.getInventoryId());
-                }
-            }
-
-            if (c.getKeyValue("PNumber") == null) {
-                c.setKeyValue("PNumber", "0");
-            }
-
-            if (player.returnscroll != null) {
-                Item ordinary = player.getInventory(MapleInventoryType.EQUIP).getItem(player.returnscroll.getPosition());
-                if (ordinary != null) {
-                    player.returnscroll.setInventoryId(ordinary.getInventoryId());
-                }
-            }
-
-            //sendOpcodeEncryption(c);
-
-            player.showNote();
-            player.showsendNote();
-            c.getSession().writeAndFlush(CField.getCharInfo(player));
-            c.getSession().writeAndFlush(CSPacket.enableCSUse());
-            c.getSession().writeAndFlush(SLFCGPacket.SetupZodiacInfo());
-
-
-            if (player.getKeyValue(190823, "grade") == -1) {
-                player.setKeyValue(190823, "grade", "0");
-            }
-            c.send(LoginPacket.debugClient());
-
-            List<Pair<Integer, Integer>> list = new ArrayList<>();
-            list.add(new Pair(Integer.valueOf(8500002), Integer.valueOf(3655)));
-            list.add(new Pair(Integer.valueOf(8500012), Integer.valueOf(3656)));
-            list.add(new Pair(Integer.valueOf(8500022), Integer.valueOf(3657)));
-            list.add(new Pair(Integer.valueOf(8644612), Integer.valueOf(0)));
-            list.add(new Pair(Integer.valueOf(8644650), Integer.valueOf(3680)));
-            list.add(new Pair(Integer.valueOf(8644655), Integer.valueOf(3682)));
-            list.add(new Pair(Integer.valueOf(8645009), Integer.valueOf(3681)));
-            list.add(new Pair(Integer.valueOf(8645066), Integer.valueOf(3683)));
-            list.add(new Pair(Integer.valueOf(8800002), Integer.valueOf(3654)));
-            list.add(new Pair(Integer.valueOf(8800022), Integer.valueOf(6994)));
-            list.add(new Pair(Integer.valueOf(8800102), Integer.valueOf(15166)));
-            list.add(new Pair(Integer.valueOf(8810018), Integer.valueOf(3789)));
-            list.add(new Pair(Integer.valueOf(8810122), Integer.valueOf(3790)));
-            list.add(new Pair(Integer.valueOf(8810214), Integer.valueOf(3651)));
-            list.add(new Pair(Integer.valueOf(8820001), Integer.valueOf(3652)));
-            list.add(new Pair(Integer.valueOf(8820212), Integer.valueOf(3653)));
-            list.add(new Pair(Integer.valueOf(8840000), Integer.valueOf(3794)));
-            list.add(new Pair(Integer.valueOf(8840007), Integer.valueOf(3793)));
-            list.add(new Pair(Integer.valueOf(8840014), Integer.valueOf(3795)));
-            list.add(new Pair(Integer.valueOf(8850005), Integer.valueOf(31095)));
-            list.add(new Pair(Integer.valueOf(8850006), Integer.valueOf(31096)));
-            list.add(new Pair(Integer.valueOf(8850007), Integer.valueOf(31097)));
-            list.add(new Pair(Integer.valueOf(8850008), Integer.valueOf(31098)));
-            list.add(new Pair(Integer.valueOf(8850009), Integer.valueOf(31099)));
-            list.add(new Pair(Integer.valueOf(8850011), Integer.valueOf(31196)));
-            list.add(new Pair(Integer.valueOf(8850111), Integer.valueOf(31199)));
-            list.add(new Pair(Integer.valueOf(8860000), Integer.valueOf(3792)));
-            list.add(new Pair(Integer.valueOf(8860005), Integer.valueOf(3791)));
-            list.add(new Pair(Integer.valueOf(8870000), Integer.valueOf(3649)));
-            list.add(new Pair(Integer.valueOf(8870100), Integer.valueOf(3650)));
-            list.add(new Pair(Integer.valueOf(8880000), Integer.valueOf(3992)));
-            list.add(new Pair(Integer.valueOf(8880002), Integer.valueOf(3993)));
-            list.add(new Pair(Integer.valueOf(8880010), Integer.valueOf(3996)));
-            list.add(new Pair(Integer.valueOf(8880100), Integer.valueOf(3663)));
-            list.add(new Pair(Integer.valueOf(8880101), Integer.valueOf(34018)));
-            list.add(new Pair(Integer.valueOf(8880110), Integer.valueOf(3662)));
-            list.add(new Pair(Integer.valueOf(8880111), Integer.valueOf(34017)));
-            list.add(new Pair(Integer.valueOf(8880140), Integer.valueOf(3659)));
-            list.add(new Pair(Integer.valueOf(8880141), Integer.valueOf(3660)));
-            list.add(new Pair(Integer.valueOf(8880142), Integer.valueOf(3684)));
-            list.add(new Pair(Integer.valueOf(8880150), Integer.valueOf(34354)));
-            list.add(new Pair(Integer.valueOf(8880151), Integer.valueOf(3661)));
-            list.add(new Pair(Integer.valueOf(8880153), Integer.valueOf(34356)));
-            list.add(new Pair(Integer.valueOf(8880155), Integer.valueOf(3685)));
-            list.add(new Pair(Integer.valueOf(8880156), Integer.valueOf(34349)));
-            list.add(new Pair(Integer.valueOf(8880167), Integer.valueOf(34368)));
-            list.add(new Pair(Integer.valueOf(8880177), Integer.valueOf(34369)));
-            list.add(new Pair(Integer.valueOf(8880200), Integer.valueOf(3591)));
-            list.add(new Pair(Integer.valueOf(8880301), Integer.valueOf(3666)));
-            list.add(new Pair(Integer.valueOf(8880302), Integer.valueOf(3658)));
-            list.add(new Pair(Integer.valueOf(8880303), Integer.valueOf(3664)));
-            list.add(new Pair(Integer.valueOf(8880304), Integer.valueOf(3665)));
-            list.add(new Pair(Integer.valueOf(8880341), Integer.valueOf(3669)));
-            list.add(new Pair(Integer.valueOf(8880342), Integer.valueOf(3670)));
-            list.add(new Pair(Integer.valueOf(8880343), Integer.valueOf(3667)));
-            list.add(new Pair(Integer.valueOf(8880344), Integer.valueOf(3668)));
-            list.add(new Pair(Integer.valueOf(8880400), Integer.valueOf(3671)));
-            list.add(new Pair(Integer.valueOf(8880405), Integer.valueOf(3672)));
-            list.add(new Pair(Integer.valueOf(8880410), Integer.valueOf(3673)));
-            list.add(new Pair(Integer.valueOf(8880415), Integer.valueOf(3674)));
-            list.add(new Pair(Integer.valueOf(8880502), Integer.valueOf(3676)));
-            list.add(new Pair(Integer.valueOf(8880503), Integer.valueOf(3677)));
-            list.add(new Pair(Integer.valueOf(8880505), Integer.valueOf(3675)));
-            list.add(new Pair(Integer.valueOf(8880518), Integer.valueOf(3679)));
-            list.add(new Pair(Integer.valueOf(8880519), Integer.valueOf(3678)));
-            list.add(new Pair(Integer.valueOf(8880600), Integer.valueOf(3686)));
-            list.add(new Pair(Integer.valueOf(8880602), Integer.valueOf(3687)));
-            list.add(new Pair(Integer.valueOf(8880614), Integer.valueOf(3687)));
-            list.add(new Pair(Integer.valueOf(8881000), Integer.valueOf(0)));
-            list.add(new Pair(Integer.valueOf(8900000), Integer.valueOf(30043)));
-            list.add(new Pair(Integer.valueOf(8900001), Integer.valueOf(30043)));
-            list.add(new Pair(Integer.valueOf(8900002), Integer.valueOf(30043)));
-            list.add(new Pair(Integer.valueOf(8900003), Integer.valueOf(30043)));
-            list.add(new Pair(Integer.valueOf(8900100), Integer.valueOf(30032)));
-            list.add(new Pair(Integer.valueOf(8900101), Integer.valueOf(30032)));
-            list.add(new Pair(Integer.valueOf(8900102), Integer.valueOf(30032)));
-            list.add(new Pair(Integer.valueOf(8900103), Integer.valueOf(0)));
-            list.add(new Pair(Integer.valueOf(8910000), Integer.valueOf(30044)));
-            list.add(new Pair(Integer.valueOf(8910100), Integer.valueOf(30039)));
-            list.add(new Pair(Integer.valueOf(8920000), Integer.valueOf(30045)));
-            list.add(new Pair(Integer.valueOf(8920001), Integer.valueOf(30045)));
-            list.add(new Pair(Integer.valueOf(8920002), Integer.valueOf(30045)));
-            list.add(new Pair(Integer.valueOf(8920003), Integer.valueOf(30045)));
-            list.add(new Pair(Integer.valueOf(8920006), Integer.valueOf(30045)));
-            list.add(new Pair(Integer.valueOf(8920100), Integer.valueOf(30033)));
-            list.add(new Pair(Integer.valueOf(8920101), Integer.valueOf(30033)));
-            list.add(new Pair(Integer.valueOf(8920102), Integer.valueOf(30033)));
-            list.add(new Pair(Integer.valueOf(8920103), Integer.valueOf(30033)));
-            list.add(new Pair(Integer.valueOf(8920106), Integer.valueOf(30033)));
-            list.add(new Pair(Integer.valueOf(8930000), Integer.valueOf(30046)));
-            list.add(new Pair(Integer.valueOf(8930100), Integer.valueOf(30041)));
-            list.add(new Pair(Integer.valueOf(8950000), Integer.valueOf(33261)));
-            list.add(new Pair(Integer.valueOf(8950001), Integer.valueOf(33262)));
-            list.add(new Pair(Integer.valueOf(8950002), Integer.valueOf(33263)));
-            list.add(new Pair(Integer.valueOf(8950100), Integer.valueOf(33301)));
-            list.add(new Pair(Integer.valueOf(8950101), Integer.valueOf(33302)));
-            list.add(new Pair(Integer.valueOf(8950102), Integer.valueOf(33303)));
-            list.add(new Pair(Integer.valueOf(9101078), Integer.valueOf(15172)));
-            list.add(new Pair(Integer.valueOf(9101190), Integer.valueOf(0)));
-            list.add(new Pair(Integer.valueOf(9309200), Integer.valueOf(0)));
-            list.add(new Pair(Integer.valueOf(9309201), Integer.valueOf(0)));
-            list.add(new Pair(Integer.valueOf(9309203), Integer.valueOf(0)));
-            list.add(new Pair(Integer.valueOf(9309205), Integer.valueOf(0)));
-            list.add(new Pair(Integer.valueOf(9309207), Integer.valueOf(0)));
-
-            c.send(CField.BossMatchingChance(list));
-            c.getSession().writeAndFlush(CSPacket.enableCSUse());
-            player.updateLinkSkillPacket();
-            player.silentGiveBuffs(PlayerBuffStorage.getBuffsFromStorage(player.getId()));
-
-            if (player.getCooldownSize() > 0) {
-                int[] bufflist = {80002282, 2321055, 2023661, 2023662, 2023663, 2023664, 2023665, 2023666, 2450064, 2450134, 2450038, 2450124, 2450147, 2450148, 2450149, 2023558, 2003550, 2023556, 2003551};
-                int arrayOfInt1[], k;
-                byte b;
-                for (arrayOfInt1 = bufflist, k = arrayOfInt1.length, b = 0; b < k; ) {
-                    Integer a = Integer.valueOf(arrayOfInt1[b]);
-                    if (!player.getBuffedValue(a.intValue())) {
-                        for (MapleCoolDownValueHolder mapleCoolDownValueHolder : player.getCooldowns()) {
-                            if (mapleCoolDownValueHolder.skillId == a.intValue()) {
-                                if (MapleItemInformationProvider.getInstance().getItemEffect(a.intValue()) != null) {
-                                    MapleItemInformationProvider.getInstance().getItemEffect(a.intValue()).applyTo(player, false, (int) (mapleCoolDownValueHolder.length + mapleCoolDownValueHolder.startTime - System.currentTimeMillis()));
-                                    break;
-                                }
-                                SkillFactory.getSkill(a.intValue()).getEffect(player.getSkillLevel(a.intValue())).applyTo(player, false, (int) (mapleCoolDownValueHolder.length + mapleCoolDownValueHolder.startTime - System.currentTimeMillis()));
-                                break;
-                            }
-                        }
-                    }
-                    b++;
-                }
-            }
-
-            //c.getSession().writeAndFlush(CWvsContext.updateMaplePoint(player));
-
-            if (player.returnscroll != null) {
-                c.getSession().writeAndFlush(CWvsContext.returnEffectConfirm(player.returnscroll, player.returnSc));
-                c.getSession().writeAndFlush(CWvsContext.returnEffectModify(player.returnscroll, player.returnSc));
-            }
-
-            if (player.choicepotential != null && player.memorialcube != null) {
-                c.getSession().writeAndFlush(CField.getBlackCubeStart(player, (Item) player.choicepotential, false, player.memorialcube.getItemId(), player.memorialcube.getPosition(), player.getItemQuantity(5062010, false)));
-            }
-
-            if (GameConstants.isBlaster(player.getJob())) {
-                player.Cylinder(0);
-            }
-
-            if (!player.isGM() || !player.getBuffedValue(9001004)) ;
-            if (GameConstants.isZero(player.getJob())) {
-                int[] ZeroQuest = {31686, 31198, 41908, 41909, 41907, 32550, 33565, 3994, 6000, 39001, 40000, 40001, 7049, 40002, 40003, 40004, 40100, 40101, 6995, 40102, 40103, 40104, 40105, 40106, 40107, 40200, 40108, 40201, 40109, 40202, 40110, 40203, 40111, 40204, 40050, 40112, 40205, 40051, 40206, 40052, 40207, 40300, 40704, 40053, 40208, 40301, 7783, 40054, 40209, 40302, 40705, 40055, 40210, 40303, 40056, 40304, 7600, 40800, 40057, 40305, 40801, 40058, 40306, 40059, 40307, 40400, 40060, 40308, 40401, 40061, 40309, 40402, 40960, 40062, 40310, 40403, 40930, 40961, 40063, 40404, 40900, 40931, 40962, 40405, 7887, 40901, 40932, 40963, 40406, 40902, 40933, 40964, 40407, 40500, 40903, 40934, 40408, 40501, 40904, 40409, 40502, 7860, 40905, 40503, 7892, 7707, 40504, 40505, 40970, 40506, 40940, 40971, 41250, 41312, 40600, 40910, 40941, 40972, 41251, 40601, 40911, 40942, 40973, 41252, 40602, 40912, 40943, 40974, 41253, 41315, 41408, 40603, 40913, 40944, 41254, 41316, 40604, 40914, 41255, 41317, 40605, 41256, 40606, 41257, 41350, 40607, 40700, 41103, 41258, 41351, 40701, 40980, 41104, 41352, 40702, 40950, 41105, 41353, 40703, 40920, 40951, 41106, 41261, 41354, 40921, 40952, 40922, 40953, 41263, 40923, 40954, 41264, 41357, 40924, 41358, 41111, 41359, 41050, 41360, 41114, 41269, 41300, 41115, 41270, 41301, 41363, 41302, 41364, 41303, 41365, 41055, 41304, 41366, 41305, 41925, 41306, 41926, 41307, 41400, 41370, 41401};
-                for (int questid : ZeroQuest) {
-                    if (questid != 41907 && player.getQuestStatus(questid) != 2) {
-                        MapleQuest.getInstance(questid).forceComplete(player, 0);
-                    }
-                    if (questid == 41907 && player.getQuestStatus(questid) != 1) {
-                        MapleQuest quest = MapleQuest.getInstance(41907);
-                        MapleQuestStatus queststatus = new MapleQuestStatus(quest, 1);
-                        queststatus.setCustomData("0");
-                        player.updateQuest(queststatus, true);
-                    }
-                }
-
-                if (player.getInventory(MapleInventoryType.EQUIPPED).getItem((short) -11) != null) {
-                    Equip eq = (Equip) player.getInventory(MapleInventoryType.EQUIPPED).getItem((short) -11);
-                    Equip eq2 = (Equip) player.getInventory(MapleInventoryType.EQUIPPED).getItem((short) -10);
-                    if (eq.getPotential1() != eq2.getPotential1()) {
-                        eq.setPotential1(eq2.getPotential1());
-                    }
-                    if (eq.getPotential2() != eq2.getPotential2()) {
-                        eq.setPotential2(eq2.getPotential2());
-                    }
-                    if (eq.getPotential3() != eq2.getPotential3()) {
-                        eq.setPotential3(eq2.getPotential3());
-                    }
-                    if (eq.getPotential4() != eq2.getPotential4()) {
-                        eq.setPotential4(eq2.getPotential4());
-                    }
-                    if (eq.getPotential5() != eq2.getPotential5()) {
-                        eq.setPotential5(eq2.getPotential5());
-                    }
-                    if (eq.getPotential6() != eq2.getPotential6()) {
-                        eq.setPotential6(eq2.getPotential6());
-                    }
-                }
-            }
-            player.getClient().getSession().writeAndFlush(CWvsContext.LoadLinkPreset(player)); //전승
-            player.addKV("bossPractice", "0");
-
-            if (player.getKeyValue(1477, "count") == -1L) {
-                player.setKeyValue(1477, "count", "0");
-            }
-
-            if (player.getKeyValue(19019, "id") == -1L) {
-                player.setKeyValue(19019, "id", "0");
-            }
-
-            if (player.getKeyValue(7293, "damage_skin") == -1L) {
-                player.setKeyValue(7293, "damage_skin", "2438159");
-            }
-
-            if (player.getKeyValue(501619, "count") == -1L) {
-                player.setKeyValue(501619, "count", "999");
-            }
-
-            if (player.getKeyValue(100711, "point") == -1L) {
-                player.setKeyValue(100711, "point", "0");
-                player.setKeyValue(100711, "sum", "0");
-                player.setKeyValue(100711, "date", String.valueOf(GameConstants.getCurrentDate_NoTime()));
-                player.setKeyValue(100711, "today", "0");
-                player.setKeyValue(100711, "total", "0");
-                player.setKeyValue(100711, "lock", "0");
-            }
-
-            if (player.getKeyValue(100711, "date") != GameConstants.getCurrentDate_NoTime()) {
-                player.setKeyValue(100711, "date", String.valueOf(GameConstants.getCurrentDate_NoTime()));
-                player.setKeyValue(100711, "today", "0");
-                player.setKeyValue(100711, "lock", "0");
-            }
-
-            if (player.getKeyValue(100712, "point") == -1L) {
-                player.setKeyValue(100712, "point", "0");
-                player.setKeyValue(100712, "sum", "0");
-                player.setKeyValue(100712, "date", String.valueOf(GameConstants.getCurrentDate_NoTime()));
-                player.setKeyValue(100712, "today", "0");
-                player.setKeyValue(100712, "total", "0");
-                player.setKeyValue(100712, "lock", "0");
-            }
-
-            if (player.getKeyValue(16700, "date") != GameConstants.getCurrentDate_NoTime()) {
-                player.setKeyValue(16700, "count", "0");
-                player.setKeyValue(16700, "date", String.valueOf(GameConstants.getCurrentDate_NoTime()));
-            }
-
-            if (player.getKeyValue(100712, "date") != GameConstants.getCurrentDate_NoTime()) {
-                player.setKeyValue(100712, "date", String.valueOf(GameConstants.getCurrentDate_NoTime()));
-                player.setKeyValue(100712, "today", "0");
-                player.setKeyValue(100712, "lock", "0");
-            }
-
-            if (player.getKeyValue(501215, "point") == -1L) {
-                player.setKeyValue(501215, "point", "0");
-                player.setKeyValue(501215, "sum", "0");
-                player.setKeyValue(501215, "date", String.valueOf(GameConstants.getCurrentDate_NoTime()));
-                player.setKeyValue(501215, "week", "0");
-                player.setKeyValue(501215, "total", "0");
-                player.setKeyValue(501215, "lock", "0");
-            }
-
-            if (player.getKeyValue(501045, "point") == -1L) {
-                player.setKeyValue(501045, "point", "0");
-                player.setKeyValue(501045, "lv", "1");
-                player.setKeyValue(501045, "sp", "0");
-                player.setKeyValue(501045, "reward0", "0");
-                player.setKeyValue(501045, "reward1", "0");
-                player.setKeyValue(501045, "reward2", "0");
-                player.setKeyValue(501045, "mapTuto", "2");
-                player.setKeyValue(501045, "skillTuto", "1");
-                player.setKeyValue(501045, "payTuto", "1");
-            }
-            player.setKeyValue(501092, "lv", "9");
-
-            if (player.getKeyValue(501046, "start") == -1L) {
-                player.setKeyValue(501046, "start", "1");
-                for (int k = 0; k < 9; k++) {
-                    player.setKeyValue(501046, String.valueOf(k), "0");
-                }
-            }
-
-            if (c.getKeyValue("dailyGiftDay") == null) {
-                c.setKeyValue("dailyGiftDay", "0");
-            }
-
-            if (c.getKeyValue("dailyGiftComplete") == null) {
-                c.setKeyValue("dailyGiftComplete", "0");
-            }
-
-            if (player.getKeyValue(501385, "date") != GameConstants.getCurrentDate_NoTime()) {
-                player.setKeyValue(501385, "count", "0");
-                player.setKeyValue(501385, "date", String.valueOf(GameConstants.getCurrentDate_NoTime()));
-            }
-
-            for (AuctionItem auctionItem : AuctionServer.getItems().values()) {
-                if (auctionItem.getAccountId() == c.getAccID() && auctionItem.getState() == 3 && auctionItem.getHistory().getState() == 3) {
-                    player.getClient().getSession().writeAndFlush(CWvsContext.AlarmAuction(0, auctionItem));
-                }
-            }
-
-            if (player.getKeyValue(19019, "id") > 0L && !player.haveItem((int) player.getKeyValue(19019, "id"))) {
-                player.setKeyValue(19019, "id", "0");
-                player.getMap().broadcastMessage(player, CField.showTitle(player.getId(), 0), false);
-            }
-
-            if (player.getKeyValue(210416, "TotalDeadTime") > 0L) {
-                player.getClient().send(CField.ExpDropPenalty(true, (int) player.getKeyValue(210416, "TotalDeadTime"), (int) player.getKeyValue(210416, "NowDeadTime"), 80, 80));
-            }
-
-            if (player.getClient().getKeyValue("UnionQuest1") != null) {
-                int questid = 16011;
-
-                if (Integer.parseInt(player.getClient().getKeyValue("UnionQuest1")) == 1) {
-                    player.forceCompleteQuest(16011);
-                } else {
-                    MapleQuest quest = MapleQuest.getInstance(questid);
-                    player.getQuest_Map().remove(quest);
-                    MapleQuestStatus queststatus = new MapleQuestStatus(quest, 0);
-                    queststatus.setStatus((byte) 0);
-                    queststatus.setCustomData("");
-                    player.getClient().send(CWvsContext.InfoPacket.updateQuest(queststatus));
-                }
-            }
-            if (player.getClient().getKeyValue("UnionQuest2") != null) {
-                int questid = 16012;
-                if (Integer.parseInt(player.getClient().getKeyValue("UnionQuest2")) == 1) {
-                    player.forceCompleteQuest(questid);
-                } else {
-                    MapleQuest quest = MapleQuest.getInstance(questid);
-                    player.getQuest_Map().remove(quest);
-                    MapleQuestStatus queststatus = new MapleQuestStatus(quest, 0);
-                    queststatus.setStatus((byte) 0);
-                    queststatus.setCustomData("");
-                    player.getClient().send(CWvsContext.InfoPacket.updateQuest(queststatus));
-                }
-            }
-            boolean itemexppendent = false;
-            KoreaCalendar kc = new KoreaCalendar();
-            String nowtime = (kc.getYeal() % 100) + kc.getMonths() + kc.getDays() + kc.getHours() + kc.getMins() + kc.getMins();
-            Item item = player.getInventory(MapleInventoryType.EQUIPPED).getItem((short) -17);
-            Item item2 = player.getInventory(MapleInventoryType.EQUIPPED).getItem((short) -31);
-            Item exppen = null;
-            if (item != null) {
-                itemexppendent = (item.getItemId() == 1122017 || item.getItemId() == 1122155 || item.getItemId() == 1122215);
-                if (itemexppendent) {
-                    exppen = item;
-                }
-            }
-            if (item2 != null && !itemexppendent) {
-                itemexppendent = (item2.getItemId() == 1122017 || item2.getItemId() == 1122155 || item2.getItemId() == 1122215);
-                if (itemexppendent) {
-                    exppen = item2;
-                }
-            }
-            if (itemexppendent) {
-                if (kc.getDayt() == player.getKeyValue(27040, "equipday") && kc.getMonth() == player.getKeyValue(27040, "equipmonth")) {
-                    long runnigtime = player.getKeyValue(27040, "runnigtime");
-                    int levels = (int) runnigtime / 3600;
-                    if (levels >= 2) {
-                        levels = 2;
-                    }
-                    int expplus = (levels == 2) ? 30 : ((levels == 1) ? 20 : 10), todaytime = (int) runnigtime / 60;
-                    long outtime = ((System.currentTimeMillis() - player.getKeyValue(27040, "firstequiptimemil"))) / 1000L - player.getKeyValue(27040, "runnigtime");
-                    player.updateInfoQuest(27039, exppen.getInventoryId() + "=" + player.getKeyValue(27040, "firstequiptime") + "|" + nowtime + "|" + outtime + "|0|0");
-                    player.getClient().send(CWvsContext.SpritPandent(exppen.getPosition(), true, levels, expplus, todaytime));
-                    player.updateInfoQuest(27039, exppen.getInventoryId() + "=" + player.getKeyValue(27040, "firstequiptime") + "|" + nowtime + "|" + outtime + "|" + expplus + "|" + todaytime + "");
-                } else {
-                    player.removeKeyValue(27040);
-                    player.setKeyValue(27040, "runnigtime", "1");
-                    player.setKeyValue(27040, "firstequiptime", nowtime);
-                    player.setKeyValue(27040, "firstequiptimemil", System.currentTimeMillis() + "");
-                    player.setKeyValue(27040, "equipday", "" + kc.getDayt() + "");
-                    player.setKeyValue(27040, "equipmonth", "" + kc.getMonth() + "");
-                    player.updateInfoQuest(27039, exppen.getInventoryId() + "=" + nowtime + "|" + nowtime + "|0|0|0");
-                    player.getClient().send(CWvsContext.SpritPandent(exppen.getPosition(), true, 0, 10, 0));
-                    player.updateInfoQuest(27039, exppen.getInventoryId() + "=" + nowtime + "|" + nowtime + "|0|10|0");
-                }
-            }
-
-            if (player.getV("EnterDay") == null) {
-                player.addKV("EnterDay", kc.getYears() + kc.getMonths() + kc.getDays());
-            } else {
-                player.checkRestDay(false, false);
-            }
-            if (player.getV("EnterDayWeek") == null) {
-                player.addKV("EnterDayWeek", kc.getYears() + kc.getMonths() + kc.getDays());
-            } else {
-                player.checkRestDay(true, false);
-            }
-            if (player.getV("EnterDayWeekMonday") == null) {
-                player.addKV("EnterDayWeekMonday", kc.getYears() + kc.getMonths() + kc.getDays());
-            } else {
-                player.checkRestDayMonday();
-            }
-            if (player.getClient().getKeyValue("EnterDay") == null) {
-                player.getClient().setKeyValue("EnterDay", kc.getYears() + kc.getMonths() + kc.getDays());
-            } else {
-                player.checkRestDay(false, true);
-            }
-            if (player.getClient().getKeyValue("EnterDayWeek") == null) {
-                player.getClient().setKeyValue("EnterDayWeek", kc.getYears() + kc.getMonths() + kc.getDays());
-            } else {
-                player.checkRestDay(true, true);
-            }
-            if (player.getClient().getKeyValue("WishCoin") == null) {
-                String bosslist = "";
-                for (int k = 0; k < ServerConstants.NeoPosList.size(); k++) {
-                    bosslist = bosslist + "0";
-                }
-                player.getClient().setKeyValue("WishCoin", bosslist);
-                player.getClient().setKeyValue("WishCoinWeekGain", "0");
-                player.getClient().setKeyValue("WishCoinGain", "0");
-            }
-
-            c.setCabiNet(new ArrayList());
-            c.loadCabinet();
-            if (!c.getCabiNet().isEmpty()) {
-                c.send(CField.getMapleCabinetList(c.getCabiNet(), false, 0, true));
-            }
-
-            List<Triple<Integer, Integer, String>> eventInfo = new ArrayList<>();
-            eventInfo.add(new Triple(Integer.valueOf(100662), Integer.valueOf(993187300), "HundredShooting"));
-            eventInfo.add(new Triple(Integer.valueOf(100661), Integer.valueOf(993074000), "jumping"));
-            eventInfo.add(new Triple(Integer.valueOf(100796), Integer.valueOf(993192500), "BloomingRace"));
-            eventInfo.add(new Triple(Integer.valueOf(100199), Integer.valueOf(993026900), "NewYear"));
-
-            c.send(SLFCGPacket.EventInfoPut(eventInfo));
-
-            c.setShopLimit(new ArrayList());
-            c.loadShopLimit();
-
-            player.RefreshUnionRaid(true);
-
-            if (player.getClient().getKeyValue("유니온코인") != null) {
-                int coin = Integer.parseInt(player.getClient().getKeyValue("유니온코인"));
-                if (coin != player.getKeyValue(500629, "point")) {
-                    player.setKeyValue(500629, "point", coin + "");
-                }
-            }
-
-            if (player.getClient().getKeyValue("presetNo") != null) {
-                int preset = Integer.parseInt(player.getClient().getKeyValue("presetNo"));
-                if (preset != player.getKeyValue(500630, "presetNo")) {
-                    player.setKeyValue(500630, "presetNo", preset + "");
-                }
-            }
-
-            for (int i = 3; i < 6; i++) {
-                if (player.getClient().getKeyValue("prisetOpen" + i) != null) {
-                    int preset = Integer.parseInt(player.getClient().getKeyValue("prisetOpen" + i));
-                    if (preset == 1) {
-                        player.SetUnionPriset(i);
-                    }
-                }
-            }
-
-            for (int i = 0; i < 8; i++) {
-                int id = (int) (500627L + player.getKeyValue(500630, "presetNo"));
-                if (player.getKeyValue(18791, i + "") == -1L && player.getClient().getCustomData(id, i + "") != null) {
-                    player.setKeyValue(id, i + "", player.getClient().getCustomData(id, i + ""));
-                }
-            }
-
-            player.gainEmoticon(1008);
-            player.gainEmoticon(1009);
-            player.gainEmoticon(1010);
-
-            if (player.getKeyValue(51351, "startquestid") > 0L) {
-                player.gainSuddenMission((int) player.getKeyValue(51351, "startquestid"), (int) player.getKeyValue(51351, "midquestid"), false);
-            }
-
-            if (player.getV("GuildBless") != null) {
-                long keys = Long.parseLong(player.getV("GuildBless"));
-                Calendar clear = new GregorianCalendar((int) keys / 10000, (int) (keys % 10000L / 100L) - 1, (int) keys % 100);
-                Calendar ocal = Calendar.getInstance();
-                int yeal = clear.get(1), days = clear.get(5), day2 = clear.get(7), maxday = clear.getMaximum(5), month = clear.get(2);
-                int check = (day2 == 7) ? 2 : ((day2 == 6) ? 3 : ((day2 == 5) ? 4 : ((day2 == 4) ? 5 : ((day2 == 3) ? 6 : ((day2 == 2) ? 7 : ((day2 == 1) ? 1 : 0))))));
-                int afterday = days + check;
-
-                if (afterday > maxday) {
-                    afterday -= maxday;
-                    month++;
-                }
-                if (month > 12) {
-                    yeal++;
-                    month = 1;
-                }
-                Calendar after = new GregorianCalendar(yeal, month, afterday);
-                if (after.getTimeInMillis() < System.currentTimeMillis()) {
-                    MapleQuest quest = MapleQuest.getInstance(26000);
-                    player.getQuest_Map().remove(quest);
-                    MapleQuestStatus queststatus = new MapleQuestStatus(quest, 0);
-                    queststatus.setStatus((byte) 0);
-                    queststatus.setCustomData("");
-                    player.getClient().send(CWvsContext.InfoPacket.updateQuest(queststatus));
-                }
-            }
-
-            if (ServerConstants.feverTime || Calendar.getInstance().get(7) == 7) {
-                ServerConstants.feverTime = true;
-                player.FeverTime(true, false);
-            } else {
-                ServerConstants.feverTime = false;
-            }
-
-
-            if (player.getClient().getCustomData(501368, "spoint") != null) {
-                int coin = Integer.parseInt(player.getClient().getCustomData(501368, "spoint"));
-                if (coin != player.getKeyValue(501368, "point")) {
-                    player.setKeyValue(501368, "point", coin + "");
-                }
-            }
-
-            c.getPlayer().loadPremium();
-
-            StringBuilder sb3 = new StringBuilder();
-            sb3.append(CurrentTime.getYear());
-            sb3.append(StringUtil.getLeftPaddedStr(String.valueOf(CurrentTime.getMonth()), '0', 2));
-            sb3.append(StringUtil.getLeftPaddedStr(String.valueOf(CurrentTime.getDate()), '0', 2));
-
-            if (player.haveItem(2438697)) {
-                if (player.getV("d_day_t") == null) {
-                    player.addKV("d_day_t", "0");
-                }
-                if (player.getV("d_daycheck") == null) {
-                    player.addKV("d_daycheck", "0");
-                }
-                if (Long.parseLong(player.getV("d_day_t")) < Long.parseLong(sb3.toString())) {
-                    player.addKV("d_day_t", sb3.toString());
-                    player.addKV("d_daycheck", "" + (Long.parseLong(player.getV("d_daycheck")) + 1L));
-                }
-            }
-
-            if (GameConstants.isYeti(player.getJob()) || GameConstants.isPinkBean(player.getJob())) {
-                MapleQuest quest = MapleQuest.getInstance(7291);
-                MapleQuestStatus queststatus = new MapleQuestStatus(quest, 1);
-                String skinString = String.valueOf(GameConstants.isPinkBean(player.getJob()) ? 292 : 293);
-                queststatus.setCustomData((skinString == null) ? "0" : skinString);
-                player.updateQuest(queststatus, true);
-                player.setKeyValue(7293, "damage_skin", GameConstants.isPinkBean(player.getJob()) ? "2633220" : "2633218");
-                if (player.getSkillLevel(80000602) <= 0) {
-                    player.changeSkillLevel(80000602, (byte) 1, (byte) 1);
-                }
-            }
-
-            Item weapon = player.getInventory(MapleInventoryType.EQUIPPED).getItem((short) -11);
-            if (weapon != null && player.getBuffedEffect(SecondaryStat.SoulMP) == null) {
-                player.setSoulMP((Equip) weapon);
-            }
-
-            boolean cgr = false;
-            for (MapleGuild mg : World.Guild.getGuilds(1, 999, 1, 999, 1, 999)) {
-                if (mg.getRequest(player.getId()) != null) {
-                    c.getPlayer().setKeyValue(26015, "name", mg.getName());
-                    cgr = true;
-                }
-            }
-            if (!cgr || c.getPlayer().getGuild() != null) {
-                c.getPlayer().setKeyValue(26015, "name", "");
-            }
-            if (player.getKeyValue(333333, "quick0") > 0L) {
-                c.getSession().writeAndFlush(CField.quickSlot(player));
-            }
-            if (c.getCustomData(252, "count") == null) {
-                c.setCustomData(252, "count", "0");
-            }
-            if (c.getCustomData(252, "T") == null || c.getCustomData(252, "T").equals("0")) {
-                c.setCustomData(252, "count", "0");
-                c.setCustomData(252, "T", GameConstants.getCurrentFullDate());
-            } else {
-                String bTime = c.getCustomData(252, "T");
-                String cTime = GameConstants.getCurrentFullDate();
-                int bH = Integer.parseInt(bTime.substring(8, 10));
-                int bM = Integer.parseInt(bTime.substring(10, 12));
-                int cH = Integer.parseInt(cTime.substring(8, 10));
-                int cM = Integer.parseInt(cTime.substring(10, 12));
-                if ((cH - bH == 1 && cM >= bM) || cH - bH > 1) {
-                    c.setCustomData(252, "count", "3600");
-                }
-            }
-
-            if (c.getCustomData(253, "day") == null) {
-                c.setCustomData(253, "day", "0");
-            }
-
-            if (c.getCustomData(253, "complete") == null) {
-                c.setCustomData(253, "complete", "0");
-            }
-
-            if (c.getCustomData(253, "bMaxDay") == null) {
-                c.setCustomData(253, "bMaxDay", "135");
-            }
-
-            if (c.getCustomData(253, "cMaxDay") == null) {
-                c.setCustomData(253, "cMaxDay", "135");
-            }
-
-            if (c.getCustomData(253, "lastDate") == null) {
-                c.setCustomData(253, "lastDate", "20/12/31");
-            }
-
-            if (c.getCustomData(253, "passCount") == null) {
-                c.setCustomData(253, "passCount", "135");
-            }
-
-            if (player.getKeyValue(0, "Boss_Level") < 0) {
-                player.setKeyValue(0, "Boss_Level", "0");
-            }
-
-            if (player.getKeyValue(100, "medal") < 0) {
-                player.setKeyValue(100, "medal", "1");
-            }
-
-            if (player.getKeyValue(100, "title") < 0) {
-                player.setKeyValue(100, "title", "1");
-            }
-
-            player.updateInfoQuest(101149, "1007=" + player.getKeyValue(100, "medal") + ";1009=" + player.getKeyValue(100, "title"));
-
-            if (player.getKeyValue(3, "dojo") < 0) {
-                player.setKeyValue(3, "dojo", "0");
-            }
-
-            if (player.getKeyValue(3, "dojo_time") < 0) {
-                player.setKeyValue(3, "dojo_time", "0");
-            }
-
-            if (c.getCustomData(254, "passDate") == null) {
-                StringBuilder str = new StringBuilder();
-                for (int k = 0; k < 63; k++) {
-                    str.append("0");
-                }
-                c.setCustomData(254, "passDate", str.toString());
-            }
-
-            MatrixHandler.calcSkillLevel(player, -1);
-
-            int linkSkill = GameConstants.getMyLinkSkill(player.getJob());
-
-            if (linkSkill > 0 && player.getSkillLevel(linkSkill) != ((player.getLevel() >= 120) ? 2 : 1)) {
-                player.changeSkillLevel(linkSkill, (byte) ((player.getLevel() >= 120) ? 2 : 1), (byte) 2);
-            }
-
-            if (c.getCustomData(238, "T") == null || c.getCustomData(238, "T").equals("0")) {
-                c.setCustomData(238, "count", "0");
-                c.setCustomData(238, "T", GameConstants.getCurrentFullDate());
-            }
-
-            if (GameConstants.isWildHunter(player.getJob())) {
-                boolean change = false;
-                for (int a = 9304000; a <= 9304008; a++) {
-                    int jaguarid = GameConstants.getJaguarType(a);
-                    String info = player.getInfoQuest(23008);
-
-                    for (int k = 0; k <= 8; k++) {
-                        if (!info.contains(k + "=1")) {
-                            if (k == jaguarid) {
-                                info = info + k + "=1;";
-                            }
-                        }
-                    }
-                    player.updateInfoQuest(23008, info);
-                    player.updateInfoQuest(123456, String.valueOf(jaguarid * 10));
-                    change = true;
-                }
-                if (change) {
-                    c.getSession().writeAndFlush(CWvsContext.updateJaguar(player));
-                }
-                if (player.getKeyValue(190823, "grade") == 0) {
-                    player.setKeyValue(190823, "grade", "1");
-                }
-            }
-
-            MapleQuestStatus stat = player.getQuestNoAdd(MapleQuest.getInstance(122700));
-
-            c.getSession().writeAndFlush(CWvsContext.pendantSlot(true));
-            c.getSession().writeAndFlush(CWvsContext.temporaryStats_Reset());
-
-
-            player.getMap().addPlayer(player);
-
-            c.getSession().writeAndFlush(CWvsContext.setBossReward(player));
-            c.getSession().writeAndFlush(CWvsContext.onSessionValue("kill_count", "0"));
-            c.getSession().writeAndFlush(CWvsContext.updateDailyGift("count=" + c.getKeyValue("dailyGiftComplete") + ";date=" + player.getKeyValue(16700, "date")));
-            c.getSession().writeAndFlush(CField.dailyGift(player, 1, 0));
-
-
-            try {
-                int[] buddyIds = player.getBuddylist().getBuddyIds();
-                World.Buddy.loggedOn(player.getName(), player.getId(), c.getChannel(), c.getAccID(), buddyIds);
-                if (player.getParty() != null) {
-                    MapleParty party = player.getParty();
-                    World.Party.updateParty(party.getId(), PartyOperation.LOG_ONOFF, new MaplePartyCharacter(player));
-                }
-
-                AccountIdChannelPair[] onlineBuddies = World.Find.multiBuddyFind(player.getBuddylist(), player.getId(), buddyIds);
-
-                for (AccountIdChannelPair onlineBuddy : onlineBuddies) {
-                    player.getBuddylist().get(onlineBuddy.getAcountId()).setChannel(onlineBuddy.getChannel());
-                }
-
-                player.getBuddylist().setChanged(true);
-                c.getSession().writeAndFlush(CWvsContext.BuddylistPacket.updateBuddylist(player.getBuddylist().getBuddies(), null, (byte) 21));
-
-                MapleMessenger messenger = player.getMessenger();
-
-                if (messenger != null) {
-                    World.Messenger.silentJoinMessenger(messenger.getId(), new MapleMessengerCharacter(c.getPlayer()));
-                    World.Messenger.updateMessenger(messenger.getId(), c.getPlayer().getName(), c.getChannel());
-                }
-
-                if (player.getGuildId() > 0) {
-                    MapleGuild gs = World.Guild.getGuild(player.getGuildId());
-
-                    if (gs != null) {
-                        if (gs.getLastResetDay() == 0) {
-                            gs.setLastResetDay(Integer.parseInt(kc.getYears() + kc.getMonths() + kc.getDays()));
-                        }
-
-                        World.Guild.setGuildMemberOnline(player.getMGC(), true, c.getChannel());
-                        c.getSession().writeAndFlush(CWvsContext.GuildPacket.showGuildInfo(player));
-                        c.getSession().writeAndFlush(CWvsContext.GuildPacket.guildLoadAattendance());
-
-                        List<byte[]> packetList = World.Alliance.getAllianceInfo(gs.getAllianceId(), true);
-                        if (packetList != null) {
-                            for (byte[] pack : packetList) {
-                                if (pack != null) {
-                                    c.getSession().writeAndFlush(pack);
-                                }
-                            }
-                        }
-                    } else {
-                        player.setGuildId(0);
-                        player.setGuildRank((byte) 5);
-                        player.setAllianceRank((byte) 5);
-                        player.saveGuildStatus();
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            CharacterNameAndId pendingBuddyRequest = player.getBuddylist().pollPendingRequest();
-
-            if (pendingBuddyRequest != null) {
-                player.getBuddylist().put(new BuddylistEntry(pendingBuddyRequest.getName(), pendingBuddyRequest.getRepName(), pendingBuddyRequest.getAccId(), pendingBuddyRequest.getId(), pendingBuddyRequest.getGroupName(), -1, false, pendingBuddyRequest.getLevel(), pendingBuddyRequest.getJob(), pendingBuddyRequest.getMemo()));
-                c.getSession().writeAndFlush(CWvsContext.BuddylistPacket.requestBuddylistAdd(pendingBuddyRequest.getId(), pendingBuddyRequest.getAccId(), pendingBuddyRequest.getName(), pendingBuddyRequest.getLevel(), pendingBuddyRequest.getJob(), c, pendingBuddyRequest.getGroupName(), pendingBuddyRequest.getMemo()));
-            }
-
-            player.getClient().getSession().writeAndFlush(CWvsContext.serverMessage("", channelServer.getServerMessage()));
-            player.sendMacros();
-            player.updatePartyMemberHP();
-            player.startFairySchedule(false);
-            player.gainDonationSkills();
-            c.getSession().writeAndFlush(CField.getKeymap(player.getKeyLayout()));
-            c.getSession().writeAndFlush(CWvsContext.OnClaimSvrStatusChanged(true));
-            player.updatePetAuto();
-            player.expirationTask(true, (transfer == null));
-            c.getSession().writeAndFlush(CWvsContext.setUnion(c));
-
-            player.getStat().recalcLocalStats(player);
-
-            for (int j = 0; j < 5; j++) {
-                c.getSession().writeAndFlush(CWvsContext.unionFreeset(c, j));
-            }
-
-            c.getPlayer().updateSingleStat(MapleStat.FATIGUE, c.getPlayer().getFatigue());
-
-            if ((player.getStat()).equippedSummon > 0) {
-                SkillFactory.getSkill((player.getStat()).equippedSummon).getEffect(1).applyTo(player, true);
-            }
-
-            c.getSession().writeAndFlush(CField.HeadTitle(player.HeadTitle()));
-
-            PetHandler.updatePetSkills(player, null);
-
-            c.getSession().writeAndFlush(CWvsContext.initSecurity());
-            c.getSession().writeAndFlush(CWvsContext.updateSecurity());
-
-            String towerchair = c.getPlayer().getInfoQuest(7266);
-            if (!towerchair.equals("")) {
-                c.getPlayer().updateInfoQuest(7266, towerchair);
-            }
-
-            c.getSession().writeAndFlush(SLFCGPacket.StarDustUI(501661, "UI/UIWindowEvent.img/starDust_17th", player.getKeyValue(501661, "e"), c.getPlayer().getKeyValue(501661, "point")));
-
-            if (player.getClient().isFirstLogin() && !player.isGM() && !player.getName().equals("\uc624\ube0c")) {
-                player.getClient().setLogin(false);
-            }
-
-            if (c.getPlayer().getPremiumPeriod().longValue() > LocalDateTime.now().toInstant(ZoneOffset.UTC).getEpochSecond()) {
-                Skill skill = SkillFactory.getSkill(c.getPlayer().getPremiumBuff());
-                if (skill != null) {
-                    if (player.getSkillLevel(skill) < 1) {
-                        c.getPlayer().changeSingleSkillLevel(skill, skill.getMaxLevel(), (byte) skill.getMasterLevel());
-                    }
-                    long td = (c.getPlayer().getPremiumPeriod().longValue() - LocalDateTime.now().toInstant(ZoneOffset.UTC).getEpochSecond()) / 86400000L;
-                    c.getPlayer().dropMessage(5, "프리미엄 버프가 " + td + "일 남았습니다.");
-                    SkillFactory.getSkill(c.getPlayer().getPremiumBuff()).getEffect(1).applyTo(player, false);
-                }
-            }
-
-            if (player.getKeyValue(501045, "point") == -1) {
-                player.setKeyValue(501045, "point", "0");
-                player.setKeyValue(501045, "lv", "1");
-                player.setKeyValue(501045, "sp", "0");
-                player.setKeyValue(501045, "reward0", "0");
-                player.setKeyValue(501045, "reward1", "0");
-                player.setKeyValue(501045, "reward2", "0");
-                player.setKeyValue(501045, "mapTuto", "2");
-                player.setKeyValue(501045, "skillTuto", "1");
-                player.setKeyValue(501045, "payTuto", "1");
-            }
-
-            if (player.getKeyValue(501092, "point") == -1) {
-                player.setKeyValue(501092, "point", "0");
-                player.setKeyValue(501092, "sp", "0");
-                player.setKeyValue(501092, "mapTuto", "2");
-                player.setKeyValue(501092, "skillTuto", "1");
-                player.setKeyValue(501092, "payTuto", "1");
-            }
-            
-            player.resetQuest();
-
-            for (int sm = 0; sm <= 7; sm++) {
-                if (c.getPlayer().getKeyValue(2018207, "medalSkill_" + sm) == 1L) {
-                    Skill skill = SkillFactory.getSkill(80001535 + sm);
-                    if (skill != null) {
-                        if (player.getSkillLevel(skill) < 1) {
-                            c.getPlayer().changeSingleSkillLevel(skill, skill.getMaxLevel(), (byte) skill.getMasterLevel());
-                        }
-                        SkillFactory.getSkill(80001535 + sm).getEffect(1).applyTo(player, false);
-                    }
-                }
-            }
-
-            int[][] medals = {{1143507, 80001543}, {1143508, 80001544}, {1143509, 80001545}};
-
-            for (int m = 0; m < medals.length; m++) {
-                if (c.getPlayer().haveItem(medals[m][0])) {
-                    Skill skill = SkillFactory.getSkill(medals[m][1]);
-                    if (skill != null) {
-                        if (player.getSkillLevel(skill) < 1) {
-                            c.getPlayer().changeSingleSkillLevel(skill, skill.getMaxLevel(), (byte) skill.getMasterLevel());
-                        }
-                        SkillFactory.getSkill(medals[m][1]).getEffect(1).applyTo(player, false);
-                    }
-                }
-            }
-            player.changeSkillLevel(80003023, (byte) 1, (byte) 1);
-            if (c.getPlayer().getKeyValue(20210113, "orgelonoff") == 1) {
-                c.getPlayer().setKeyValue(20210113, "orgelonoff", "0");
-                c.getPlayer().updateInfoQuest(100720, "count=0;fever=0;");
-            }
-            player.getClient().send(CField.UIPacket.closeUI(3));
-            c.getSession().writeAndFlush(SLFCGPacket.SetIngameDirectionMode(true, false, false, false));
-            c.getSession().writeAndFlush(SLFCGPacket.SetIngameDirectionMode(false, true, false, false));
-
-
-            if (ServerConstants.ServerTest) {
-               // c.send(CField.NPCPacket.getNPCTalk(9010061, (byte) 0, "#e갈매기에 오신 것을 환영합니다#n\r\n이 곳은 갈매기 정식 오픈 전에 각종 버그, 오류들을 미리 테스트 하기 위해 만들어 진 곳이며 다음과 같은 사항이 제한됩니다.\r\n\r\n#b1. 테스트 월드에서는 테스트를 위하여 캐릭터 성장이 쉽게 설정되어있습니다. 이러한 모든 정보는 정식 월드에는 적용되지 않습니다.\r\n2. 테스트 월드의 캐릭터 정보는 정식 월드와 절대 공유되지 않습니다.\r\n3. 테스트 월드의 캐릭터 정보는 이용자의 동의를 받지 않고 아무런 공지없이 리셋될 수 있습니다.\r\n4. 테스트 월드의 서비스가 아무런 공지없이 중단될 수 있습니다.\r\n5. 이 곳에서 테스트 된 내용이 정식 월드에 반드시 적용되지는 않습니다.\r\n6. 테스트 된 내용이 정식 월드에 추가될 때에는 세부 수치가 변경될 수 있습니다.", "00 00", (byte) 0, c.getPlayer().getId()));
-                if (!player.haveItem(2431138)) {
-                    player.gainItem(2431138, 1);
-                }
-            }
-            //길드 대항전 의뢰
-            if(((new Date()).getHours() == 19 && (new Date()).getMinutes() < 55) ||  ((new Date()).getHours() == 22 && (new Date()).getMinutes() < 55)){
-                //player.getClient().getSession().writeAndFlush(SLFCGPacket.OnYellowDlg(2012041, 3500, "팀 대항전이 시작되었다네 참여를 하고 싶으면 나에게 말을 걸어 주게나.", ""));
-            }
-            
-            final Calendar ocal = Calendar.getInstance();
-            int years = ocal.get(1);
-            int month = (ocal.get(2) + 1);
-            int day = ocal.get(5);
-            
-            String date3 = years+"-"+month+"-"+day;
-            
-            player.Dailyreset();
-            //player.dropMessage(5, player.getClient().getCustomKeyValueStr(2307, "date"));
-            if(player.getClient().getCustomKeyValueStr(2307, "date") == null){
-                player.getClient().setCustomKeyValue(2307, "date", date3);
-                player.getClient().setCustomKeyValue(230731, "Roulette", "3");
-                //player.dropMessage(5, "초기화");
-              } else if(!player.getClient().getCustomKeyValueStr(2307, "date").equals(date3)){
-                player.getClient().setCustomKeyValue(2307, "date", date3);
-                player.getClient().setCustomKeyValue(230731, "Roulette", "3");
-                //player.dropMessage(5, "초기화");
-              }
-            
-            if (ocal.get(7) == 2) {
-                    if(player.getKeyValueStr(230802, "reset") == null){
-                      player.setKeyValue(230802, "reset", date3);
-                      player.setKeyValue(230731,"Enhance", "1");
-                    } else if(!date3.equals(player.getKeyValueStr(230802, "reset"))){
-                      player.setKeyValue(230802, "reset", date3);
-                      player.setKeyValue(230731,"Enhance", "1");
-                    }
-                }
-            
-            
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static final void ChangeChannel(LittleEndianAccessor slea, MapleClient c, MapleCharacter chr, boolean room) {
-        try {
-            if (chr == null || chr.getEventInstance() != null || chr.getMap() == null || FieldLimitType.ChannelSwitch.check(chr.getMap().getFieldLimit())) {
-                c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-                return;
-            }
-            if (World.getPendingCharacterSize() >= 10) {
-                chr.dropMessage(1, "채널 이동중인 사람이 많습니다. 잠시 후 시도해주세요.");
-                c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-                return;
-            }
-            int chc = slea.readByte() + 1;
-            int mapid = 0;
-            if (room) {
-                mapid = slea.readInt();
-            }
-            slea.readInt();
-            if (!World.isChannelAvailable(chc)) {
-                chr.dropMessage(1, "현재 해당 채널이 혼잡하여 이동하실 수 없습니다.");
-                c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-                return;
-            }
-            if (room && (mapid < 910000001 || mapid > 910000022)) {
-                chr.dropMessage(1, "현재 해당 채널이 혼잡하여 이동하실 수 없습니다.");
-                c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-                return;
-            }
-            if (room) {
-                if (chr.getMapId() == mapid) {
-                    if (c.getChannel() == chc) {
-                        c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-                    } else {
-                        chr.changeChannel(chc);
-                    }
-                } else {
-                    if (c.getChannel() != chc) {
-                        chr.changeChannel(chc);
-                    }
-                    MapleMap warpz = ChannelServer.getInstance(c.getChannel()).getMapFactory().getMap(mapid);
-                    if (warpz != null) {
-                        chr.changeMap(warpz, warpz.getPortal("out00"));
-                    } else {
-                        chr.dropMessage(1, "현재 해당 채널이 혼잡하여 이동하실 수 없습니다.");
-                        c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
-                    }
-                }
-            } else {
-                chr.changeChannel(chc);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void getGameQuitRequest(RecvPacketOpcode header, LittleEndianAccessor rh, MapleClient c) {
-        String account = null;
-        if (header == RecvPacketOpcode.GAME_EXIT) {
-            rh.skip(8);
+            c.setTempIP(ip.right);
+            newLogin = true;
+           
         } else {
-            account = rh.readMapleAsciiString();
+            player = MapleCharacter.ReconstructChr(transfer, c, true);
         }
-        if (account == null || account.equals("")) {
-            account = c.getAccountName();
-        }
-        if (c == null) {
-            return;
-        }
-        if (account == null || header == RecvPacketOpcode.GAME_EXIT) {
-            c.disconnect(true, false, false);
+     
+        c.setPlayer(player);
+        c.setAccID(player.getAccountID());
+
+        if (!c.CheckIPAddress()) { // Remote hack
             c.getSession().close();
             return;
         }
-        if (!c.isLoggedIn() && !c.getAccountName().equals(account)) {
-            c.disconnect(true, false, false);
+  
+        CharacterTransfer transfer2 = CashShopServer.getPlayerStorage().getPendingCharacter(playerid);
+        if (transfer2 != null) { // Remote hack
             c.getSession().close();
             return;
         }
-        c.disconnect(true, false, false);
-        c.getSession().writeAndFlush(LoginPacket.getKeyGuardResponse(account + "," + c.getPassword(account)));
-    }
 
+        final int state = c.getLoginState();
+        boolean allowLogin = false;
 
-    public static void sendOpcodeEncryption(MapleClient c) {
-        c.mEncryptedOpcode.clear();
-        byte[] aKey = new byte[24];
-        String key = "G0dD@mnN#H@ckEr!";
-        for (int i = 0; i < key.length(); i++) {
-            aKey[i] = (byte) key.charAt(i);
+        if (state == MapleClient.LOGIN_SERVER_TRANSITION || state == MapleClient.CHANGE_CHANNEL || state == MapleClient.LOGIN_NOTLOGGEDIN) {
+            allowLogin = !World.isCharacterListConnected(c.loadCharacterNames(c.getWorld()));
         }
-        System.arraycopy(aKey, 0, aKey, 16, 8);
-
-        List<Integer> aUsed = new ArrayList<>();
-        String sOpcode = "1351|";
-        int startOpcode = 194;
-        int size = 0;
-
-        for (int i = startOpcode; i < 2000; i++) {
-            int nNum = Randomizer.rand(startOpcode, 9999);
-            while (aUsed.contains(nNum)) {
-                nNum = Randomizer.rand(startOpcode, 9999);
-            }
-            String sNum = String.format("%d", nNum);
-            c.mEncryptedOpcode.put(nNum, i);
-            aUsed.add(nNum);
-            if (i > startOpcode) {
-                sOpcode += ("|" + sNum);
-            } else {
-                sOpcode += sNum;
-            }
-            if (++size >= 1351) {
-                break;
-            }
+        if (!allowLogin) {
+            c.setPlayer(null);
+            c.getSession().close();
+            return;
         }
-        aUsed.clear();
+       
+        c.updateLoginState(MapleClient.LOGIN_LOGGEDIN, c.getSessionIPAddress());
+        channelServer.addPlayer(player);
 
-        TripleDESCipher pCipher = new TripleDESCipher(aKey);
+        player.giveCoolDowns(PlayerBuffStorage.getCooldownsFromStorage(player.getId()));
+        player.silentGiveBuffs(PlayerBuffStorage.getBuffsFromStorage(player.getId()));
+        player.giveSilentDebuff(PlayerBuffStorage.getDiseaseFromStorage(player.getId()));
+        c.getSession().write(MaplePacketCreator.getCharInfo(player));
+        c.getSession().write(MTSCSPacket.enableCSUse());
+
+        if (player.checkPcTime()) {
+            player.clearPc(true);
+            c.getSession().write(MaplePacketCreator.enableInternetCafe((byte) 2, player.getCalcPcTime()));
+        } else {
+            c.getSession().write(MaplePacketCreator.enableInternetCafe((byte) 0, player.getCalcPcTime()));
+        }
+        //PC방
+
+        c.getSession().write(MaplePacketCreator.temporaryStats_Reset()); // .
+        player.getMap().addPlayer(player);
+
+        int connection = 0;
+        for (ChannelServer chn : ChannelServer.getAllInstances()) {
+            connection += chn.getPlayerStorage().getConnectedClients();
+        }
+        int incConnection = Start.increaseConnectionUsers;
+        if (connection < 10) {
+            incConnection = 0;
+        }
+        if (incConnection < 0) {
+            if (Math.abs(incConnection) < connection)
+                connection += incConnection;
+        } else {
+            connection += incConnection;
+        }
+        c.sendPacket(MaplePacketCreator.yellowChat("[알림] 현재 " + connection + "명이 서버에 접속중입니다."));
+        c.getSession().write(MaplePacketCreator.yellowChat("[안내] @명령어 입력시 가이드 엔피시와 대화합니다."));
+        c.getSession().write(MaplePacketCreator.yellowChat("[안내] ~ 할말 : 고성능 확성기 이용 가능 합니다. (쿨타임 15초)"));
+        c.getSession().write(MaplePacketCreator.yellowChat("[안내] 고용 상인 설치시 경험20% 드롭율 15% 획득 효과를 얻게 됩니다."));
+        
+        if (ChannelServer.isElite(c.getChannel())) {
+            player.dropMessage(-9, "[알림] 엘리트 채널에 입장하셨습니다. 엘리트 채널에서는 모든 몬스터가 강력해지며 드롭율과 경험치가 상승합니다.");
+        }
+        
+        //c.getSession().write(MaplePacketCreator.yellowChat("[TIP] @저장 명령어를 항상 사용하시기바랍니다. 서버의 모든 데이터가 저장 됩니다."));
+        //c.getSession().write(MaplePacketCreator.yellowChat("[알림] 현재 " + 동접 + "명이 플레이 중입니다."));
+        //c.getSession().write(MaplePacketCreator.yellowChat("[알림] 모든 펫은 자석효과를 가지고있습니다."));
+        c.getSession().write(MTSCSPacket.enableCSUse());
+
         try {
-            byte[] aEncrypt = pCipher.Encrypt(sOpcode.getBytes());
-            c.getSession().writeAndFlush(LoginPacket.OnOpcodeEncryption(aEncrypt));
+            // Start of buddylist
+            final int buddyIds[] = player.getBuddylist().getBuddyIds();
+            World.Buddy.loggedOn(player.getName(), player.getId(), c.getChannel(), buddyIds);
+            if (player.getParty() != null) {
+                final MapleParty party = player.getParty();
+                World.Party.updateParty(party.getId(), PartyOperation.LOG_ONOFF, new MaplePartyCharacter(player));
+
+                if (party != null && party.getExpeditionId() > 0) {
+                    final MapleExpedition me = World.Party.getExped(party.getExpeditionId());
+                    if (me != null) {
+                        c.getSession().write(MaplePacketCreator.expeditionStatus(me, false));
+                    }
+                }
+            }
+
+            if (player.getSidekick() == null) {
+                player.setSidekick(World.Sidekick.getSidekickByChr(player.getId()));
+            }
+            final CharacterIdChannelPair[] onlineBuddies = World.Find.multiBuddyFind(player.getId(), buddyIds);
+            for (CharacterIdChannelPair onlineBuddy : onlineBuddies) {
+                player.getBuddylist().get(onlineBuddy.getCharacterId()).setChannel(onlineBuddy.getChannel());
+            }
+            c.getSession().write(MaplePacketCreator.updateBuddylist(player.getBuddylist().getBuddies()));
+
+            // Start of Messenger
+            final MapleMessenger messenger = player.getMessenger();
+            if (messenger != null) {
+                World.Messenger.silentJoinMessenger(messenger.getId(), new MapleMessengerCharacter(c.getPlayer()));
+                World.Messenger.updateMessenger(messenger.getId(), c.getPlayer().getName(), c.getChannel());
+            }
+
+            // Start of Guild and alliance
+            if (player.getGuildId() > 0) {
+                World.Guild.setGuildMemberOnline(player.getMGC(), true, c.getChannel());
+                c.getSession().write(MaplePacketCreator.showGuildInfo(player));
+                final MapleGuild gs = World.Guild.getGuild(player.getGuildId());
+                if (gs != null) {
+                    final List<byte[]> packetList = World.Alliance.getAllianceInfo(gs.getAllianceId(), true);
+                    if (packetList != null) {
+                        for (byte[] pack : packetList) {
+                            if (pack != null) {
+                                c.getSession().write(pack);
+                            }
+                        }
+                    }
+                } else { //guild not found, change guild id
+                    player.setGuildId(0);
+                    player.setGuildRank((byte) 5);
+                    player.setAllianceRank((byte) 5);
+                    player.saveGuildStatus();
+                }
+            }
+
+            if (player.getFamilyId() > 0) {
+                World.Family.setFamilyMemberOnline(player.getMFC(), true, c.getChannel());
+            }
+            c.getSession().write(FamilyPacket.getFamilyData());
+            c.getSession().write(FamilyPacket.getFamilyInfo(player));
         } catch (Exception e) {
-            e.printStackTrace();
+        }
+        player.getClient().getSession().write(MaplePacketCreator.serverMessage(channelServer.getServerMessage()));
+        player.sendMacros();
+        player.showNote();
+        player.updatePartyMemberHP();
+        player.baseSkills(); //fix people who've lost skills.   
+        if (newLogin) {
+            player.setEquippedTimeAll();
+        }
+        
+        Date nowtime = new Date();
+
+        for (int ho : ServerConstants.hour) {
+            if (nowtime.getMinutes() >= 50 && nowtime.getMinutes() <= 59 && nowtime.getHours() == (ho - 1)) {
+                player.dropMessage(6, (60 - nowtime.getMinutes()) + "분후 월드 보스가 시작됩니다. 자유 시장 월드 보스 NPC 를 통해 어서 입장하세요.");
+                player.sethottimeboss(true);
+            }
+        }
+
+        if (player.haveItem(1142005, 1, true, true) && player.getQuestStatus(29400) >= 1) {
+            if (MedalRanking.getReadOnlyRanking(MedalRanking.MedalRankingType.ExpertHunter).isEmpty() || MedalRanking.canMedalRank(MedalRanking.MedalRankingType.ExpertHunter, player.getName(), Integer.parseInt(player.getOneInfo(29400, "mon"))) != 0) {
+                //노련한 사냥꾼의 자격이 없다면
+                player.removeAllEquip(1142005, false);
+                player.dropMessage(5, "전설적인 사냥꾼 자격이 박탈되어, 칭호가 회수되었습니다.");
+            }
+        }
+
+        if (player.haveItem(1142006, 1, true, true) && player.getQuestStatus(29500) >= 1) {
+            if (MedalRanking.getReadOnlyRanking(MedalRanking.MedalRankingType.Pop).isEmpty() || MedalRanking.canMedalRank(MedalRanking.MedalRankingType.Pop, player.getName(), player.getFame()) != 0) {
+                player.removeAllEquip(1142006, false);
+                player.dropMessage(5, "메이플 아이돌스타 자격이 박탈되어, 칭호가 회수되었습니다.");
+            }
+        }
+
+        if (player.haveItem(1142014, 1, true, true) && player.getQuestStatus(29503) >= 1) {
+            if (MedalRanking.getReadOnlyRanking(MedalRanking.MedalRankingType.HenesysDonor).isEmpty() || MedalRanking.canMedalRank(MedalRanking.MedalRankingType.HenesysDonor, player.getName(), Integer.parseInt(player.getOneInfo(29503, "money"))) != 0) {
+                player.removeAllEquip(1142014, false);
+                player.dropMessage(5, "헤네시스 기부왕 자격이 박탈되어, 칭호가 회수되었습니다.");
+            }
+        }
+        if (player.haveItem(1142015, 1, true, true) && player.getQuestStatus(29503) >= 1) {
+            if (MedalRanking.getReadOnlyRanking(MedalRanking.MedalRankingType.ElliniaDonor).isEmpty() || MedalRanking.canMedalRank(MedalRanking.MedalRankingType.ElliniaDonor, player.getName(), Integer.parseInt(player.getOneInfo(29503, "money"))) != 0) {
+                player.removeAllEquip(1142015, false);
+                player.dropMessage(5, "엘리니아 기부왕 자격이 박탈되어, 칭호가 회수되었습니다.");
+            }
+        }
+        if (player.haveItem(1142016, 1, true, true) && player.getQuestStatus(29503) >= 1) {
+            if (MedalRanking.getReadOnlyRanking(MedalRanking.MedalRankingType.PerionDonor).isEmpty() || MedalRanking.canMedalRank(MedalRanking.MedalRankingType.PerionDonor, player.getName(), Integer.parseInt(player.getOneInfo(29503, "money"))) != 0) {
+                player.removeAllEquip(1142016, false);
+                player.dropMessage(5, "페리온 기부왕 자격이 박탈되어, 칭호가 회수되었습니다.");
+            }
+        }
+        if (player.haveItem(1142017, 1, true, true) && player.getQuestStatus(29503) >= 1) {
+            if (MedalRanking.getReadOnlyRanking(MedalRanking.MedalRankingType.KerningDonor).isEmpty() || MedalRanking.canMedalRank(MedalRanking.MedalRankingType.KerningDonor, player.getName(), Integer.parseInt(player.getOneInfo(29503, "money"))) != 0) {
+                player.removeAllEquip(1142017, false);
+                player.dropMessage(5, "커닝시티 기부왕 자격이 박탈되어, 칭호가 회수되었습니다.");
+            }
+        }
+        if (player.haveItem(1142018, 1, true, true) && player.getQuestStatus(29503) >= 1) {
+            if (MedalRanking.getReadOnlyRanking(MedalRanking.MedalRankingType.SleepyWoodDonor).isEmpty() || MedalRanking.canMedalRank(MedalRanking.MedalRankingType.SleepyWoodDonor, player.getName(), Integer.parseInt(player.getOneInfo(29503, "money"))) != 0) {
+                player.removeAllEquip(1142018, false);
+                player.dropMessage(5, "슬리피우드 기부왕 자격이 박탈되어, 칭호가 회수되었습니다.");
+            }
+        }
+        if (player.haveItem(1142019, 1, true, true) && player.getQuestStatus(29503) >= 1) {
+            if (MedalRanking.getReadOnlyRanking(MedalRanking.MedalRankingType.NautilusDonor).isEmpty() || MedalRanking.canMedalRank(MedalRanking.MedalRankingType.NautilusDonor, player.getName(), Integer.parseInt(player.getOneInfo(29503, "money"))) != 0) {
+                player.removeAllEquip(1142019, false);
+                player.dropMessage(5, "노틸러스 기부왕 자격이 박탈되어, 칭호가 회수되었습니다.");
+            }
+        }
+        if (player.haveItem(1142030, 1, true, true) && player.getQuestStatus(29503) >= 1) {
+            if (MedalRanking.getReadOnlyRanking(MedalRanking.MedalRankingType.LithDonor).isEmpty() || MedalRanking.canMedalRank(MedalRanking.MedalRankingType.LithDonor, player.getName(), Integer.parseInt(player.getOneInfo(29503, "money"))) != 0) {
+                player.removeAllEquip(1142030, false);
+                player.dropMessage(5, "리스항구 기부왕 자격이 박탈되어, 칭호가 회수되었습니다.");
+            }
+        }
+
+        if (player.haveItem(1142007, 1, true, true) && player.getQuestStatus(29501) >= 1) {
+            String d = player.getQuestNAdd(MapleQuest.getInstance(136000)).getCustomData();
+            int d2 = 0;
+            if (d == null) {
+                d2 = 0;
+            }
+            d2 = Integer.parseInt(d);
+            if (d2 == 0 || MedalRanking.getReadOnlyRanking(MedalRanking.MedalRankingType.HorntailSlayer).isEmpty() || MedalRanking.canMedalRank(MedalRanking.MedalRankingType.HorntailSlayer, player.getName(), d2) != 0) {
+                player.removeAllEquip(1142007, false);
+                player.dropMessage(5, "혼테일 슬레이어 자격이 박탈되어, 칭호가 회수되었습니다.");
+            }
+        }
+
+        if (player.haveItem(1142008, 1, true, true) && player.getQuestStatus(29502) >= 1) {
+            String d = player.getQuestNAdd(MapleQuest.getInstance(136001)).getCustomData();
+            int d2 = 0;
+            if (d == null) {
+                d2 = 0;
+            }
+            d2 = Integer.parseInt(d);
+            if (d2 == 0 || MedalRanking.getReadOnlyRanking(MedalRanking.MedalRankingType.PinkbeanSlayer).isEmpty() || MedalRanking.canMedalRank(MedalRanking.MedalRankingType.PinkbeanSlayer, player.getName(), d2) != 0) {
+                player.removeAllEquip(1142008, false);
+                player.dropMessage(5, "핑크빈 슬레이어 자격이 박탈되어, 칭호가 회수되었습니다.");
+            }
+        }
+
+        player.acceptUpdate();
+        c.getSession().write(MaplePacketCreator.getKeymap(player.getKeyLayout()));
+        player.updatePetAuto();
+        player.expirationTask(true, transfer == null);
+        if (player.getJob() == 132) { // DARKKNIGHT
+            player.checkBerserk();
+        }
+
+        player.spawnSavedPets();
+
+        DueyHandler.checkReceivePackage(player);
+        if (player.isHidden()) {
+            c.getSession().write(MaplePacketCreator.GmHide(player.isHidden()));
+        }
+
+        if (player.getUltimate() == 1) { // 궁극의 모험가
+            player.gainAp((short) 258);
+            player.teachSkill(1004, (byte) 1, (byte) 1);
+            switch (player.getJob()) {
+                case 110:
+                case 120:
+                case 130:
+                    player.gainSP((short) 123);
+                    player.teachSkill(1075, (byte) 1, (byte) 1);
+                    player.setUltimate((int) 2);
+                    break;
+                case 210:
+                case 220:
+                case 230:
+                    player.gainSP((short) 129);
+                    player.teachSkill(1074, (byte) 1, (byte) 1);
+                    player.setUltimate((int) 2);
+                    break;
+                case 310:
+                case 320:
+                    player.gainSP((short) 123);
+                    player.teachSkill(1077, (byte) 1, (byte) 1);
+                    player.setUltimate((int) 2);
+                    break;
+                case 410:
+                case 420:
+                    player.gainSP((short) 123);
+                    player.teachSkill(1078, (byte) 1, (byte) 1);
+                    player.setUltimate((int) 2);
+                    break;
+                case 432:
+                    player.gainSP((short) 123);
+                    player.teachSkill(1078, (byte) 1, (byte) 1);
+                    player.teachSkill(4311003, (byte) 0, (byte) 5);
+                    player.setSubcategory(1);
+                    player.setUltimate((int) 2);
+                    break;
+                case 510:
+                case 520:
+                    player.gainSP((short) 123);
+                    player.teachSkill(1079, (byte) 1, (byte) 1);
+                    player.setUltimate((int) 2);
+                    break;
+            }
+        }
+
+//        MapleQuestStatus stat = player.getQuestNoAdd(MapleQuest.getInstance(GameConstants.PENDANT_SLOT));
+//        c.getSession().write(MaplePacketCreator.pendantSlot(stat != null && stat.getCustomData() != null && Long.parseLong(stat.getCustomData()) > System.currentTimeMillis()));
+        c.sendPacket(MaplePacketCreator.pendantSlot(FileTime.compareFileTime(player.getEquipExtExpire(), FileTime.systemTimeToFileTime()) >= 0));
+        MapleQuestStatus stat = player.getQuestNoAdd(MapleQuest.getInstance(GameConstants.QUICK_SLOT));
+        c.getSession().write(MaplePacketCreator.quickSlot(stat != null && stat.getCustomData() != null && stat.getCustomData().length() == 8 ? stat.getCustomData() : null));
+        //player.getStat().recalcLocalStats(false, player);
+        if (player.getStat().equippedSummon > 0) {
+            SkillFactory.getSkill(player.getStat().equippedSummon).getEffect(1).applyTo(player);
+        }
+        ConnectorClient cli = ConnectorServer.getInstance().getClientStorage().getClientByName(player.getClient().getAccountName());
+        if (cli != null) {
+            player.getClient().setconnecterClient(cli);
+            ConnectorServer.getInstance().getClientStorage().registerChangeInGameCharWaiting(cli.toString(), cli.toString());
+            if (player.getClient().getAccountName().equals(cli.getId())) {
+                cli.setChar(player);
+            } else if (player.getClient().getAccountName().equals(cli.getSecondId())) {
+                cli.setSecondChar(player);
+            }
+            cli.addInGameChar(player.getName(), player.getName());
+        }
+        if (player.getGuild() != null) { // 아니구나 이건데 잠만여
+            player.guild_buff = World.Guild.getGuildBuffLevel(0, player.getGuildId());
+            player.hunter_buff = World.Guild.getGuildBuffLevel(1, player.getGuildId());
+            player.guild_stat_watk = World.Guild.getGuildBuffStat(0, 0, player.getGuildId());
+            player.guild_stat_matk = World.Guild.getGuildBuffStat(0, 1, player.getGuildId());
+            player.guild_stat_boss = World.Guild.getGuildBuffStat(1, 2, player.getGuildId());
+            String guildname = World.Guild.getName(player.getGuildId());
+            if (player.guild_buff > 0) {
+                player.dropMessage(5, "[길드] 당신이 속한 " + guildname + " 길드의 <길드의 가호> 효과로 (공격력 +" + player.guild_stat_watk + ", 마력 +" + player.guild_stat_matk + ") 만큼 상승합니다.");
+            }
+            if (player.hunter_buff > 0) {
+                //player.dropMessage(5, "[길드] 당신이 속한 " + guildname + " 길드의 <사냥꾼의 가호> 효과로 (보스 공격력 +" + player.guild_stat_boss + "%) 만큼 상승합니다.");
+            }
+        }
+      //  player.rosySymbol();
+        player.guildUpdate();
+        
+        for (int boosterEquipItemID : GameConstants.boosterEquipItemID) {
+            int boosterItemID = 0;
+            if ((boosterItemID = GameConstants.getBoosterItemID(boosterEquipItemID)) != 0) {
+                MapleStatEffect boosterEff = MapleItemInformationProvider.getInstance().getItemEffect(boosterItemID);
+                if (boosterEff != null) {
+                    if (player.hasEquipped(boosterEquipItemID)) {
+                        if (!player.getBuffedValue1(boosterItemID))
+                            boosterEff.applyTo(c.getPlayer());
+                    } else {
+                        player.cancelEffect(boosterEff, -2);
+                    }
+                }
+            }
+        }
+        
+        if (newLogin) {
+            Map<Integer, Long> getBuffs = BuffHandler.get().getBuffs(player.getId());
+            if (getBuffs != null) {
+                long cur = System.currentTimeMillis();
+                for (Entry<Integer, Long> entry : getBuffs.entrySet()) {
+                    int skillID = entry.getKey();
+                    long end = entry.getValue();
+                    long remain = end - cur;
+                    if (remain < 1000) { //1초 보다 작을 시 
+                        continue;
+                    }
+                    switch (skillID) {
+                        //특정 아이템 스킬만
+                        case 2450018: {
+                            MapleStatEffect itemEff = MapleItemInformationProvider.getInstance().getItemEffect(skillID);
+                            if (itemEff != null) {
+                                itemEff.applyTo(player, (int) remain);
+                            }
+                            break;
+                        }
+                        case 9001008: {
+                            Skill skill = SkillFactory.getSkill(skillID);
+                            if (skill != null) {
+                                MapleStatEffect eff = skill.getEffect(1);
+                                if (eff != null) {
+                                    eff.applyTo(player, (int) remain);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+//        player.CustomStatEffect(false);
+        player.customizeStat(0);
+        
+        if (ServerConstants.cubeDayValue > 1.0) {
+            World.Broadcast.broadcastMessage(MaplePacketCreator.yellowChat("[이벤트] 미라클 큐브 데이 이벤트가 진행 중입니다. " + ServerConstants.cubeDayValue + "배 등급업의 기회를 노려보세요!"));
         }
     }
+
+    public static final void ChangeChannel(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+        if (chr == null || chr.hasBlockedInventory() || chr.getEventInstance() != null || chr.getMap() == null || chr.isInBlockedMap() || FieldLimitType.ChannelSwitch.check(chr.getMap().getFieldLimit())) {
+            c.getSession().write(MaplePacketCreator.enableActions());
+            return;
+        }
+        if (World.getPendingCharacterSize() >= 10) {
+            chr.dropMessage(1, "The server is busy at the moment. Please try again in a less than a minute.");
+            c.getSession().write(MaplePacketCreator.enableActions());
+            return;
+        }
+        final int chc = slea.readByte();
+        final int nextChc = (chc + 1);
+        
+    
+        if (!World.isChannelAvailable(chc + 1)) {
+            chr.dropMessage(1, "The channel is full at the moment.");
+            c.getSession().write(MaplePacketCreator.enableActions());
+            return;
+        }
+        chr.changeChannel(chc + 1);
+    }
+
 }

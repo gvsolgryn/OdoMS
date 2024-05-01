@@ -1,70 +1,46 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package client;
 
 public class CharacterNameAndId {
-  private int id;
-  
-  private int accId;
-  
-  private int level;
-  
-  private int job;
-  
-  private String name;
-  
-  private String repName;
-  
-  private String groupname;
-  
-  private String memo;
-  
-  public CharacterNameAndId(int id, int accId, String name, String repName, int level, int job, String groupname, String memo) {
-    this.id = id;
-    this.accId = accId;
-    this.name = name;
-    this.repName = repName;
-    this.level = level;
-    this.job = job;
-    this.groupname = groupname;
-    this.memo = memo;
-  }
-  
-  public int getId() {
-    return this.id;
-  }
-  
-  public String getName() {
-    return this.name;
-  }
-  
-  public int getLevel() {
-    return this.level;
-  }
-  
-  public int getJob() {
-    return this.job;
-  }
-  
-  public String getGroupName() {
-    return this.groupname;
-  }
-  
-  public String getMemo() {
-    return this.memo;
-  }
-  
-  public int getAccId() {
-    return this.accId;
-  }
-  
-  public void setAccId(int accId) {
-    this.accId = accId;
-  }
-  
-  public String getRepName() {
-    return this.repName;
-  }
-  
-  public void setRepName(String repName) {
-    this.repName = repName;
-  }
+
+    private int id;
+    private String name, group;
+
+    public CharacterNameAndId(int id, String name, String group) {
+        super();
+        this.id = id;
+        this.name = name;
+        this.group = group;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getGroup() {
+        return group;
+    }
 }

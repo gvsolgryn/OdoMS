@@ -1,363 +1,427 @@
 package client.messages.commands;
 
-import client.*;
-import client.messages.CommandProcessorUtil;
-import constants.GameConstants;
-import constants.KoreaCalendar;
-import constants.ServerConstants;
-import handling.auction.AuctionServer;
+import client.MapleCharacter;
+import constants.ServerConstants.PlayerGMRank;
+import client.MapleClient;
+import client.MapleStat;
+import database.DatabaseConnection;
+import handling.SendPacketOpcode;
 import handling.channel.ChannelServer;
-import server.ShutdownServer;
-import server.Timer;
-import server.life.MapleLifeFactory;
-import server.life.MapleMonster;
-import tools.CPUSampler;
-import tools.Pair;
-import tools.packet.CField;
-import tools.packet.CWvsContext;
-
+import handling.world.World;
+import java.awt.Point;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ScheduledFuture;
+import server.MaplePortal;
+import server.MedalRanking;
+import server.ShutdownServer;
+import server.Timer;
+import server.life.MapleLifeFactory;
+import server.maps.MapleMap;
+import server.marriage.MarriageManager;
+import server.shops.MinervaOwlSearchTop;
+import tools.CPUSampler;
+import tools.MaplePacketCreator;
+import tools.data.MaplePacketLittleEndianWriter;
 
 public class AdminCommand {
-  public static ServerConstants.PlayerGMRank getPlayerLevelRequired() {
-    return ServerConstants.PlayerGMRank.ADMIN;
-  }
-  
-  public static class 버프테스트 extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      int rate = Integer.parseInt(splitted[1]);
-      c.getPlayer().setSkillBuffTest(rate);
-      c.getPlayer().dropMessage(6, "[설정완료] 현재 버프 코드 : " + c.getPlayer().getSkillBuffTest());
-      return 1;
-    }
-  }
-  
-  public static class MesoEveryone extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      for (ChannelServer cserv : ChannelServer.getAllInstances()) {
-        for (MapleCharacter mch : cserv.getPlayerStorage().getAllCharacters().values())
-          mch.gainMeso(Integer.parseInt(splitted[1]), true); 
-      } 
-      return 1;
-    }
-  }
-  
-  public static class ExpRate extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      if (splitted.length > 1) {
-        int rate = Integer.parseInt(splitted[1]);
-        if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
-          for (ChannelServer cserv : ChannelServer.getAllInstances())
-            cserv.setExpRate(rate); 
-        } else {
-          c.getChannelServer().setExpRate(rate);
-        } 
-        c.getPlayer().dropMessage(6, "Exprate has been changed to " + rate + "x");
-      } else {
-        c.getPlayer().dropMessage(6, "Syntax: !exprate <number> [all]");
-      } 
-      return 1;
-    }
-  }
-  
-  public static class 링크소환 extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      c.getPlayer().setLinkMobCount(100);
-      for (int i = 0; i < 10; i++) {
-        MapleMonster m = MapleLifeFactory.getMonster(100100);
-        m.setHp(m.getStats().getHp());
-        m.getStats().setHp(m.getStats().getHp());
-        m.setOwner(c.getPlayer().getId());
-        c.getPlayer().getMap().spawnMonsterOnGroundBelow(m, c.getPlayer().getTruePosition());
-      } 
-      return 1;
-    }
-  }
-  
-  public static class 경매장저장 extends CommandExecute {
-    public int execute(MapleClient c, String[] Splitted) {
-      AuctionServer.saveItems();
-      c.getPlayer().dropMessage(6, "경매장 데이터를 저장하였습니다.");
-      return 1;
-    }
-  }
-  
-  public static class MesoRate extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      if (splitted.length > 1) {
-        int rate = Integer.parseInt(splitted[1]);
-        if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
-          for (ChannelServer cserv : ChannelServer.getAllInstances())
-            cserv.setMesoRate(rate); 
-        } else {
-          c.getChannelServer().setMesoRate(rate);
-        } 
-        c.getPlayer().dropMessage(6, "Meso Rate has been changed to " + rate + "x");
-      } else {
-        c.getPlayer().dropMessage(6, "Syntax: !mesorate <number> [all]");
-      } 
-      return 1;
-    }
-  }
-  
-  public static class DCAll extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      int range = -1;
-      if (splitted[1].equals("m")) {
-        range = 0;
-      } else if (splitted[1].equals("c")) {
-        range = 1;
-      } else if (splitted[1].equals("w")) {
-        range = 2;
-      } 
-      if (range == -1)
-        range = 1; 
-      if (range == 0) {
-        c.getPlayer().getMap().disconnectAll();
-      } else if (range == 1) {
-        c.getChannelServer().getPlayerStorage().disconnectAll(true);
-      } else if (range == 2) {
-        for (ChannelServer cserv : ChannelServer.getAllInstances())
-          cserv.getPlayerStorage().disconnectAll(true); 
-      } 
-      return 1;
-    }
-  }
-  
-  public static class Shutdown extends CommandExecute {
-    protected static Thread t = null;
-    
-    public int execute(MapleClient c, String[] splitted) {
-      c.getPlayer().dropMessage(6, "Shutting down...");
-      if (t == null || !t.isAlive()) {
-        t = new Thread(ShutdownServer.getInstance());
-        ShutdownServer.getInstance().shutdown();
-        t.start();
-      } else {
-        c.getPlayer().dropMessage(6, "A shutdown thread is already in progress or shutdown has not been done. Please wait.");
-      } 
-      return 1;
-    }
-  }
-  
-  public static class 리붓 extends Shutdown {
-    private static ScheduledFuture<?> ts = null;
-    
-    private int minutesLeft = 0;
-    
-    public int execute(MapleClient c, String[] splitted) {
-      this.minutesLeft = Integer.parseInt(splitted[1]);
-      KoreaCalendar kc = new KoreaCalendar();
-      int hour = kc.getHour();
-      int min = kc.getMin() + this.minutesLeft;
-      if (min >= 60) {
-        hour++;
-        min -= 60;
-        if (hour >= 24)
-          hour = 0; 
-      } 
-      String am = (hour >= 12) ? "오후" : "오전";
-      String type = (Integer.parseInt(splitted[2]) == 1) ? "패치가" : "점검이";
-      for (ChannelServer cserv : ChannelServer.getAllInstances())
-        cserv.setServerMessage("반갑다 아쎄이들, GM황근출 해병이다. 잠시 후 " + am + " " + hour + "시 " + min + "분 부터 서버" + type + " 기합스럽게 진행 될 예정이다. 해병 수육이 되고싶지 않다면 지금 바로 접속을 종료해라 아쎄이!!");
-      if (ts == null && (t == null || !t.isAlive())) {
-        t = new Thread(ShutdownServer.getInstance());
-        ts = Timer.EventTimer.getInstance().register(new Runnable() {
-              public void run() {
-                if (리붓.this.minutesLeft == 0) {
-                  ShutdownServer.getInstance().shutdown();
-                  Shutdown.t.start();
-                  리붓.ts.cancel(false);
-                  return;
-                } 
-                리붓.this.minutesLeft--;
-              }
-            },  60000L);
-      } else {
-        c.getPlayer().dropMessage(6, "이미 저장된 타이머가 있습니다.");
-      } 
-      return 1;
-    }
-  }
-  
-  public static class StartProfiling extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      CPUSampler sampler = CPUSampler.getInstance();
-      sampler.addIncluded("client");
-      sampler.addIncluded("connector");
-      sampler.addIncluded("constants");
-      sampler.addIncluded("database");
-      sampler.addIncluded("handling");
-      sampler.addIncluded("log");
-      sampler.addIncluded("provider");
-      sampler.addIncluded("scripting");
-      sampler.addIncluded("server");
-      sampler.addIncluded("tools");
-      sampler.start();
-      c.getPlayer().dropMessageGM(-5, "프로파일링을 시작합니다.");
-      return 1;
-    }
-  }
-  
-  public static class StopProfiling extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      CPUSampler sampler = CPUSampler.getInstance();
-      try {
-        String filename = "CPU프로파일링.txt";
-        if (splitted.length > 1)
-          filename = splitted[1]; 
-        File file = new File(filename);
-        if (file.exists()) {
-          c.getPlayer().dropMessage(6, "이미 존재하는 파일입니다. 삭제나 이름 변경을 해주세요.");
-          return 0;
-        } 
-        sampler.stop();
-        FileWriter fw = new FileWriter(file);
-        sampler.save(fw, 1, 10);
-        fw.close();
-        sampler.reset();
-        c.getPlayer().dropMessage(6, "파일을 저장했습니다.");
-      } catch (IOException e) {
-        System.err.println("Error saving profile" + e);
-      } 
-      return 1;
-    }
-  }
 
-  public static class 쿨타임리셋 extends CommandExecute {
-
-    @Override
-    public int execute(MapleClient c, String[] splitted) {
-      c.getPlayer().clearAllCooldowns();
-      return 1;
+    public static PlayerGMRank getPlayerLevelRequired() {
+        return PlayerGMRank.ADMIN;
     }
-  }
 
-  public static class 캐시 extends CommandExecute {
-
-    @Override
-    public int execute(MapleClient c, String[] splitted) {
-      if (splitted.length < 2) {
-        c.getPlayer().dropMessage(5, "Need amount.");
-        return 0;
-      }
-      c.getPlayer().modifyCSPoints(1, Integer.parseInt(splitted[1]), true);
-      return 1;
-    }
-  }
-
-
-  public static class 맥스스탯 extends CommandExecute {
+    public static class 경험치배율 extends CommandExecute {
 
         @Override
         public int execute(MapleClient c, String[] splitted) {
-            c.getPlayer().getStat().setDex((short) 32767, c.getPlayer());
-            c.getPlayer().getStat().setInt((short) 32767, c.getPlayer());
-            c.getPlayer().getStat().setLuk((short) 32767, c.getPlayer());
-            c.getPlayer().getStat().setMaxHp(500000, c.getPlayer());
-            if (!GameConstants.isZero(c.getPlayer().getJob())) {
-                c.getPlayer().getStat().setMaxMp(500000, c.getPlayer());
-                c.getPlayer().getStat().setMp(500000, c.getPlayer());
+            if (splitted.length > 1) {
+                final int rate = Integer.parseInt(splitted[1]);
+                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
+                    for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                        cserv.setExpRate(rate);
+                    }
+                } else {
+                    c.getChannelServer().setExpRate(rate);
+                }
+                c.getPlayer().dropMessage(6, "경험치 배율이 " + rate + " 배로 변경되었습니다.");
+            } else {
+                c.getPlayer().dropMessage(6, "Syntax: !exprate <number> [all]");
             }
-            c.getPlayer().getStat().setHp(500000, c.getPlayer());
-            c.getPlayer().getStat().setStr((short) 32767, c.getPlayer());
-            c.getPlayer().updateSingleStat(MapleStat.STR, 32767);
-            c.getPlayer().updateSingleStat(MapleStat.DEX, 32767);
-            c.getPlayer().updateSingleStat(MapleStat.INT, 32767);
-            c.getPlayer().updateSingleStat(MapleStat.LUK, 32767);
-            c.getPlayer().updateSingleStat(MapleStat.MAXHP, 500000);
-            if (!GameConstants.isZero(c.getPlayer().getJob())) {
-                c.getPlayer().updateSingleStat(MapleStat.MAXMP, 500000);
-                c.getPlayer().updateSingleStat(MapleStat.MP, 500000);
-            }
-            c.getPlayer().updateSingleStat(MapleStat.HP, 500000);
             return 1;
         }
     }
-  
-  public static class 스탯초기화 extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      c.getPlayer().getStat().setStr((short)100, c.getPlayer());
-      c.getPlayer().getStat().setDex((short)100, c.getPlayer());
-      c.getPlayer().getStat().setInt((short)100, c.getPlayer());
-      c.getPlayer().getStat().setLuk((short)100, c.getPlayer());
-      c.getPlayer().getStat().setMaxHp(10000L, c.getPlayer());
-      if (!GameConstants.isZero(c.getPlayer().getJob())) {
-        c.getPlayer().getStat().setMaxMp(10000L, c.getPlayer());
-        c.getPlayer().getStat().setMp(10000L, c.getPlayer());
-      } 
-      c.getPlayer().getStat().setHp(10000L, c.getPlayer());
-      c.getPlayer().updateSingleStat(MapleStat.STR, 100L);
-      c.getPlayer().updateSingleStat(MapleStat.DEX, 100L);
-      c.getPlayer().updateSingleStat(MapleStat.INT, 100L);
-      c.getPlayer().updateSingleStat(MapleStat.LUK, 100L);
-      c.getPlayer().updateSingleStat(MapleStat.MAXHP, 10000L);
-      if (!GameConstants.isZero(c.getPlayer().getJob())) {
-        c.getPlayer().updateSingleStat(MapleStat.MAXMP, 10000L);
-        c.getPlayer().updateSingleStat(MapleStat.MP, 10000L);
-      } 
-      c.getPlayer().updateSingleStat(MapleStat.HP, 10000L);
-      return 1;
+    
+    public static class 테스트 extends CommandExecute {
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            c.sendPacket(MaplePacketCreator.itemEffect(c.getPlayer().getId(), 0));
+            c.getPlayer().getMap().broadcastMessage(c.getPlayer(), MaplePacketCreator.itemEffect(c.getPlayer().getId(), 0), false);
+//            c.sendPacket(MaplePacketCreator.showOwnBuffEffect(0, 0, 0, 0));
+//            MaplePacketLittleEndianWriter oPacket = new MaplePacketLittleEndianWriter();
+//            oPacket.writeOpcode(SendPacketOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
+//            oPacket.write(7);
+//            oPacket.writeInt(4221001);
+////            oPacket.write(100);
+////            oPacket.write(30);
+////            oPacket.write(Byte.parseByte(splitted[1]));
+//            c.sendPacket(oPacket.getPacket());
+            
+//            c.sendPacket(MaplePacketCreator.serverNotice(6, 1302000, "한가지 색상이 질렸다면 [{}]로 한껏 뽐내보는건 어떨까요? CASHSHOP> 추천상품과 장비에 있습니다."));
+//            c.sendPacket(MaplePacketCreator.temporaryStats_Aran());
+            
+//            c.getPlayer().gainSP(1000);
+//            double damage = 15000; //15000 데미지
+//            int pdrate = 100; //몬스터
+//            int def = 0; //장비 방무
+//            int a = def * pdrate / -100 + pdrate;
+//            double d = (100.0 - a) * damage * 0.01; 
+//            //여기까지 방무 계산
+//            //여러가지의 계산 이후 . . . 
+//            //보공 계산
+//            int bossDAMr = 300; //보공 300
+//            double dd = bossDAMr * d * 0.01 + d;
+//            System.err.println("After Damage = " + dd + " / Original Damage = " + d);
+            
+            
+//            c.getPlayer().getClient().getSession().write(MaplePacketCreator.HD(599 + Short.parseShort(splitted[1])));
+            return 1;
+        }
     }
-  }
-  
-  public static class 시간 extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      c.getPlayer().getMap().broadcastMessage(CField.getClock(CommandProcessorUtil.getOptionalIntArg(splitted, 1, 60)));
-      return 1;
+
+    public static class 메소배율 extends CommandExecute {
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            if (splitted.length > 1) {
+                final int rate = Integer.parseInt(splitted[1]);
+                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
+                    for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                        cserv.setMesoRate(rate);
+                    }
+                } else {
+                    c.getChannelServer().setMesoRate(rate);
+                }
+                c.getPlayer().dropMessage(6, "메소 배율이 " + rate + " 배로 변경 되었습니다.");
+            } else {
+                c.getPlayer().dropMessage(6, "Syntax: !mesorate <number> [all]");
+            }
+            return 1;
+        }
     }
-  }
-  
-  public static class 피시방시간 extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      if (splitted.length < 2) {
-        c.getPlayer().dropMessage(5, "Need amount.");
-        return 0;
-      } 
-      c.getPlayer().setInternetCafeTime(c.getPlayer().getInternetCafeTime() + Integer.parseInt(splitted[1]));
-      c.getPlayer().dropMessage(6, "PC방 정량제를 " + Integer.parseInt(splitted[1]) + "분 늘렸습니다.");
-      return 1;
+
+    public static class 드롭배율 extends CommandExecute {
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            if (splitted.length > 1) {
+                final int rate = Integer.parseInt(splitted[1]);
+                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
+                    for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                        cserv.setDropRate(rate);
+                    }
+                } else {
+                    c.getChannelServer().setDropRate(rate);
+                }
+                c.getPlayer().dropMessage(6, "드롭 배율이 " + rate + " 배로 변경 되었습니다.");
+            } else {
+                c.getPlayer().dropMessage(6, "Syntax: !mesorate <number> [all]");
+            }
+            return 1;
+        }
     }
-  }
-  
-  public static class 쿨 extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      c.getPlayer().clearAllCooldowns();
-      return 1;
+    
+    public static class 아이템삭제 extends CommandExecute {
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            if (splitted.length < 3) {
+                c.getPlayer().dropMessage(6, "사용법 : !아이템제거 <캐릭터명> <아이템코드>");
+                return 0;
+            }
+            MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterByName(splitted[1]);
+            if (chr == null) {
+                c.getPlayer().dropMessage(6, "존재하지 않는 캐릭터입니다.");
+                return 0;
+            }
+            chr.removeAll(Integer.parseInt(splitted[2]), false);
+            c.getPlayer().dropMessage(6, splitted[1] + "가 가진 모든 " + splitted[2] + "번 아이템이 제거되었습니다.");
+            return 1;
+
+        }
+    }   
+    
+    public static class 인기도 extends CommandExecute {
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            MapleCharacter player = c.getPlayer();
+            if (splitted.length < 2) {
+                c.getPlayer().dropMessage(6, "사용법: !인기도 닉네임 숫자");
+                return 0;
+            }
+            MapleCharacter victim = c.getChannelServer().getPlayerStorage().getCharacterByName(splitted[1]);
+            int fame = 0;
+            try {
+                fame = Integer.parseInt(splitted[2]);
+            } catch (NumberFormatException nfe) {
+                c.getPlayer().dropMessage(5, "숫자를 기재해주세요.");
+                return 0;
+            }
+            if (victim != null && player.allowedToTarget(victim)) {
+                victim.addFame(fame);
+                victim.updateSingleStat(MapleStat.FAME, victim.getFame());
+            }
+            return 1;
+        }
+    }    
+    
+    public static class 저장 extends CommandExecute {
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            // User Data Save Start
+            for (ChannelServer ch : ChannelServer.getAllInstances()) {
+                for (MapleCharacter chr : ch.getPlayerStorage().getAllCharacters()) {
+                    chr.saveToDB(false, false);
+                }
+            }
+            // User Data Save End
+            // Server Data Save Start
+            World.Guild.save();
+            World.Alliance.save();
+            World.Family.save();
+            MarriageManager.getInstance().saveAll();
+            MinervaOwlSearchTop.getInstance().saveToFile();
+            MedalRanking.saveAll();
+            //       RankingWorker.getInstance().run();
+            // Server Data Save End
+            c.getPlayer().dropMessage(6, "저장이 완료되었습니다.");
+            return 1;
+        }
+    }    
+    
+    public static class 펫 extends CommandExecute {
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            boolean allowed = c.getPlayer().getMap().togglePetPick();
+            c.getPlayer().dropMessage(6, "Current Map's Pet Pickup allowed : " + allowed);
+            if (!allowed) {
+                c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.yellowChat("현재 맵에서 펫 줍기 기능이 비활성화 되었습니다."));
+            } else {
+                c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.yellowChat("현재 맵에서 펫 줍기 기능이 활성화 되었습니다."));
+            }
+            return 1;
+        }
+
     }
-  }
-  
-  public static class 버프리스트 extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      c.getPlayer().dropMessage(5, "현재 버프 리스트입니다.");
-      for (Pair<SecondaryStat, SecondaryStatValueHolder> effect : c.getPlayer().getEffects())
-        c.getPlayer().dropMessage(-8, ((SecondaryStat)effect.left).name() + " : " + ((SecondaryStatValueHolder)effect.right).effect.getSourceId() + " / " + ((SecondaryStatValueHolder)effect.right).localDuration); 
-      return 1;
+
+    public static class 서버종료 extends CommandExecute {
+
+        protected static Thread t = null;
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            c.getPlayer().dropMessage(5, "서버 종료 중...");
+            if (t == null || !t.isAlive()) {
+                t = new Thread(ShutdownServer.getInstance());
+                ShutdownServer.getInstance().shutdown();
+                t.start();
+            } else {
+                c.getPlayer().dropMessage(5, "서버 종료를 위해 프로그램들을 종료 중 입니다. 잠시만 기다려주십시오.");
+            }
+            return 1;
+        }
     }
-  }
-  
-  public static class 버프스탯테스트 extends CommandExecute {
-    public int execute(MapleClient c, String[] splitted) {
-      if (splitted.length < 2) {
-        c.getPlayer().dropMessage(5, "버프를 선택해주세요.");
-        return 0;
-      } 
-      int type = Integer.parseInt(splitted[1]);
-      if (type > SecondaryStat.getUnkBuffStats().size()) {
-        c.getPlayer().dropMessage(5, "최대 사이즈 : " + SecondaryStat.getUnkBuffStats().size());
-        return 0;
-      } 
-      SecondaryStat stat = SecondaryStat.getUnkBuffStats().get(type);
-      Map<SecondaryStat, Pair<Integer, Integer>> dds = new HashMap<>();
-      dds.put(stat, new Pair<>(Integer.valueOf(1), Integer.valueOf(0)));
-      c.getSession().writeAndFlush(CWvsContext.BuffPacket.giveBuff(dds, SkillFactory.getSkill(2121004).getEffect(20), c.getPlayer()));
-      c.getPlayer().dropMessage(5, "적용된 버프 : " + stat.name());
-      return 1;
+
+    public static class 서버종료시간 extends 서버종료 {
+
+        private static ScheduledFuture<?> ts = null;
+        private int minutesLeft = 0;
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            minutesLeft = Integer.parseInt(splitted[1]);
+            c.getPlayer().dropMessage(5, minutesLeft + "분 후 서버가 종료됩니다.");
+            if (ts == null && (t == null || !t.isAlive())) {
+                t = new Thread(ShutdownServer.getInstance());
+                ts = Timer.EventTimer.getInstance().register(new Runnable() {
+
+                    public void run() {
+                        if (minutesLeft == 0) {
+                            ShutdownServer.getInstance().shutdown();
+                            t.start();
+                            ts.cancel(false);
+                            return;
+                        }
+                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverMessage("서버가 " + minutesLeft + "분 후 종료됩니다. 안전하게 로그아웃해 주세요."));
+                        minutesLeft--;
+                    }
+                }, 60000);
+            } else {
+                c.getPlayer().dropMessage(5, "서버종료를 위해 프로그래밍을 종료하는 중 입니다.");
+            }
+            return 1;
+        }
+    }   
+    
+
+    public static class 아이피대조 extends CommandExecute {
+
+        public int execute(MapleClient c, String[] splitted) {
+            if (splitted.length < 2) {
+                c.getPlayer().dropMessage(5, "사용법: !아이피대조 <캐릭터 닉네임>");
+                return 0;
+            }
+            Connection con = null;
+            PreparedStatement ps = null;
+            ResultSet rs = null;
+            PreparedStatement ps2 = null;
+            ResultSet rs2 = null;
+
+            int Accid = 0, Count = 0;
+            String IP = "";
+            try {
+                con = DatabaseConnection.getConnection();
+                ps = con.prepareStatement("SELECT * FROM characters WHERE name = ?");
+                ps.setString(1, splitted[1]);
+                rs = ps.executeQuery();
+                if (rs.next()) {
+                    Accid = rs.getInt("accountid");
+                    ps.close();
+                    rs.close();
+                    ps = con.prepareStatement("SELECT * FROM accounts WHERE id = ?");
+                    ps.setInt(1, Accid);
+                    rs = ps.executeQuery();
+                    if (rs.next()) {
+                        IP = rs.getString("SessionIP");
+                        c.getPlayer().dropMessage(2, "검색한 캐릭터의 접속 아이디 파악 (검색 값 : " + splitted[1] + ") [아이피 : " + IP + "]");
+                        ps.close();
+                        rs.close();
+                        ps = con.prepareStatement("SELECT * FROM accounts WHERE SessionIP = ?");
+                        ps.setString(1, IP);
+                        rs = ps.executeQuery();
+                        String Text = "";
+                        while (rs.next()) {
+                            if (rs.getInt("banned") > 0) {
+                                Text = " / 밴 당한 아이디";
+                            }
+                            c.getPlayer().dropMessage(5, "아이디 : " + rs.getString("name") + " / " + Text);
+                            Accid = rs.getInt("id");
+                            ps2 = con.prepareStatement("SELECT * FROM characters WHERE accountid = ?");
+                            ps2.setInt(1, Accid);
+                            rs2 = ps2.executeQuery();
+                            while (rs2.next()) {
+                                Count++;
+                                c.getPlayer().dropMessage(6, Count + "번 캐릭터 : " + rs2.getString("name"));
+                            }
+                            if (Count == 0) {
+                                c.getPlayer().dropMessage(6, rs.getString("name") + " 아이디는 캐릭터가 없습니다.");
+                            }
+                            Count = 0;
+                            ps2.close();
+                            rs2.close();
+                        }
+                        ps.close();
+                        rs.close();
+                    } else {
+                        c.getPlayer().dropMessage(5, "버그가 발생했습니다.");
+                        return 0;
+                    }
+                } else {
+                    c.getPlayer().dropMessage(5, "존재하지 않는 닉네임입니다.");
+                    return 0;
+                }
+                con.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (rs != null) {
+                        rs.close();
+                    }
+                    if (ps != null) {
+                        ps.close();
+                    }
+                    if (con != null) {
+                        con.close();
+                    }
+                    if (rs2 != null) {
+                        rs2.close();
+                    }
+                    if (ps2 != null) {
+                        ps2.close();
+                    }
+                } catch (Exception e) {
+                }
+            }
+            return 1;
+        }
+    }    
+
+    public static class 고용상인닫기 extends CommandExecute {
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                cserv.closeAllMerchant();
+            }
+            return 1;
+        }
     }
-  }
+    
+    
+    public static class StartProfiling extends CommandExecute {
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            CPUSampler sampler = CPUSampler.getInstance();
+            sampler.addIncluded("client");
+            sampler.addIncluded("constants"); //or should we do Packages.constants etc.?
+            sampler.addIncluded("database");
+            sampler.addIncluded("handling");
+            sampler.addIncluded("provider");
+            sampler.addIncluded("scripting");
+            sampler.addIncluded("server");
+            sampler.addIncluded("tools");
+            sampler.start();
+            return 1;
+        }
+    }
+    
+        public static class StopProfiling extends CommandExecute {
+
+        @Override
+        public int execute(MapleClient c, String[] splitted) {
+            CPUSampler sampler = CPUSampler.getInstance();
+            try {
+                String filename = "odinprofile.txt";
+                if (splitted.length > 1) {
+                    filename = splitted[1];
+                }
+                File file = new File(filename);
+                if (file.exists()) {
+                    c.getPlayer().dropMessage(6, "The entered filename already exists, choose a different one");
+                    return 0;
+                }
+                sampler.stop();
+                FileWriter fw = new FileWriter(file);
+                sampler.save(fw, 1, 10);
+                fw.close();
+            } catch (IOException e) {
+                System.err.println("Error saving profile" + e);
+            }
+            sampler.reset();
+            return 1;
+        }
+    }
+    
 }

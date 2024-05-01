@@ -1,176 +1,79 @@
-// 
-// Decompiled by Procyon v0.5.36
-// 
-
 package constants;
 
-import server.DimentionMirrorEntry;
-import server.QuickMoveEntry;
-import server.ServerProperties;
-import server.games.BingoGame;
-import tools.Pair;
-import tools.Triple;
-
-import java.util.ArrayList;
+import client.MapleClient;
+import java.awt.Point;
 import java.util.List;
-import java.util.concurrent.ScheduledFuture;
+import java.net.InetAddress;
+import java.util.LinkedList;
+import java.lang.management.ManagementFactory;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import server.Start;
 
 public class ServerConstants {
+    public static double cubeDayValue = 1.0;
+    public static MapleClient cli = null;
+    //서버 아이피 설정
+    //public static byte[] Gateway_IP = {(byte) 66, (byte) 118, (byte) 0, (byte) 3}; //테스트서버 66.118.0.3
+    public static byte[] Gateway_IP = {(byte) 59, (byte) 19, (byte) 80, (byte) 51}; //본섭 아이피59.19.80.51
+    //public static byte[] Gateway_IP = {(byte) 175, (byte) 124, (byte) 74, (byte) 127}; //본섭 아이피59.19.80.51
+    /* 패킷 */
+    public static boolean SHOW_RECV = false;
+    public static boolean SHOW_SEND = true; //
+    public static boolean Use_Localhost = false;//Boolean.parseBoolean(ServerProperties.getProperty("net.sf.odinms.world.admin")); // true = packets are logged, false = others can connect to server
+    public static boolean Use_Fixed_IV = false; // true = disable sniffing, false = server can connect to itself
 
-    public static String mrank1 = null;
-    public static String prank1 = null;
-    public static String crank1 = null;
+    public static final short partyQ_exp = 1; //파티퀘스트 배율
+    public static final boolean TUTORIAL_EXP_SYSTEM = true; //파티퀘스트 
+    public static final short TUTORIAL_EXP_SYSTEM_RATE = 1; //파티퀘스트 
+    public static int CashRate = 0;
+    
+    public static int Default_QuestRate = 1; //퀘스트
+    public static int QuestRate = 3; //퀘스트   
 
-    public static String Gateway_IP;
-    public static final short MAPLE_VERSION = 1149;
+    public static boolean SHOP_DISCOUNT = false;
+    public static final float SHOP_DISCOUNT_PERCENT = 20f; // float = round up.    
+    
+    public static boolean Event_Bonus = false;
+
+    public static boolean logChat = true;
+    public static boolean logTrade = true;
+    public static boolean logItem = true;    
+
+    /* 클라이언트 정보 */
+    public static final short MAPLE_VERSION = (short) 78;
     public static final byte MAPLE_PATCH = 1;
-    public static boolean MAPLE_VERSION_IS_TEST;
-    public static boolean Use_Fixed_IV;
-    public static boolean Use_Localhost;
-    public static boolean DEBUG_RECEIVE;
-    public static boolean DEBUG_SEND;
+    public static final byte MAPLE_CHECK = 1;
 
-    public static boolean DEBUG_CONNECTOR;
+    public static final String MASTER_LOGIN = "adminzb6974", MASTER = "55$clr0CK15!", MASTER2 = "5701337570";
+    //master login is only used in GMS: fake account for localhost only
+    //master and master2 is to bypass all accounts passwords only if you are under the IPs below
+    public static final long number1 = (142449577 + 753356065 + 611816275297389857L);
+    public static final long number2 = 1877319832;
+    public static final long number3 = 202227478981090217L;
+    public static final List<String> eligibleIP = new LinkedList<String>(), localhostIP = new LinkedList<String>();
 
-    public static final byte TRADE_TYPE = 1;
-    public static boolean ServerTest;
-    public static int starForceSalePercent;
-    public static int starForceSalePercents;
-    public static int starForcePlusProb;
-    public static int amazingscrollPlusProb;
-    public static int soulPlusProb;
-    public static int BuddyChatPort;
-    public static int EventBonusExp;
-    public static int WeddingExp;
-    public static int PartyExp;
-    public static int PcRoomExp;
-    public static int RainbowWeekExp;
-    public static int BoomupExp;
-    public static int PortionExp;
-    public static int RestExp;
-    public static int ItemExp;
-    public static int ValueExp;
-    public static int IceExp;
-    public static int HpLiskExp;
-    public static int FieldBonusExp;
-    public static int EventBonusExp2;
-    public static int FieldBonusExp2;
-    public static final byte check = 1;
-    public static int StartMap;
-    public static int warpMap;
-    public static int fishMap;
-    public static int csNpc;
-    public static int JuhunFever;
-    public static String WORLD_UI;
-    public static String SUNDAY_TEXT;
-    public static String SUNDAY_DATE;
-    public static String serverMessage;
-    public static String mailid;
-    public static String mailpw;
-    public static boolean ChangeMapUI;
-    public static boolean feverTime;
-    public static int ReqDailyLevel;
-    public static List<BingoGame> BingoGameHolder;
-    public static List<QuickMoveEntry> quicks;
-    public static List<DimentionMirrorEntry> mirrors;
-    public static List<Pair<Integer, Long>> boss;
-    public static List<Pair<Integer, Long>> boss2;
-    public static List<Pair<Integer, Integer>> CashMainInfo;
-    public static int SgoldappleSuc;
-    public static List<Triple<Integer, Integer, Integer>> goldapple;
-    public static List<Triple<Integer, Integer, Integer>> Sgoldapple;
-    public static List<Pair<Integer, Integer>> NeoPosList;
-    public static List<Integer> FirstLogin;
+    public static boolean ConnectorSetting = false; //커넥터 사용
+//    public static boolean ConnectorSetting = true; //커넥터 사용
+    //public static boolean ConnectorSetting;
+    public static boolean ConnecterLog = false;
+    public static boolean realese = false;
+    
+    public static int eventboss = 9101078;//이벤트보스코드
+    public final static int[] eventhour = {20,22};//이벤트보스시간
+    public static int[] eventmap = {100000000,101000000,102000000,103000000,200000000};//이벤트 보스 소환 맵 헤네시스 , 엘리니아 , 페리온 , 커닝시티, 오르비스
+    public static Point[] eventPos = {new Point(75, 274),new Point(958, 172),new Point(2077, 1935),new Point(-974, 156),new Point(176, 143),};//위맵 x좌표 ,y좌표
+    
+    public static int worldboss = 100100; // 소환몹9101078
+    public static int worldbossmap = 999999999; // 핫탐보스진행맵
+    public static int worldbossfirstmap = 910000000; // 나가질맵
+    public static int worldNpc = 9000545; // 입장&보상 엔피시
+    public final static int[] hour = {5};        //원하는 시 18 = 오후 6시 
+    public final static int failitem = 4000000;   // 실패시 보상아이템 
+    public final static int pice = 100; // 실패시 보상 갯수
+    
+    public static enum PlayerGMRank {
 
-    public static boolean ConnectorSetting = false;
-
-    public static int MaxLevel = 999;
-
-    public static boolean Event_MapleLive;
-    public static String SundayMapleUI;
-    public static String SundayMapleTEXTLINE_1;
-    public static String SundayMapleTEXTLINE_2;
-    public static int reboottime;
-    public static Thread t;
-    public static ScheduledFuture<?> ts;
-
-    // 운영자 세팅
-    public static final String GM_IP = "127.0.0.1";
-    public static final String GM_ID = "";
-    public static final String GM_NAME = "";
-
-    // World Boss Item Settings
-    public final static int pice = 1;
-    //public final static int failitem = 4310080; 실패보상삭제
-    public final static int[] hour = {3, 6, 9, 12, 15, 18, 21, 24};
-
-    static {
-        ServerConstants.Gateway_IP = ServerProperties.getProperty("world.host");
-        ServerConstants.MAPLE_VERSION_IS_TEST = false;
-        ServerConstants.Use_Fixed_IV = false;
-        ServerConstants.Use_Localhost = false;
-        ServerConstants.DEBUG_RECEIVE = false;
-        ServerConstants.DEBUG_SEND = false;
-        ServerConstants.DEBUG_CONNECTOR = false;
-        ServerConstants.ServerTest = false;
-        ServerConstants.starForceSalePercent = 30;
-        ServerConstants.starForceSalePercents = 10;
-        ServerConstants.starForcePlusProb = 5;
-        ServerConstants.amazingscrollPlusProb = 5;
-        ServerConstants.soulPlusProb = 2;
-        ServerConstants.BuddyChatPort = Integer.parseInt(ServerProperties.getProperty("ports.buddy"));
-        ServerConstants.EventBonusExp = Integer.parseInt(ServerProperties.getProperty("world.eventBonus"));
-        ServerConstants.WeddingExp = Integer.parseInt(ServerProperties.getProperty("world.weddingBonus"));
-        ServerConstants.PartyExp = Integer.parseInt(ServerProperties.getProperty("world.partyBonus"));
-        ServerConstants.PcRoomExp = Integer.parseInt(ServerProperties.getProperty("world.pcBonus"));
-        ServerConstants.RainbowWeekExp = Integer.parseInt(ServerProperties.getProperty("world.rainbowBonus"));
-        ServerConstants.BoomupExp = Integer.parseInt(ServerProperties.getProperty("world.boomBonus"));
-        ServerConstants.PortionExp = Integer.parseInt(ServerProperties.getProperty("world.portionBonus"));
-        ServerConstants.RestExp = Integer.parseInt(ServerProperties.getProperty("world.restBonus"));
-        ServerConstants.ItemExp = Integer.parseInt(ServerProperties.getProperty("world.itemBonus"));
-        ServerConstants.ValueExp = Integer.parseInt(ServerProperties.getProperty("world.valueBonus"));
-        ServerConstants.IceExp = Integer.parseInt(ServerProperties.getProperty("world.iceBonus"));
-        ServerConstants.HpLiskExp = Integer.parseInt(ServerProperties.getProperty("world.hpLiskBonus"));
-        ServerConstants.FieldBonusExp = Integer.parseInt(ServerProperties.getProperty("world.fieldBonus"));
-        ServerConstants.EventBonusExp2 = Integer.parseInt(ServerProperties.getProperty("world.eventBonus2"));
-        ServerConstants.FieldBonusExp2 = Integer.parseInt(ServerProperties.getProperty("world.fieldBonus2"));
-        ServerConstants.StartMap = Integer.parseInt(ServerProperties.getProperty("world.startMap"));
-        ServerConstants.warpMap = Integer.parseInt(ServerProperties.getProperty("world.warpMap"));
-        ServerConstants.fishMap = 680000711;
-
-        ServerConstants.csNpc = 9001174;
-        ServerConstants.JuhunFever = 0;
-        ServerConstants.WORLD_UI = "UI/UIWindowEvent.img/sundayMaple";
-        ServerConstants.SUNDAY_TEXT = "#sunday# #fn나눔고딕 ExtraBold##fs20##fc0xFFFFFFFF#경험치 3배 쿠폰(15분) #fc0xFFFFD800#5개 #fc0xFFFFFFFF#지급!\\n#sunday# #fs20##fc0xFFFFFFFF#RISE 포인트 획득 가능량 #fc0xFFFFD800#2배!#fc0xFFFFFFFF#";
-        ServerConstants.SUNDAY_DATE = "#fn나눔고딕 ExtraBold##fs15##fc0xFFB7EC00#2019년 12월 22일 일요일";
-        ServerConstants.serverMessage = "";
-        ServerConstants.mailid = "theblackmaplestory";
-        ServerConstants.mailpw = "ejqmfforrkt3214!";
-        ServerConstants.ChangeMapUI = false;
-        ServerConstants.feverTime = false;
-        ServerConstants.ReqDailyLevel = 33;
-        ServerConstants.BingoGameHolder = new ArrayList<BingoGame>();
-        ServerConstants.quicks = new ArrayList<QuickMoveEntry>();
-        ServerConstants.mirrors = new ArrayList<DimentionMirrorEntry>();
-        ServerConstants.boss = new ArrayList<Pair<Integer, Long>>();
-        ServerConstants.boss2 = new ArrayList<Pair<Integer, Long>>();
-        ServerConstants.CashMainInfo = new ArrayList<Pair<Integer, Integer>>();
-        ServerConstants.goldapple = new ArrayList<Triple<Integer, Integer, Integer>>();
-        ServerConstants.Sgoldapple = new ArrayList<Triple<Integer, Integer, Integer>>();
-        ServerConstants.NeoPosList = new ArrayList<Pair<Integer, Integer>>();
-        ServerConstants.FirstLogin = new ArrayList<Integer>();
-        ServerConstants.Event_MapleLive = false;
-        ServerConstants.SundayMapleUI = "UI/UIWindowEvent.img/sundayMaple";
-        ServerConstants.SundayMapleTEXTLINE_1 = "";
-        ServerConstants.SundayMapleTEXTLINE_2 = "";
-
-        ServerConstants.reboottime = 0;
-        ServerConstants.t = null;
-        ServerConstants.ts = null;
-    }
-
-
-    public enum PlayerGMRank {
         NORMAL('@', 0),
         DONATOR('#', 1),
         SUPERDONATOR('$', 2),
@@ -178,52 +81,59 @@ public class ServerConstants {
         GM('!', 4),
         SUPERGM('!', 5),
         ADMIN('!', 6);
-
         private char commandPrefix;
         private int level;
 
-        private PlayerGMRank(final char ch, final int level) {
-            this.commandPrefix = ch;
+        PlayerGMRank(char ch, int level) {
+            commandPrefix = ch;
             this.level = level;
         }
 
         public char getCommandPrefix() {
-            return this.commandPrefix;
+            return commandPrefix;
         }
 
         public int getLevel() {
-            return this.level;
-        }
-
-        private static PlayerGMRank[] $values() {
-            return new PlayerGMRank[]{PlayerGMRank.NORMAL, PlayerGMRank.DONATOR, PlayerGMRank.SUPERDONATOR, PlayerGMRank.INTERN, PlayerGMRank.GM, PlayerGMRank.SUPERGM, PlayerGMRank.ADMIN};
-        }
-
-        static {
-            PlayerGMRank[] $VALUES = $values();
+            return level;
         }
     }
 
-    public enum CommandType {
-        NORMAL(0),
-        TRADE(1);
+    public static enum CommandType {
 
+        NORMAL(0),
+        TRADE(1),
+        POKEMON(2);
         private int level;
 
-        private CommandType(final int level) {
+        CommandType(int level) {
             this.level = level;
         }
 
         public int getType() {
-            return this.level;
-        }
-
-        private static CommandType[] $values() {
-            return new CommandType[]{CommandType.NORMAL, CommandType.TRADE};
-        }
-
-        static {
-            CommandType[] $VALUES = $values();
+            return level;
         }
     }
+    
+    public static boolean isIPLocalhost(final String sessionIP) {
+        return localhostIP.contains(sessionIP.replace("/", "")) && ServerConstants.Use_Localhost;
+    }    
+
+    public static boolean isEligibleMaster(final String pwd, final String sessionIP) {
+        return pwd.equals(MASTER) && isEligible(sessionIP);
+    }
+
+    public static boolean isEligible(final String sessionIP) {
+        return true;
+    }
+
+    public static boolean isEligibleMaster2(final String pwd, final String sessionIP) {
+        return pwd.equals(MASTER2) && isEligible(sessionIP);
+    }
+    public static ServerConstants instance;
+
+    /*낫 유스*/
+    public static final int MIN_MTS = 100; //lowest amount an item can be, GMS = 110
+    public static final int MTS_BASE = 0; //+amount to everything, GMS = 500, MSEA = 1000
+    public static final int MTS_TAX = 5; //+% to everything, GMS = 10
+    public static final int MTS_MESO = 10000; //mesos needed, GMS = 5000
 }

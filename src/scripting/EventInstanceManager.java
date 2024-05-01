@@ -1,700 +1,731 @@
-// 
-// Decompiled by Procyon v0.5.36
-// 
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc>
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
 
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package scripting;
 
 import client.MapleCharacter;
 import client.MapleQuestStatus;
-import client.MapleTrait;
 import client.SkillFactory;
 import handling.channel.ChannelServer;
-import handling.world.party.MapleParty;
-import handling.world.party.MaplePartyCharacter;
-import handling.world.guild.MapleGuild;
-import handling.world.guild.MapleGuildCharacter;
+import handling.world.MapleParty;
+import handling.world.MaplePartyCharacter;
+import server.MapleCarnivalParty;
 import server.MapleItemInformationProvider;
-import server.Timer;
+import server.MapleSquad;
+import server.RateManager;
+import server.Timer.EventTimer;
 import server.life.MapleMonster;
 import server.maps.MapleMap;
 import server.maps.MapleMapFactory;
 import server.quest.MapleQuest;
 import tools.FileoutputUtil;
+import tools.MaplePacketCreator;
 import tools.Pair;
-import tools.packet.CField;
-import tools.packet.CWvsContext;
-import tools.packet.SLFCGPacket;
+import tools.packet.UIPacket;
 
 import javax.script.ScriptException;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class EventInstanceManager
-{
-    private List<MapleCharacter> chars;
-    private List<Integer> dced;
-    private List<MapleMonster> mobs;
-    private Map<Integer, Integer> killCount;
+public class EventInstanceManager {
+
+    private List<MapleCharacter> chars = new LinkedList<MapleCharacter>(); //this is messy
+    private List<Integer> dced = new LinkedList<Integer>();
+    private List<MapleMonster> mobs = new LinkedList<MapleMonster>();
+    private Map<Integer, Integer> killCount = new HashMap<Integer, Integer>();
     private EventManager em;
     private int channel;
     private String name;
-    private Properties props;
-    private long timeStarted;
-    private long eventTime;
-    private List<Integer> mapIds;
-    private List<Boolean> isInstanced;
+    private Properties props = new Properties();
+    private long timeStarted = 0;
+    private long eventTime = 0;
+    private List<Integer> mapIds = new LinkedList<Integer>();
+    private List<Boolean> isInstanced = new LinkedList<Boolean>();
     private ScheduledFuture<?> eventTimer;
-    private final ReentrantReadWriteLock mutex;
-    private final Lock rL;
-    private final Lock wL;
-    private boolean disposed;
-    
-    public EventInstanceManager(final EventManager em, final String name, final int channel) {
-        this.chars = new CopyOnWriteArrayList<MapleCharacter>();
-        this.dced = new LinkedList<Integer>();
-        this.mobs = new LinkedList<MapleMonster>();
-        this.killCount = new HashMap<Integer, Integer>();
-        this.props = new Properties();
-        this.timeStarted = 0L;
-        this.eventTime = 0L;
-        this.mapIds = new LinkedList<Integer>();
-        this.isInstanced = new LinkedList<Boolean>();
-        this.mutex = new ReentrantReadWriteLock();
-        this.rL = this.mutex.readLock();
-        this.wL = this.mutex.writeLock();
-        this.disposed = false;
+    private ScheduledFuture<?> ElapsedTimer = null;
+    private AtomicInteger elapsedtime = new AtomicInteger(0);
+    private List<ScheduledFuture<?>> Schedules = new ArrayList<ScheduledFuture<?>>();
+    private final ReentrantReadWriteLock mutex = new ReentrantReadWriteLock();
+    private final Lock rL = mutex.readLock(), wL = mutex.writeLock();
+    private boolean disposed = false;
+
+    public EventInstanceManager(EventManager em, String name, int channel) {
         this.em = em;
         this.name = name;
         this.channel = channel;
     }
-    
-    public void registerPlayer(final MapleCharacter chr) {
-        if (this.disposed || chr == null) {
+
+    public void registerPlayer(MapleCharacter chr) {
+        if (disposed || chr == null) {
             return;
         }
         try {
-            this.chars.add(chr);
+            wL.lock();
+            try {
+                chars.add(chr);
+            } finally {
+                wL.unlock();
+            }
             chr.setEventInstance(this);
-           this.em.getIv().invokeFunction("playerEntry", this, chr);
-        }
-        catch (NullPointerException ex) {
-            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", ex);
+            em.getIv().invokeFunction("playerEntry", this, chr);
+        } catch (NullPointerException ex) {
+            FileoutputUtil.outputFileError(FileoutputUtil.ScriptEx_Log, ex);
             ex.printStackTrace();
-        }
-        catch (Exception ex2) {
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : playerEntry:\n" + ex2);
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : playerEntry:\n" + ex2);
+        } catch (Exception ex) {
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : playerEntry:\n" + ex);
+            System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : playerEntry:\n" + ex);
         }
     }
-    
+
     public void changedMap(final MapleCharacter chr, final int mapid) {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
         try {
-            this.em.getIv().invokeFunction("changedMap", this, chr, mapid);
-        }
-        catch (NullPointerException ex2) {}
-        catch (Exception ex) {
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name : " + this.em.getName() + ", Instance name : " + this.name + ", method Name : changedMap:\n" + ex);
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : changedMap:\n" + ex);
+            em.getIv().invokeFunction("changedMap", this, chr, mapid);
+        } catch (NullPointerException npe) {
+        } catch (Exception ex) {
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : changedMap:\n" + ex);
+            System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : changedMap:\n" + ex);
         }
     }
-    
+
+    public void allCancelSchedules() {
+        for (ScheduledFuture<?> sche : Schedules) {
+            if (sche != null) {
+                if (sche.isCancelled() || sche.isDone()) {
+                    continue;
+                } else {
+                    sche.cancel(false);
+                }
+            }
+        }
+        Schedules.clear();
+    }
+
     public void timeOut(final long delay, final EventInstanceManager eim) {
-        if (this.disposed || eim == null) {
+        if (disposed || eim == null) {
             return;
         }
-        this.eventTimer = Timer.EventTimer.getInstance().schedule(new Runnable() {
-            @Override
+        eventTimer = EventTimer.getInstance().schedule(new Runnable() {
             public void run() {
-                if (EventInstanceManager.this.disposed || eim == null || EventInstanceManager.this.em == null) {
+                if (disposed || eim == null || em == null) {
                     return;
                 }
                 try {
-                    EventInstanceManager.this.em.getIv().invokeFunction("scheduledTimeout", eim);
-                }
-                catch (Exception ex) {
-                    FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + EventInstanceManager.this.em.getName() + ", Instance name : " + EventInstanceManager.this.name + ", method Name : scheduledTimeout:\n" + ex);
-                    System.out.println("Event name" + EventInstanceManager.this.em.getName() + ", Instance name : " + EventInstanceManager.this.name + ", method Name : scheduledTimeout:\n" + ex);
+                    em.getIv().invokeFunction("scheduledTimeout", eim);
+                } catch (Exception ex) {
+                    FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : scheduledTimeout:\n" + ex);
+                    System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : scheduledTimeout:\n" + ex);
                 }
             }
         }, delay);
     }
-    
+
+    public void startElapsedTimer() {
+        if (disposed) {
+            return;
+        }
+        ElapsedTimer = EventTimer.getInstance().register(new Runnable() {
+            public void run() {
+                if (disposed || em == null) {
+                    return;
+                }
+                try {
+                    em.getIv().invokeFunction("elapsedTime", EventInstanceManager.this, elapsedtime.incrementAndGet());
+                } catch (NoSuchMethodException ignore) {
+                    //ignore
+                } catch (Exception ex) {
+                    FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : elapsedTime:\n" + ex);
+                    System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : elapsedTime:\n" + ex);
+                }
+            }
+        }, 1000);
+    }
+
+    public void stopElapsedTimer() {
+        if (disposed) {
+            return;
+        }
+        if (ElapsedTimer != null) {
+            ElapsedTimer.cancel(false);
+            ElapsedTimer = null;
+        }
+    }
+
+    public void restartElapsedTimer() {
+        stopElapsedTimer();
+        elapsedtime.set(0);
+        startElapsedTimer();
+    }
+
+    public int getElapsedTime() {
+        return elapsedtime.get();
+    }
+
     public void stopEventTimer() {
-        this.eventTime = 0L;
-        this.timeStarted = 0L;
-        if (this.eventTimer != null) {
-            this.eventTimer.cancel(false);
+        eventTime = 0;
+        timeStarted = 0;
+        if (eventTimer != null) {
+            eventTimer.cancel(false);
         }
     }
-    
-    public void restartEventTimerMillSecond(final int time) {
+
+    public void restartEventTimer(long time) {
         try {
-            if (this.disposed) {
+            if (disposed) {
                 return;
             }
-            this.timeStarted = System.currentTimeMillis();
-            this.eventTime = time;
-            if (this.eventTimer != null) {
-                this.eventTimer.cancel(false);
+            timeStarted = System.currentTimeMillis();
+            eventTime = time;
+            if (eventTimer != null) {
+                eventTimer.cancel(false);
             }
-            this.eventTimer = null;
-            for (final MapleCharacter chr : this.getPlayers()) {
-                chr.getClient().getSession().writeAndFlush((Object)SLFCGPacket.milliTimer(time));
+            eventTimer = null;
+            final int timesend = (int) time / 1000;
+
+            for (MapleCharacter chr : getPlayers()) {
+                if (name.startsWith("PVP")) {
+                    chr.getClient().getSession().write(MaplePacketCreator.getPVPClock(Integer.parseInt(getProperty("type")), timesend));
+                } else {
+                    chr.getClient().getSession().write(MaplePacketCreator.getClock(timesend));
+                }
             }
-            this.timeOut(time, this);
-        }
-        catch (Exception ex) {
-            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", ex);
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : restartEventTimerMillSecond:\n");
+            timeOut(time, this);
+
+        } catch (Exception ex) {
+            FileoutputUtil.outputFileError(FileoutputUtil.ScriptEx_Log, ex);
+            System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : restartEventTimer:\n");
             ex.printStackTrace();
         }
     }
-    
-    public void restartEventTimer(final long time) {
-        this.restartEventTimer(time, false);
+
+    public void startEventTimer(long time) {
+        restartEventTimer(time); //just incase
     }
-    
-    public void restartEventTimer(final long time, final int type) {
-        try {
-            if (this.disposed) {
-                return;
-            }
-            this.timeStarted = System.currentTimeMillis();
-            this.eventTime = time;
-            if (this.eventTimer != null) {
-                this.eventTimer.cancel(false);
-            }
-            this.eventTimer = null;
-            final int timesend = (int)time / 1000;
-            for (final MapleCharacter chr : this.getPlayers()) {
-                if (this.name.startsWith("PVP")) {
-                    chr.getClient().getSession().writeAndFlush((Object)CField.getPVPClock(Integer.parseInt(this.getProperty("type")), timesend));
-                }
-                else if (type == 4 || type == 5) {
-                    chr.getClient().getSession().writeAndFlush((Object)CField.getVanVanClock((byte)((type != 4) ? 1 : 0), timesend));
-                }
-                else {
-                    chr.getClient().getSession().writeAndFlush((Object)CField.getClock(timesend));
-                }
-            }
-            this.timeOut(time, this);
-        }
-        catch (Exception ex) {
-            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", ex);
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : restartEventTimer:\n");
-            ex.printStackTrace();
-        }
-    }
-    
-    public void restartEventTimer(final long time, final boolean punchking) {
-        try {
-            if (this.disposed) {
-                return;
-            }
-            this.timeStarted = System.currentTimeMillis();
-            this.eventTime = time;
-            if (this.eventTimer != null) {
-                this.eventTimer.cancel(false);
-            }
-            this.eventTimer = null;
-            final int timesend = (int)time / 1000;
-            for (final MapleCharacter chr : this.getPlayers()) {
-                if (this.name.startsWith("PVP")) {
-                    chr.getClient().getSession().writeAndFlush((Object)CField.getPVPClock(Integer.parseInt(this.getProperty("type")), timesend));
-                }
-                else if (punchking) {
-                    chr.getClient().getSession().writeAndFlush((Object)CField.getClockMilliEvent(this.timeStarted + this.eventTime));
-                }
-                else {
-                    chr.getClient().getSession().writeAndFlush((Object)CField.getClock(timesend));
-                }
-            }
-            this.timeOut(time, this);
-        }
-        catch (Exception ex) {
-            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", ex);
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : restartEventTimer:\n");
-            ex.printStackTrace();
-        }
-    }
-    
-    public void startEventTimer(final long time) {
-        this.restartEventTimer(time, false);
-    }
-    
-    public void startEventTimer(final long time, final boolean punchking) {
-        this.restartEventTimer(time, punchking);
-    }
-    
+
     public boolean isTimerStarted() {
-        return this.eventTime > 0L && this.timeStarted > 0L;
+        return eventTime > 0 && timeStarted > 0;
     }
-    
+
     public long getTimeLeft() {
-        return this.eventTime - (System.currentTimeMillis() - this.timeStarted);
+        return eventTime - (System.currentTimeMillis() - timeStarted);
     }
-    
-    public void registerParty(final MapleParty party, final MapleMap map) {
-        if (this.disposed) {
+
+    public void registerParty(MapleParty party, MapleMap map) {
+        if (disposed) {
             return;
         }
-        for (final MaplePartyCharacter pc : party.getMembers()) {
-            this.registerPlayer(map.getCharacterById(pc.getId()));
+        for (MaplePartyCharacter pc : party.getMembers()) {
+            registerPlayer(map.getCharacterById(pc.getId()));
         }
     }
-    
-    public void registerGuild(final MapleGuild guild, final MapleMap map) {
-        if (this.disposed) {
-            return;
-        }
-        for (final MapleGuildCharacter pc : guild.getMembers()) {
-            this.registerPlayer(map.getCharacterById(pc.getId()));
-        }
-    }
-    
+
     public void unregisterPlayer(final MapleCharacter chr) {
-        if (this.disposed) {
+        if (disposed) {
             chr.setEventInstance(null);
             return;
         }
-        this.unregisterPlayer_NoLock(chr);
+        wL.lock();
+        try {
+            unregisterPlayer_NoLock(chr);
+        } finally {
+            wL.unlock();
+        }
     }
     
+    public void unregisterAll() {
+        wL.lock();
+	try {
+            for (MapleCharacter chr : chars) {
+                chr.setEventInstance(null);
+            }
+            chars.clear();
+	} finally {
+	    wL.unlock();
+	}
+    }
+
     private boolean unregisterPlayer_NoLock(final MapleCharacter chr) {
+        if (name.equals("CWKPQ")) { //hard code it because i said so
+            final MapleSquad squad = ChannelServer.getInstance(channel).getMapleSquad("CWKPQ");//so fkin hacky
+            if (squad != null) {
+                squad.removeMember(chr.getName());
+                if (squad.getLeaderName().equals(chr.getName())) {
+                    em.setProperty("leader", "false");
+                }
+            }
+        }
         chr.setEventInstance(null);
-        if (this.disposed) {
+        if (disposed) {
             return false;
         }
-        if (this.chars.contains(chr)) {
-            this.chars.remove(chr);
+        if (chars.contains(chr)) {
+            chars.remove(chr);
             return true;
         }
         return false;
     }
-    
+
     public final boolean disposeIfPlayerBelow(final byte size, final int towarp) {
-        if (this.disposed) {
+        if (disposed) {
             return true;
         }
         MapleMap map = null;
         if (towarp > 0) {
             map = this.getMapFactory().getMap(towarp);
         }
-        if (this.chars != null && this.chars.size() <= size) {
-            final List<MapleCharacter> chrs = new LinkedList<MapleCharacter>(this.chars);
-            for (final MapleCharacter chr : chrs) {
-                if (chr == null) {
-                    continue;
+
+        wL.lock();
+        try {
+            if (chars != null && chars.size() <= size) {
+                final List<MapleCharacter> chrs = new LinkedList<MapleCharacter>(chars);
+                for (MapleCharacter chr : chrs) {
+                    if (chr == null) {
+                        continue;
+                    }
+                    unregisterPlayer_NoLock(chr);
+                    if (towarp > 0 && chr.getMapId() != towarp) {
+                        if (chr.isAlive()) {
+                            chr.changeMap(map, map.getPortal(0));
+                        } else {
+                            chr.changeMap(map.getForcedReturnMap(), map.getPortal(0));
+                        }
+                    }
                 }
-                this.unregisterPlayer_NoLock(chr);
-                if (towarp <= 0) {
-                    continue;
-                }
-                chr.changeMap(map, map.getPortal(0));
+                dispose_NoLock();
+                return true;
             }
-            this.dispose_NoLock();
-            return true;
+        } catch (Exception ex) {
+            FileoutputUtil.outputFileError(FileoutputUtil.ScriptEx_Log, ex);
+            ex.printStackTrace();
+        } finally {
+            wL.unlock();
         }
         return false;
     }
-    
+
     public final void saveBossQuest(final int points) {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
-        for (final MapleCharacter chr : this.getPlayers()) {
+        for (MapleCharacter chr : getPlayers()) {
             final MapleQuestStatus record = chr.getQuestNAdd(MapleQuest.getInstance(150001));
+
             if (record.getCustomData() != null) {
                 record.setCustomData(String.valueOf(points + Integer.parseInt(record.getCustomData())));
+            } else {
+                record.setCustomData(String.valueOf(points)); // First time
             }
-            else {
-                record.setCustomData(String.valueOf(points));
-            }
-            chr.getTrait(MapleTrait.MapleTraitType.will).addExp(points / 100, chr);
+            chr.modifyCSPoints(3, points / 5, true);
         }
     }
-    
+
     public final void saveNX(final int points) {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
-        for (final MapleCharacter chr : this.getPlayers()) {
-            chr.modifyCSPoints(1, points, true);
+        for (MapleCharacter chr : getPlayers()) {
+            chr.modifyCSPoints(3, points, true);
         }
     }
-    
+
     public List<MapleCharacter> getPlayers() {
-        if (this.disposed) {
+        if (disposed) {
             return Collections.emptyList();
         }
-        return new ArrayList<MapleCharacter>(this.chars);
+        rL.lock();
+        try {
+            return new LinkedList<MapleCharacter>(chars);
+        } finally {
+            rL.unlock();
+        }
     }
-    
+
     public List<Integer> getDisconnected() {
-        return this.dced;
+        return dced;
     }
-    
+
     public final int getPlayerCount() {
-        if (this.disposed) {
+        if (disposed) {
             return 0;
         }
-        return this.chars.size();
+        return chars.size();
     }
-    
-    public void registerMonster(final MapleMonster mob) {
-        if (this.disposed) {
+
+    public void registerMonster(MapleMonster mob) {
+        if (disposed) {
             return;
         }
-        this.mobs.add(mob);
+        mobs.add(mob);
         mob.setEventInstance(this);
     }
-    
-    public void unregisterMonster(final MapleMonster mob) {
+
+    public void unregisterMonster(MapleMonster mob) {
         mob.setEventInstance(null);
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
-        if (this.mobs.contains(mob)) {
-            this.mobs.remove(mob);
+        if (mobs.contains(mob)) {
+            mobs.remove(mob);
         }
-        if (this.mobs.isEmpty()) {
+        if (mobs.size() == 0) {
             try {
-                this.em.getIv().invokeFunction("allMonstersDead", this);
-            }
-            catch (Exception ex) {
-                FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : allMonstersDead:\n" + ex);
-                System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : allMonstersDead:\n" + ex);
+                em.getIv().invokeFunction("allMonstersDead", this);
+            } catch (Exception ex) {
+                FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : allMonstersDead:\n" + ex);
+                System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : allMonstersDead:\n" + ex);
             }
         }
     }
-    
-    public void playerKilled(final MapleCharacter chr) {
-        if (this.disposed) {
+
+    public void playerKilled(MapleCharacter chr) {
+        if (disposed) {
             return;
         }
         try {
-            this.em.getIv().invokeFunction("playerDead", this, chr);
-        }
-        catch (Exception ex) {
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : playerDead:\n" + ex);
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : playerDead:\n" + ex);
+            em.getIv().invokeFunction("playerDead", this, chr);
+        } catch (Exception ex) {
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : playerDead:\n" + ex);
+            System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : playerDead:\n" + ex);
         }
     }
-    
-    public boolean revivePlayer(final MapleCharacter chr) {
-        if (this.disposed) {
+
+    public boolean revivePlayer(MapleCharacter chr) {
+        if (disposed) {
             return false;
         }
         try {
-            final Object b = this.em.getIv().invokeFunction("playerRevive", this, chr);
-            if (b instanceof Boolean) {
-                return (boolean)b;
+            if (chr.getDeathCount() > 0) {
+                chr.decreaseDeathCount();
+                chr.getStat().heal(chr);
+                chr.changeMap(chr.getMap());
+                return true;
             }
-        }
-        catch (Exception ex) {
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : playerRevive:\n" + ex);
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : playerRevive:\n" + ex);
+            
+            Object b = em.getIv().invokeFunction("playerRevive", this, chr);
+            if (b instanceof Boolean) {
+                return (Boolean) b;
+            } else {
+                return false;
+            }
+        } catch (NoSuchMethodException ez) {
+            //Ignore... -> too lazy make this into all events
+        } catch (Exception ex) {
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : playerRevive:\n" + ex);
+            System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : playerRevive:\n" + ex);
         }
         return true;
     }
-    
-    public void playerDisconnected(final MapleCharacter chr, final int idz) {
-        if (this.disposed) {
+
+    public void playerDisconnected(final MapleCharacter chr, int idz) {
+        if (disposed) {
             return;
         }
         byte ret;
         try {
-            ret = ((Double)this.em.getIv().invokeFunction("playerDisconnected", this, chr)).byteValue();
-        }
-        catch (Exception e) {
+            ret = ((Double) em.getIv().invokeFunction("playerDisconnected", this, chr)).byteValue();
+        } catch (Exception e) {
             ret = 0;
         }
-        if (this.disposed) {
-            return;
-        }
-        if (chr == null || chr.isAlive()) {
-            this.dced.add(idz);
-        }
-        if (chr != null) {
-            this.unregisterPlayer_NoLock(chr);
-        }
-        if (ret == 0) {
-            if (this.getPlayerCount() <= 0) {
-                this.dispose_NoLock();
-            }
-        }
-        else if ((ret > 0 && this.getPlayerCount() < ret) || (ret < 0 && (this.isLeader(chr) || this.getPlayerCount() < ret * -1))) {
-            final List<MapleCharacter> chrs = new LinkedList<MapleCharacter>(this.chars);
-            for (final MapleCharacter player : chrs) {
-                if (player.getId() != idz) {
-                    this.removePlayer(player);
-                }
-            }
-            this.dispose_NoLock();
-        }
-    }
-    
-    public void monsterKilled(final MapleCharacter chr, final MapleMonster mob) {
-        if (this.disposed) {
-            return;
-        }
+
+        wL.lock();
         try {
-            final int inc = (int)this.em.getIv().invokeFunction("monsterValue", this, mob.getId());
-            if (this.disposed || chr == null) {
+            if (disposed) {
                 return;
             }
-            Integer kc = this.killCount.get(chr.getId());
+            if (chr == null || chr.isAlive()) {
+                dced.add(idz);
+            }
+            if (chr != null) {
+                unregisterPlayer_NoLock(chr);
+            }
+            if (ret == 0) {
+                if (getPlayerCount() <= 0) {
+                    dispose_NoLock();
+                }
+            } else if ((ret > 0 && getPlayerCount() < ret) || (ret < 0 && (isLeader(chr) || getPlayerCount() < (ret * -1)))) {
+                final List<MapleCharacter> chrs = new LinkedList<MapleCharacter>(chars);
+                for (MapleCharacter player : chrs) {
+                    if (player.getId() != idz) {
+                        removePlayer(player);
+                    }
+                }
+                dispose_NoLock();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            FileoutputUtil.outputFileError(FileoutputUtil.ScriptEx_Log, ex);
+        } finally {
+            wL.unlock();
+        }
+
+    }
+
+    /**
+     * @param chr
+     * @param mob
+     */
+    public void monsterKilled(final MapleCharacter chr, final MapleMonster mob) {
+        if (disposed) {
+            return;
+        }
+        try {
+            int inc = ((Double) em.getIv().invokeFunction("monsterValue", this, mob.getId())).intValue();
+            if (disposed || chr == null) {
+                return;
+            }
+            Integer kc = killCount.get(chr.getId());
             if (kc == null) {
                 kc = inc;
-            }
-            else {
+            } else {
                 kc += inc;
             }
-            this.killCount.put(chr.getId(), kc);
-        }
-        catch (ScriptException ex) {
-            System.out.println("Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex);
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex);
-        }
-        catch (NoSuchMethodException ex2) {
-            System.out.println("Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex2);
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex2);
-        }
-        catch (Exception ex3) {
-            ex3.printStackTrace();
-            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", ex3);
+            killCount.put(chr.getId(), kc);
+            if (chr.getCarnivalParty() != null && (mob.getStats().getPoint() > 0 || mob.getStats().getCP() > 0)) {
+                em.getIv().invokeFunction("monsterKilled", this, chr, mob.getStats().getCP() > 0 ? mob.getStats().getCP() : mob.getStats().getPoint());
+            }
+        } catch (ScriptException ex) {
+            System.out.println("Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterValue:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterValue:\n" + ex);
+        } catch (NoSuchMethodException ex) {
+            System.out.println("Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterValue:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterValue:\n" + ex);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            FileoutputUtil.outputFileError(FileoutputUtil.ScriptEx_Log, ex);
         }
     }
-    
-    public void monsterDamaged(final MapleCharacter chr, final MapleMonster mob, final long damage) {
-        final List<Integer> mobs = Collections.unmodifiableList((List<? extends Integer>)Arrays.asList(9700037, 8850011));
-        if (this.disposed || !mobs.contains(mob.getId())) {
+
+    public void monsterDamaged(final MapleCharacter chr, final MapleMonster mob, final int damage) {
+        if (disposed || mob.getId() != 9700037) { //ghost PQ boss only.
             return;
         }
         try {
-            this.em.getIv().invokeFunction("monsterDamaged", this, chr, mob.getId(), damage);
-        }
-        catch (ScriptException ex) {
-            System.out.println("Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex);
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex);
-        }
-        catch (NoSuchMethodException ex2) {
-            System.out.println("Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex2);
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex2);
-        }
-        catch (Exception ex3) {
-            ex3.printStackTrace();
-            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", ex3);
+            em.getIv().invokeFunction("monsterDamaged", this, chr, mob.getId(), damage);
+        } catch (ScriptException ex) {
+            System.out.println("Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterDamaged:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterDamaged:\n" + ex);
+        } catch (NoSuchMethodException ex) {
+            System.out.println("Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterDamaged:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterDamaged:\n" + ex);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            FileoutputUtil.outputFileError(FileoutputUtil.ScriptEx_Log, ex);
         }
     }
-    
+
     public void addPVPScore(final MapleCharacter chr, final int score) {
-        if (this.disposed) {
+        if (disposed) { //ghost PQ boss only.
             return;
         }
         try {
-            this.em.getIv().invokeFunction("addPVPScore", this, chr, score);
-        }
-        catch (ScriptException ex) {
-            System.out.println("Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex);
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex);
-        }
-        catch (NoSuchMethodException ex2) {
-            System.out.println("Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex2);
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + ((this.em == null) ? "null" : this.em.getName()) + ", Instance name : " + this.name + ", method Name : monsterValue:\n" + ex2);
-        }
-        catch (Exception ex3) {
-            ex3.printStackTrace();
-            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", ex3);
+            em.getIv().invokeFunction("addPVPScore", this, chr, score);
+        } catch (ScriptException ex) {
+            System.out.println("Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterValue:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterValue:\n" + ex);
+        } catch (NoSuchMethodException ex) {
+            System.out.println("Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterValue:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + (em == null ? "null" : em.getName()) + ", Instance name : " + name + ", method Name : monsterValue:\n" + ex);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            FileoutputUtil.outputFileError(FileoutputUtil.ScriptEx_Log, ex);
         }
     }
-    
-    public int getKillCount(final MapleCharacter chr) {
-        if (this.disposed) {
+
+    public int getKillCount(MapleCharacter chr) {
+        if (disposed) {
             return 0;
         }
-        final Integer kc = this.killCount.get(chr.getId());
+        Integer kc = killCount.get(chr.getId());
         if (kc == null) {
             return 0;
+        } else {
+            return kc;
         }
-        return kc;
     }
-    
+
     public void dispose_NoLock() {
-        if (this.disposed || this.em == null) {
+        if (disposed || em == null) {
             return;
         }
-        final String emN = this.em.getName();
+        final String emN = em.getName();
         try {
-            this.disposed = true;
-            for (final MapleCharacter chr : this.chars) {
+
+            disposed = true;
+            for (MapleCharacter chr : chars) {
                 chr.setEventInstance(null);
+                chr.removeDeathCount();
             }
-            this.chars.clear();
-            this.chars = null;
-            if (this.mobs.size() >= 1) {
-                for (final MapleMonster mob : this.mobs) {
+            chars.clear();
+            chars = null;
+            if (mobs.size() >= 1) {
+                for (MapleMonster mob : mobs) {
                     if (mob != null) {
                         mob.setEventInstance(null);
                     }
                 }
             }
-            this.mobs.clear();
-            this.mobs = null;
-            this.killCount.clear();
-            this.killCount = null;
-            this.dced.clear();
-            this.dced = null;
-            this.timeStarted = 0L;
-            this.eventTime = 0L;
-            this.props.clear();
-            this.props = null;
-            for (int i = 0; i < this.mapIds.size(); ++i) {
-                if (this.isInstanced.get(i)) {
-                    this.getMapFactory().removeInstanceMap(this.mapIds.get(i));
+            mobs.clear();
+            mobs = null;
+            killCount.clear();
+            killCount = null;
+            dced.clear();
+            dced = null;
+            timeStarted = 0;
+            eventTime = 0;
+            props.clear();
+            props = null;
+            for (int i = 0; i < mapIds.size(); i++) {
+                if (isInstanced.get(i)) {
+                    this.getMapFactory().removeInstanceMap(mapIds.get(i));
                 }
             }
-            this.mapIds.clear();
-            this.mapIds = null;
-            this.isInstanced.clear();
-            this.isInstanced = null;
-            this.em.disposeInstance(this.name);
-        }
-        catch (Exception e) {
-            System.out.println("Caused by : " + emN + " instance name: " + this.name + " method: dispose:");
+            mapIds.clear();
+            mapIds = null;
+            isInstanced.clear();
+            isInstanced = null;
+            allCancelSchedules();
+            if (ElapsedTimer != null) {
+                ElapsedTimer.cancel(false);
+            }
+            em.disposeInstance(name);
+        } catch (Exception e) {
+            System.out.println("Caused by : " + emN + " instance name: " + name + " method: dispose:");
             e.printStackTrace();
-            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", e);
+            FileoutputUtil.outputFileError(FileoutputUtil.ScriptEx_Log, e);
         }
     }
-    
+
     public void dispose() {
-        this.dispose_NoLock();
+        wL.lock();
+        try {
+            dispose_NoLock();
+        } finally {
+            wL.unlock();
+        }
+
     }
-    
+
     public ChannelServer getChannelServer() {
-        return ChannelServer.getInstance(this.channel);
+        return ChannelServer.getInstance(channel);
     }
-    
+
     public List<MapleMonster> getMobs() {
-        return this.mobs;
+        return mobs;
     }
-    
+
     public final void giveAchievement(final int type) {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
-        for (MapleCharacter mapleCharacter : this.getPlayers()) {}
+        for (MapleCharacter chr : getPlayers()) {
+            chr.finishAchievement(type);
+        }
     }
-    
+
     public final void broadcastPlayerMsg(final int type, final String msg) {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
-        for (final MapleCharacter chr : this.getPlayers()) {
+        for (MapleCharacter chr : getPlayers()) {
             chr.dropMessage(type, msg);
         }
     }
-    
-    public final void broadcastEnablePvP(final MapleCharacter chr) {
-        if (this.disposed) {
-            return;
-        }
-        for (final MapleCharacter mc : chr.getMap().getCharacters()) {
-            mc.enablePvP();
-        }
-    }
-    
+
+    //PVP
     public final List<Pair<Integer, String>> newPair() {
         return new ArrayList<Pair<Integer, String>>();
     }
-    
-    public void addToPair(final List<Pair<Integer, String>> e, final int e1, final String e2) {
+
+    public void addToPair(List<Pair<Integer, String>> e, int e1, String e2) {
         e.add(new Pair<Integer, String>(e1, e2));
     }
-    
+
     public final List<Pair<Integer, MapleCharacter>> newPair_chr() {
         return new ArrayList<Pair<Integer, MapleCharacter>>();
     }
-    
-    public void addToPair_chr(final List<Pair<Integer, MapleCharacter>> e, final int e1, final MapleCharacter e2) {
+
+    public void addToPair_chr(List<Pair<Integer, MapleCharacter>> e, int e1, MapleCharacter e2) {
         e.add(new Pair<Integer, MapleCharacter>(e1, e2));
     }
-    
-    public final void broadcastPacket(final byte[] p) {
-        if (this.disposed) {
+
+    public final void broadcastPacket(byte[] p) {
+        if (disposed) {
             return;
         }
-        for (final MapleCharacter chr : this.getPlayers()) {
-            chr.getClient().getSession().writeAndFlush((Object)p);
+        for (MapleCharacter chr : getPlayers()) {
+            chr.getClient().getSession().write(p);
         }
     }
-    
-    public final void broadcastTeamPacket(final byte[] p, final int team) {
-        if (this.disposed) {
+
+    public final void broadcastTeamPacket(byte[] p, int team) {
+        if (disposed) {
             return;
         }
-        for (final MapleCharacter chr : this.getPlayers()) {
+        for (MapleCharacter chr : getPlayers()) {
             if (chr.getTeam() == team) {
-                chr.getClient().getSession().writeAndFlush((Object)p);
+                chr.getClient().getSession().write(p);
             }
         }
     }
     
     public final MapleMap createInstanceMap(final int mapid) {
-        if (this.disposed) {
+        if (disposed) {
             return null;
         }
         final int assignedid = EventScriptManager.getNewInstanceMapId();
-        this.mapIds.add(assignedid);
-        this.isInstanced.add(true);
+        mapIds.add(assignedid);
+        isInstanced.add(true);
         return this.getMapFactory().CreateInstanceMap(mapid, true, true, true, assignedid);
-    }
-    
-    public final MapleMap createInstanceMapS(final int mapid) {
-        if (this.disposed) {
-            return null;
-        }
-        final int assignedid = EventScriptManager.getNewInstanceMapId();
-        this.mapIds.add(assignedid);
-        this.isInstanced.add(true);
-        return this.getMapFactory().CreateInstanceMap(mapid, false, false, false, assignedid);
-    }
-    
-    public final MapleMap setInstanceMap(final int mapid) {
-        if (this.disposed) {
+    }    
+
+    public final MapleMap setInstanceMap(final int mapid) { //gets instance map from the channelserv
+        if (disposed) {
             return this.getMapFactory().getMap(mapid);
         }
-        this.mapIds.add(mapid);
-        this.isInstanced.add(false);
+        mapIds.add(mapid);
+        isInstanced.add(false);
         return this.getMapFactory().getMap(mapid);
     }
-    
+
     public final MapleMapFactory getMapFactory() {
-        return this.getChannelServer().getMapFactory();
+        return getChannelServer().getMapFactory();
     }
-    
-    public final void sendPunchKing(final MapleMap map, final int type, final int data) {
-    }
-    
-    public final MapleMap getMapInstance(final int args) {
-        if (this.disposed) {
+
+    public final MapleMap getMapInstance(int args) {
+        if (disposed) {
             return null;
         }
         try {
             boolean instanced = false;
             int trueMapID = -1;
-            if (args >= this.mapIds.size()) {
+            if (args >= mapIds.size()) {
+                //assume real map
                 trueMapID = args;
-            }
-            else {
-                trueMapID = this.mapIds.get(args);
-                instanced = this.isInstanced.get(args);
+            } else {
+                trueMapID = mapIds.get(args);
+                instanced = isInstanced.get(args);
             }
             MapleMap map = null;
             if (!instanced) {
@@ -702,170 +733,258 @@ public class EventInstanceManager
                 if (map == null) {
                     return null;
                 }
-                if (map.getCharactersSize() == 0 && this.em.getProperty("shuffleReactors") != null && this.em.getProperty("shuffleReactors").equals("true")) {
-                    map.shuffleReactors();
+                // in case reactors need shuffling and we are actually loading the map
+                if (map.getCharactersSize() == 0) {
+                    if (em.getProperty("shuffleReactors") != null && em.getProperty("shuffleReactors").equals("true")) {
+                        map.shuffleReactors();
+                    }
                 }
-            }
-            else {
+            } else {
                 map = this.getMapFactory().getInstanceMap(trueMapID);
                 if (map == null) {
                     return null;
                 }
-                if (map.getCharactersSize() == 0 && this.em.getProperty("shuffleReactors") != null && this.em.getProperty("shuffleReactors").equals("true")) {
-                    map.shuffleReactors();
+                // in case reactors need shuffling and we are actually loading the map
+                if (map.getCharactersSize() == 0) {
+                    if (em.getProperty("shuffleReactors") != null && em.getProperty("shuffleReactors").equals("true")) {
+                        map.shuffleReactors();
+                    }
                 }
             }
             return map;
-        }
-        catch (NullPointerException ex) {
-            FileoutputUtil.outputFileError("Log/Log_Script_Except.rtf", ex);
+        } catch (NullPointerException ex) {
+            FileoutputUtil.outputFileError(FileoutputUtil.ScriptEx_Log, ex);
             ex.printStackTrace();
             return null;
         }
     }
-    
+
     public final void schedule(final String methodName, final long delay) {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
-        Timer.EventTimer.getInstance().schedule(new Runnable() {
-            @Override
+        Schedules.add(EventTimer.getInstance().schedule(new Runnable() {
             public void run() {
-                if (EventInstanceManager.this.disposed || EventInstanceManager.this == null || EventInstanceManager.this.em == null) {
+                if (disposed || EventInstanceManager.this == null || em == null) {
                     return;
                 }
                 try {
-                    EventInstanceManager.this.em.getIv().invokeFunction(methodName, EventInstanceManager.this);
-                }
-                catch (NullPointerException ex2) {}
-                catch (Exception ex) {
-                    System.out.println("Event name" + EventInstanceManager.this.em.getName() + ", Instance name : " + EventInstanceManager.this.name + ", method Name : " + methodName + ":\n" + ex);
-                    FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + EventInstanceManager.this.em.getName() + ", Instance name : " + EventInstanceManager.this.name + ", method Name(schedule) : " + methodName + " :\n" + ex);
+                    em.getIv().invokeFunction(methodName, EventInstanceManager.this);
+                } catch (NullPointerException npe) {
+                } catch (Exception ex) {
+                    System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : " + methodName + ":\n" + ex);
+                    FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name(schedule) : " + methodName + " :\n" + ex);
                 }
             }
-        }, delay);
+        }, delay));
     }
-    
+
     public final String getName() {
-        return this.name;
+        return name;
     }
-    
+
     public final void setProperty(final String key, final String value) {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
-        this.props.setProperty(key, value);
+        props.setProperty(key, value);
     }
-    
+
     public final Object setProperty(final String key, final String value, final boolean prev) {
-        if (this.disposed) {
+        if (disposed) {
             return null;
         }
-        return this.props.setProperty(key, value);
+        return props.setProperty(key, value);
     }
-    
+
     public final String getProperty(final String key) {
-        if (this.disposed) {
+        if (disposed) {
             return "";
         }
-        return this.props.getProperty(key);
+        return props.getProperty(key);
     }
-    
+
     public final Properties getProperties() {
-        return this.props;
+        return props;
     }
-    
+
     public final void leftParty(final MapleCharacter chr) {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
         try {
-            this.em.getIv().invokeFunction("leftParty", this, chr);
-        }
-        catch (Exception ex) {
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : leftParty:\n" + ex);
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : leftParty:\n" + ex);
+            em.getIv().invokeFunction("leftParty", this, chr);
+        } catch (Exception ex) {
+            System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : leftParty:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : leftParty:\n" + ex);
         }
     }
-    
+
     public final void disbandParty() {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
         try {
-            this.em.getIv().invokeFunction("disbandParty", this);
-        }
-        catch (Exception ex) {
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : disbandParty:\n" + ex);
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : disbandParty:\n" + ex);
+            em.getIv().invokeFunction("disbandParty", this);
+        } catch (Exception ex) {
+            System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : disbandParty:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : disbandParty:\n" + ex);
         }
     }
-    
+
+    //Separate function to warp players to a "finish" map, if applicable
     public final void finishPQ() {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
         try {
-            this.em.getIv().invokeFunction("clearPQ", this);
-        }
-        catch (Exception ex) {
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : clearPQ:\n" + ex);
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : clearPQ:\n" + ex);
+            em.getIv().invokeFunction("clearPQ", this);
+        } catch (Exception ex) {
+            System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : clearPQ:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : clearPQ:\n" + ex);
         }
     }
-    
+
     public final void removePlayer(final MapleCharacter chr) {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
         try {
-            this.em.getIv().invokeFunction("playerExit", this, chr);
-        }
-        catch (Exception ex) {
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : playerExit:\n" + ex);
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : playerExit:\n" + ex);
+            em.getIv().invokeFunction("playerExit", this, chr);
+        } catch (Exception ex) {
+            System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : playerExit:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : playerExit:\n" + ex);
         }
     }
-    
+
+    public final void registerCarnivalParty(final MapleCharacter leader, final MapleMap map, final byte team) {
+        if (disposed) {
+            return;
+        }
+        leader.clearCarnivalRequests();
+        List<MapleCharacter> characters = new LinkedList<MapleCharacter>();
+        final MapleParty party = leader.getParty();
+
+        if (party == null) {
+            return;
+        }
+        for (MaplePartyCharacter pc : party.getMembers()) {
+            final MapleCharacter c = map.getCharacterById(pc.getId());
+            if (c != null) {
+                characters.add(c);
+                registerPlayer(c);
+                c.resetCP();
+            }
+        }
+        final MapleCarnivalParty carnivalParty = new MapleCarnivalParty(leader, characters, team);
+        try {
+            em.getIv().invokeFunction("registerCarnivalParty", this, carnivalParty);
+        } catch (ScriptException ex) {
+            System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : registerCarnivalParty:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : registerCarnivalParty:\n" + ex);
+        } catch (NoSuchMethodException ex) {
+            //ignore
+        }
+    }
+
     public void onMapLoad(final MapleCharacter chr) {
-        if (this.disposed) {
+        if (disposed) {
             return;
         }
         try {
-            this.em.getIv().invokeFunction("onMapLoad", this, chr);
+            em.getIv().invokeFunction("onMapLoad", this, chr);
+        } catch (ScriptException ex) {
+            System.out.println("Event name" + em.getName() + ", Instance name : " + name + ", method Name : onMapLoad:\n" + ex);
+            FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name" + em.getName() + ", Instance name : " + name + ", method Name : onMapLoad:\n" + ex);
+        } catch (NoSuchMethodException ex) {
+            // Ignore, we don't want to update this for all events.
         }
-        catch (ScriptException ex) {
-            System.out.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : onMapLoad:\n" + ex);
-            FileoutputUtil.log("Log/Log_Script_Except.rtf", "Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : onMapLoad:\n" + ex);
-        }
-        catch (NoSuchMethodException ex2) {}
     }
-    
+
     public boolean isLeader(final MapleCharacter chr) {
-        return chr != null && chr.getParty() != null && chr.getParty().getLeader().getId() == chr.getId();
+        return (chr != null && chr.getParty() != null && chr.getParty().getLeader().getId() == chr.getId());
     }
-    
-    public boolean isDisconnected(final MapleCharacter chr) {
-        return !this.disposed && this.dced.contains(chr.getId());
-    }
-    
-    public void removeDisconnected(final int id) {
-        if (this.disposed) {
+
+    public void registerSquad(MapleSquad squad, MapleMap map, int questID) {
+        if (disposed) {
             return;
         }
-        this.dced.remove(id);
+        final int mapid = map.getId();
+
+        for (String chr : squad.getMembers()) {
+            MapleCharacter player = squad.getChar(chr);
+            if (player != null && player.getMapId() == mapid) {
+                if (questID > 0) {
+                    player.getQuestNAdd(MapleQuest.getInstance(questID)).setCustomData(String.valueOf(System.currentTimeMillis()));
+                }
+                registerPlayer(player);
+            }
+        }
+        squad.setStatus((byte) 2);
+        squad.getBeginMap().broadcastMessage(MaplePacketCreator.stopClock());
     }
-    
+
+    public boolean isDisconnected(final MapleCharacter chr) {
+        if (disposed) {
+            return false;
+        }
+        return (dced.contains(chr.getId()));
+    }
+
+    public void removeDisconnected(final int id) {
+        if (disposed) {
+            return;
+        }
+        dced.remove(id);
+    }
+
     public EventManager getEventManager() {
-        return this.em;
+        return em;
     }
-    
+
     public void applyBuff(final MapleCharacter chr, final int id) {
-        MapleItemInformationProvider.getInstance().getItemEffect(id).applyTo(chr, true);
-        chr.getClient().getSession().writeAndFlush((Object)CWvsContext.InfoPacket.getStatusMsg(id));
+        MapleItemInformationProvider.getInstance().getItemEffect(id).applyTo(chr);
+        chr.getClient().getSession().write(UIPacket.getStatusMsg(id));
     }
-    
+
     public void applySkill(final MapleCharacter chr, final int id) {
-        SkillFactory.getSkill(id).getEffect(1).applyTo(chr, false);
+        SkillFactory.getSkill(id).getEffect(1).applyTo(chr);
+    }
+
+    public final void gainPartyExpPQ(MapleMap map, int exp, String pq, int mod) {
+        int qid = -1;
+        if (pq.equalsIgnoreCase("ludipq")) {
+            qid = 199600;
+        }
+        if (pq.equalsIgnoreCase("kerningpq")) {
+            qid = 199601;
+        }
+        if (pq.equalsIgnoreCase("orbispq")) {
+            qid = 199602;
+        }
+        if (pq.equalsIgnoreCase("rnj")) {
+            qid = 199603;
+        }
+        if (pq.equalsIgnoreCase("ellin")) {
+            qid = 199604;
+        }
+
+        for (final MapleCharacter curChar : map.getCharacters()) {
+            if (curChar != null) {
+                int modifiedExp = exp;
+                if (qid > -1) {
+                    double modd = mod / 100.0D;
+                    MapleQuestStatus qr = curChar.getQuestNAdd(MapleQuest.getInstance(qid));
+                    if (qr.getCustomData() == null) {
+                        qr.setCustomData("0");
+                    }
+                    int count = Integer.parseInt(qr.getCustomData());
+                    if (count > 0) {
+                        modifiedExp *= modd;
+                    }
+                }
+                curChar.gainExp(modifiedExp * RateManager.EXP, true, true, true);
+            }
+        }
     }
 }

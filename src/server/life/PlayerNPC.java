@@ -1,138 +1,134 @@
-// 
-// Decompiled by Procyon v0.5.36
-// 
+/*
+ This file is part of the ZeroFusion MapleStory Server
+ Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+ ZeroFusion organized by "RMZero213" <RMZero213@hotmail.com>
 
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package server.life;
 
+import java.awt.Point;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import client.inventory.Item;
 import client.MapleCharacter;
 import client.MapleClient;
-import client.inventory.Item;
 import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import database.DatabaseConnection;
 import handling.channel.ChannelServer;
 import handling.world.World;
-import server.maps.MapleMap;
-import tools.packet.CField;
-import tools.packet.CWvsContext;
-
-import java.awt.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import server.maps.*;
+import tools.MaplePacketCreator;
 
-public class PlayerNPC extends MapleNPC
-{
-    private Map<Byte, Integer> equips;
-    private Map<Byte, Integer> secondEquips;
-    private int mapid;
-    private int face;
-    private int hair;
-    private int charId;
-    private int secondFace;
-    private byte skin;
-    private byte gender;
-    private byte secondSkin;
-    private byte secondGender;
-    private int[] pets;
-    
-    public PlayerNPC(final ResultSet rs) throws Exception {
+public class PlayerNPC extends MapleNPC {
+
+    private Map<Byte, Integer> equips = new HashMap<Byte, Integer>();
+    private int mapid, face, hair, charId;
+    private byte skin, gender;
+    private int[] pets = new int[3];
+  
+
+    public PlayerNPC(ResultSet rs) throws Exception {
         super(rs.getInt("ScriptId"), rs.getString("name"));
-        this.equips = new HashMap<Byte, Integer>();
-        this.secondEquips = new HashMap<Byte, Integer>();
-        this.pets = new int[3];
-        this.hair = rs.getInt("hair");
-        this.face = rs.getInt("face");
-        this.mapid = rs.getInt("map");
-        this.skin = rs.getByte("skin");
-        this.charId = rs.getInt("charid");
-        this.gender = rs.getByte("gender");
-        this.setCoords(rs.getInt("x"), rs.getInt("y"), rs.getInt("dir"), rs.getInt("Foothold"));
-        final String[] pet = rs.getString("pets").split(",");
-        for (int i = 0; i < 3; ++i) {
+        hair = rs.getInt("hair");
+        face = rs.getInt("face");
+        mapid = rs.getInt("map");
+        skin = rs.getByte("skin");
+        charId = rs.getInt("charid");
+        gender = rs.getByte("gender");
+        setCoords(rs.getInt("x"), rs.getInt("y"), rs.getInt("dir"), rs.getInt("Foothold"));
+        String[] pet = rs.getString("pets").split(",");
+        for (int i = 0; i < 3; i++) {
             if (pet[i] != null) {
-                this.pets[i] = Integer.parseInt(pet[i]);
-            }
-            else {
-                this.pets[i] = 0;
+                pets[i] = Integer.parseInt(pet[i]);
+            } else {
+                pets[i] = 0;
             }
         }
+
         Connection con = null;
         PreparedStatement ps = null;
         ResultSet rs2 = null;
         try {
             con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT * FROM playernpcs_equip WHERE NpcId = ?");
-            ps.setInt(1, this.getId());
+            ps.setInt(1, getId());
             rs2 = ps.executeQuery();
             while (rs2.next()) {
-                this.equips.put(rs2.getByte("equippos"), rs2.getInt("equipid"));
+                equips.put(rs2.getByte("equippos"), rs2.getInt("equipid"));
             }
-            rs2.close();
-            ps.close();
-            con.close();
-        }
-        catch (Exception ex) {
-            try {
-                if (con != null) {
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (con != null) {
+                try {
                     con.close();
+                } catch (Exception e) {
                 }
-                if (ps != null) {
+            }
+            if (ps != null) {
+                try {
                     ps.close();
+                } catch (Exception e) {
                 }
-                if (rs2 != null) {
+            }
+            if (rs2 != null) {
+                try {
                     rs2.close();
+                } catch (Exception e) {
                 }
-            }
-            catch (SQLException se) {
-                se.printStackTrace();
-            }
-        }
-        finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (rs2 != null) {
-                    rs2.close();
-                }
-            }
-            catch (SQLException se2) {
-                se2.printStackTrace();
             }
         }
     }
-    
-    public PlayerNPC(final MapleCharacter cid, final int npc, final MapleMap map, final MapleCharacter base) {
+
+    public PlayerNPC(MapleCharacter chr, int npc, MapleMap map, int x, int y, int f, int fh) {
+        super(npc, chr.getName());
+        this.charId = chr.getId();
+        this.mapid = map.getId();
+        setCoords(x, y, f, fh); //0 = facing dir? no idea, but 1 dosnt work
+        update(chr);
+    }
+
+    public PlayerNPC(MapleCharacter cid, int npc, MapleMap map, MapleCharacter base) {
         super(npc, cid.getName());
-        this.equips = new HashMap<Byte, Integer>();
-        this.secondEquips = new HashMap<Byte, Integer>();
-        this.pets = new int[3];
         this.charId = cid.getId();
         this.mapid = map.getId();
-        this.setCoords(base.getTruePosition().x, base.getTruePosition().y, 0, base.getFH());
-        this.update(cid);
+        setCoords(base.getTruePosition().x, base.getTruePosition().y, 0, base.getFH()); //0 = facing dir? no idea, but 1 dosnt work
+        update(cid);
     }
-    
-    public void setCoords(final int x, final int y, final int f, final int fh) {
-        this.setPosition(new Point(x, y));
-        this.setCy(y);
-        this.setRx0(x - 50);
-        this.setRx1(x + 50);
-        this.setF(f);
-        this.setFh(fh);
+
+    public void setCoords(int x, int y, int f, int fh) {
+        setPosition(new Point(x, y));
+        setCy(y);
+        setRx0(x - 50);
+        setRx1(x + 50);
+        setF(f);
+        setFh(fh);
     }
-    
+
     public static void loadAll() {
-        final List<PlayerNPC> toAdd = new ArrayList<PlayerNPC>();
+        List<PlayerNPC> toAdd = new ArrayList<PlayerNPC>();
         Connection con = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -143,319 +139,265 @@ public class PlayerNPC extends MapleNPC
             while (rs.next()) {
                 toAdd.add(new PlayerNPC(rs));
             }
-            rs.close();
-            ps.close();
-        }
-        catch (Exception se) {
+        } catch (Exception se) {
             se.printStackTrace();
-            try {
-                if (con != null) {
+        } finally {
+            if (con != null) {
+                try {
                     con.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (rs != null) {
-                    rs.close();
+                } catch (Exception e) {
                 }
             }
-            catch (SQLException se2) {
-                se2.printStackTrace();
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Exception e) {
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (Exception e) {
+                }
             }
         }
-        finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (rs != null) {
-                    rs.close();
-                }
-            }
-            catch (SQLException se3) {
-                se3.printStackTrace();
-            }
-        }
-        for (final PlayerNPC npc : toAdd) {
+        for (PlayerNPC npc : toAdd) {
             npc.addToServer();
         }
     }
-    
-    public static void updateByCharId(final MapleCharacter chr) {
-        if (World.Find.findChannel(chr.getId()) > 0) {
-            for (final PlayerNPC npc : ChannelServer.getInstance(World.Find.findChannel(chr.getId())).getAllPlayerNPC()) {
+
+    public static void updateByCharId(MapleCharacter chr) {
+        if (World.Find.findChannel(chr.getId()) > 0) { //if character is in cserv
+            for (PlayerNPC npc : ChannelServer.getInstance(World.Find.findChannel(chr.getId())).getAllPlayerNPC()) {
                 npc.update(chr);
             }
         }
     }
-    
+
     public void addToServer() {
-        for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+        for (ChannelServer cserv : ChannelServer.getAllInstances()) {
             cserv.addPlayerNPC(this);
         }
     }
-    
+
     public void removeFromServer() {
-        for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+        for (ChannelServer cserv : ChannelServer.getAllInstances()) {
             cserv.removePlayerNPC(this);
         }
     }
-    
-    public void update(final MapleCharacter chr) {
-        if (chr == null || this.charId != chr.getId()) {
-            return;
+
+    public void update(MapleCharacter chr) {
+        if (chr == null || charId != chr.getId()) {
+            return; //cant use name as it mightve been change actually..
         }
-        this.setName(chr.getName());
-        this.setHair(chr.getHair());
-        this.setFace(chr.getFace());
-        this.setSkin(chr.getSkinColor());
-        this.setGender(chr.getGender());
-        this.equips = new HashMap<Byte, Integer>();
-        for (final Item item : chr.getInventory(MapleInventoryType.EQUIPPED).newList()) {
+        setName(chr.getName());
+        setHair(chr.getHair());
+        setFace(chr.getFace());
+        setSkin((byte) (chr.getSkinColor()));
+        setGender(chr.getGender());
+        setPets(chr.getPets());
+
+        equips = new HashMap<Byte, Integer>();
+        for (Item item : chr.getInventory(MapleInventoryType.EQUIPPED).newList()) {
             if (item.getPosition() < -127) {
                 continue;
             }
-            this.equips.put((byte)item.getPosition(), item.getItemId());
+            equips.put((byte) item.getPosition(), item.getItemId());
         }
-        this.saveToDB();
+        saveToDB();
     }
-    
+
     public void destroy() {
-        this.destroy(false);
+        destroy(false); //just sql
     }
-    
-    public void destroy(final boolean remove) {
+
+    public void destroy(boolean remove) {
         Connection con = null;
         PreparedStatement ps = null;
-        final ResultSet rs = null;
         try {
             con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("DELETE FROM playernpcs WHERE scriptid = ?");
-            ps.setInt(1, this.getId());
+            ps.setInt(1, getId());
             ps.executeUpdate();
             ps.close();
+
             ps = con.prepareStatement("DELETE FROM playernpcs_equip WHERE npcid = ?");
-            ps.setInt(1, this.getId());
+            ps.setInt(1, getId());
             ps.executeUpdate();
             ps.close();
             if (remove) {
-                this.removeFromServer();
+                removeFromServer();
             }
-        }
-        catch (Exception se) {
+        } catch (Exception se) {
             se.printStackTrace();
-            try {
-                if (con != null) {
+        } finally {
+            if (con != null) {
+                try {
                     con.close();
+                } catch (Exception e) {
                 }
-                if (ps != null) {
+            }
+            if (ps != null) {
+                try {
                     ps.close();
+                } catch (Exception e) {
                 }
-                if (rs != null) {
-                    rs.close();
-                }
-            }
-            catch (SQLException se2) {
-                se2.printStackTrace();
-            }
-        }
-        finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (rs != null) {
-                    rs.close();
-                }
-            }
-            catch (SQLException se3) {
-                se3.printStackTrace();
             }
         }
     }
-    
+
     public void saveToDB() {
         Connection con = null;
         PreparedStatement ps = null;
-        final ResultSet rs = null;
         try {
-            if (this.getNPCFromWZ() == null) {
-                this.destroy(true);
+            if (getNPCFromWZ() == null) {
+                destroy(true);
                 return;
             }
+            destroy();
             con = DatabaseConnection.getConnection();
-            this.destroy();
             ps = con.prepareStatement("INSERT INTO playernpcs(name, hair, face, skin, x, y, map, charid, scriptid, foothold, dir, gender, pets) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            ps.setString(1, this.getName());
-            ps.setInt(2, this.getHair());
-            ps.setInt(3, this.getFace());
-            ps.setInt(4, this.getSkinColor());
-            ps.setInt(5, this.getTruePosition().x);
-            ps.setInt(6, this.getTruePosition().y);
-            ps.setInt(7, this.getMapId());
-            ps.setInt(8, this.getCharId());
-            ps.setInt(9, this.getId());
-            ps.setInt(10, this.getFh());
-            ps.setInt(11, this.getF());
-            ps.setInt(12, this.getGender());
-            final String[] pet = { "0", "0", "0" };
-            for (int i = 0; i < 3; ++i) {
-                if (this.pets[i] > 0) {
-                    pet[i] = String.valueOf(this.pets[i]);
+            ps.setString(1, getName());
+            ps.setInt(2, getHair());
+            ps.setInt(3, getFace());
+            ps.setInt(4, getSkin());
+            ps.setInt(5, getTruePosition().x);
+            ps.setInt(6, getTruePosition().y);
+            ps.setInt(7, getMapId());
+            ps.setInt(8, getCharId());
+            ps.setInt(9, getId());
+            ps.setInt(10, getFh());
+            ps.setInt(11, getF());
+            ps.setInt(12, getGender());
+            String[] pet = {"0", "0", "0"};
+            for (int i = 0; i < 3; i++) {
+                if (pets[i] > 0) {
+                    pet[i] = String.valueOf(pets[i]);
                 }
             }
             ps.setString(13, pet[0] + "," + pet[1] + "," + pet[2]);
             ps.executeUpdate();
             ps.close();
+
             ps = con.prepareStatement("INSERT INTO playernpcs_equip(npcid, charid, equipid, equippos) VALUES (?, ?, ?, ?)");
-            ps.setInt(1, this.getId());
-            ps.setInt(2, this.getCharId());
-            for (final Map.Entry<Byte, Integer> equip : this.equips.entrySet()) {
+            ps.setInt(1, getId());
+            ps.setInt(2, getCharId());
+            for (Entry<Byte, Integer> equip : equips.entrySet()) {
                 ps.setInt(3, equip.getValue());
                 ps.setInt(4, equip.getKey());
                 ps.executeUpdate();
             }
             ps.close();
-        }
-        catch (Exception se) {
+        } catch (Exception se) {
             se.printStackTrace();
-            try {
-                if (con != null) {
+        } finally {
+            if (con != null) {
+                try {
                     con.close();
+                } catch (Exception e) {
                 }
-                if (ps != null) {
+            }
+            if (ps != null) {
+                try {
                     ps.close();
+                } catch (Exception e) {
                 }
-                if (rs != null) {
-                    rs.close();
-                }
-            }
-            catch (SQLException se2) {
-                se2.printStackTrace();
-            }
-        }
-        finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (rs != null) {
-                    rs.close();
-                }
-            }
-            catch (SQLException se3) {
-                se3.printStackTrace();
             }
         }
     }
-    
-    public short getJob() {
-        return 0;
+
+    public Map<Byte, Integer> getEquips() {
+        return equips;
     }
-    
-    public int getDemonMarking() {
-        return 0;
+
+    public byte getSkin() {
+        return skin;
     }
-    
-    public Map<Byte, Integer> getEquips(final boolean moru) {
-        return this.equips;
+
+    public int getGender() {
+        return gender;
     }
-    
-    public Map<Byte, Integer> getSecondEquips(final boolean moru) {
-        return this.secondEquips;
-    }
-    
-    public Map<Byte, Integer> getTotems() {
-        return new HashMap<Byte, Integer>();
-    }
-    
-    public byte getSkinColor() {
-        return this.skin;
-    }
-    
-    public byte getSecondSkinColor() {
-        return this.secondSkin;
-    }
-    
-    public byte getGender() {
-        return this.gender;
-    }
-    
-    public byte getSecondGender() {
-        return this.secondGender;
-    }
-    
+
     public int getFace() {
-        return this.face;
+        return face;
     }
-    
-    public int getSecondFace() {
-        return this.secondFace;
-    }
-    
+
     public int getHair() {
-        return this.hair;
+        return hair;
     }
-    
+
     public int getCharId() {
-        return this.charId;
+        return charId;
     }
-    
+
     public int getMapId() {
-        return this.mapid;
+        return mapid;
     }
-    
-    public void setSkin(final byte s) {
+
+    public void setSkin(byte s) {
         this.skin = s;
     }
-    
-    public void setFace(final int f) {
+
+    public void setFace(int f) {
         this.face = f;
     }
-    
-    public void setHair(final int h) {
+
+    public void setHair(int h) {
         this.hair = h;
     }
-    
-    public void setGender(final int g) {
-        this.gender = (byte)g;
+
+    public void setGender(int g) {
+        this.gender = (byte) g;
     }
-    
-    public int getPet(final int i) {
-        return (this.pets[i] > 0) ? this.pets[i] : 0;
+
+    public int getPet(int i) {
+        return pets[i] > 0 ? pets[i] : 0;
     }
-    
-    public void setPets(final List<MaplePet> p) {
-        for (int i = 0; i < 3; ++i) {
+
+    public void setPets(List<MaplePet> p) {
+        for (int i = 0; i < 3; i++) {
             if (p != null && p.size() > i && p.get(i) != null) {
                 this.pets[i] = p.get(i).getPetItemId();
-            }
-            else {
+            } else {
                 this.pets[i] = 0;
             }
         }
     }
-    
-    @Override
-    public void sendSpawnData(final MapleClient client) {
-        client.getSession().writeAndFlush((Object)CField.NPCPacket.spawnNPC(this, true));
-        client.getSession().writeAndFlush((Object)CWvsContext.spawnPlayerNPC(this, client.getPlayer()));
-        client.getSession().writeAndFlush((Object)CField.NPCPacket.spawnNPCRequestController(this, true));
+
+    public static void sendBroadcastModifiedNPC(final MapleCharacter chr, final MapleMap map, final int npcid, final boolean update) {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                    for (PlayerNPC npc : cserv.getAllPlayerNPC()) {
+                        if (npc.getId() == npcid) {
+                            if (update) {
+                                npc.update(chr);
+                                map.broadcastMessage(MaplePacketCreator.removeNPC(npc.getObjectId()));
+                                map.broadcastMessage(MaplePacketCreator.removeNPCController(npc.getObjectId()));
+                            }
+                            map.broadcastMessage(MaplePacketCreator.spawnNPC((PlayerNPC) npc, true));
+                            map.broadcastMessage(MaplePacketCreator.spawnPlayerNPC((PlayerNPC) npc));
+                            map.broadcastMessage(MaplePacketCreator.spawnNPCRequestController((PlayerNPC) npc, true));
+                        }
+                    }
+                }
+            }
+        };
+        new Thread(r).start(); //new thread... -> cuz too slow update.
     }
-    
+
+    @Override
+    public void sendSpawnData(MapleClient client) {
+        client.getSession().write(MaplePacketCreator.spawnNPC(this, true));
+        client.getSession().write(MaplePacketCreator.spawnPlayerNPC(this));
+        client.getSession().write(MaplePacketCreator.spawnNPCRequestController(this, true));
+    }
+
     public MapleNPC getNPCFromWZ() {
-        final MapleNPC npc = MapleLifeFactory.getNPC(this.getId());
+        MapleNPC npc = MapleLifeFactory.getNPC(getId());
         if (npc != null) {
-            npc.setName(this.getName());
+            npc.setName(getName());
         }
         return npc;
     }

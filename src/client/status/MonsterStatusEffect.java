@@ -1,166 +1,169 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package client.status;
 
 import client.MapleCharacter;
-
+import java.lang.ref.WeakReference;
 import java.util.concurrent.ScheduledFuture;
+import server.life.MapleMonster;
+import server.life.MobSkill;
 
 public class MonsterStatusEffect {
-  private final int skill;
-  
-  private int duration;
-  
-  private int level;
-  
-  private int cid;
-  
-  private int interval;
-  
-  private int key;
-  
-  private long value;
-  
-  private long cancelTask;
-  
-  private long startTime;
-  
-  private long lastPoisonTime;
-  
-  private MonsterStatus ms;
-  
-  private MapleCharacter chr;
-  
-  private ScheduledFuture<?> schedule;
-  
-  private boolean mobskill;
-  
-  public MonsterStatusEffect(int skill, int duration) {
-    this.skill = skill;
-    this.duration = duration;
-    setStartTime(System.currentTimeMillis());
-    setCancelTask(duration);
-  }
-  
-  public MonsterStatusEffect(int skill, int duration, long value) {
-    this.skill = skill;
-    this.duration = duration;
-    this.value = value;
-    setStartTime(System.currentTimeMillis());
-    setCancelTask(duration);
-  }
-  
-  public final boolean shouldCancel(long now) {
-    return (this.cancelTask > 0L && this.cancelTask <= now);
-  }
-  
-  public final void cancelTask() {
-    this.cancelTask = 0L;
-  }
-  
-  public int getDuration() {
-    return this.duration;
-  }
-  
-  public void setDuration(int duration) {
-    this.duration = duration;
-  }
-  
-  public int getSkill() {
-    return this.skill;
-  }
-  
-  public long getValue() {
-    return this.value;
-  }
-  
-  public void setValue(long value) {
-    this.value = value;
-  }
-  
-  public long getCancelTask() {
-    return this.cancelTask;
-  }
-  
-  public void setCancelTask(long cancelTask) {
-    this.cancelTask = System.currentTimeMillis() + cancelTask;
-  }
-  
-  public MonsterStatus getStati() {
-    return this.ms;
-  }
-  
-  public void setStati(MonsterStatus ms) {
-    this.ms = ms;
-  }
-  
-  public int getLevel() {
-    return this.level;
-  }
-  
-  public void setLevel(int level) {
-    this.level = level;
-  }
-  
-  public MapleCharacter getChr() {
-    return this.chr;
-  }
-  
-  public void setChr(MapleCharacter cid) {
-    this.chr = cid;
-  }
-  
-  public int getCid() {
-    return this.cid;
-  }
-  
-  public void setCid(int cid) {
-    this.cid = cid;
-  }
-  
-  public long getStartTime() {
-    return this.startTime;
-  }
-  
-  public void setStartTime(long startTime) {
-    this.startTime = startTime;
-  }
-  
-  public ScheduledFuture<?> getSchedule() {
-    return this.schedule;
-  }
-  
-  public void setSchedule(ScheduledFuture<?> schedule) {
-    this.schedule = schedule;
-  }
-  
-  public int getInterval() {
-    return this.interval;
-  }
-  
-  public void setInterval(int interval) {
-    this.interval = interval;
-  }
-  
-  public long getLastPoisonTime() {
-    return this.lastPoisonTime;
-  }
-  
-  public void setLastPoisonTime(long lastPoisonTime) {
-    this.lastPoisonTime = lastPoisonTime;
-  }
-  
-  public int getKey() {
-    return this.key;
-  }
-  
-  public void setKey(int key) {
-    this.key = key;
-  }
-  
-  public boolean isMobskill() {
-    return this.mobskill;
-  }
-  
-  public void setMobskill(boolean mobskill) {
-    this.mobskill = mobskill;
-  }
+
+    private MonsterStatus stati;
+    private final int skill;
+    private final MobSkill mobskill;
+    private final boolean monsterSkill;
+    private WeakReference<MapleCharacter> weakChr = null;
+    private Integer x;
+    private boolean reflect = false;
+    private long cancelTime = 0;
+    private ScheduledFuture<?> cancelTask;
+    private int poisonSchedule = 0;
+    private int venomCount = 0;
+
+    public MonsterStatusEffect(final MonsterStatus stat, final Integer x, final int skillId, final MobSkill mobskill, final boolean monsterSkill) {
+        this.stati = stat;
+        this.skill = skillId;
+        this.monsterSkill = monsterSkill;
+        this.mobskill = mobskill;
+        this.x = x;
+    }
+
+    public MonsterStatusEffect(final MonsterStatus stat, final Integer x, final int skillId, final MobSkill mobskill, final boolean monsterSkill, final boolean reflect) {
+        this.stati = stat;
+        this.skill = skillId;
+        this.monsterSkill = monsterSkill;
+        this.mobskill = mobskill;
+        this.x = x;
+        this.reflect = reflect;
+    }
+
+    public final MonsterStatus getStati() {
+        return stati;
+    }
+
+    public final Integer getX() {
+        return x;
+    }
+
+    public final void setValue(final MonsterStatus status, final Integer newVal) {
+        stati = status;
+        x = newVal;
+    }
+
+    public final int getSkill() {
+        return skill;
+    }
+
+    public final MobSkill getMobSkill() {
+        return mobskill;
+    }
+
+    public final boolean isMonsterSkill() {
+        return monsterSkill;
+    }
+
+    public final void setCancelTask(final long cancelTask) {
+        this.cancelTime = System.currentTimeMillis() + cancelTask;
+    }
+
+    public final long getCancelTask() {
+        return this.cancelTime;
+    }
+
+    public final void setPoisonSchedule(final int poisonSchedule, MapleCharacter chrr) {
+        this.poisonSchedule = poisonSchedule;
+        this.weakChr = new WeakReference<MapleCharacter>(chrr);
+    }
+
+    public WeakReference<MapleCharacter> getWeakChr() {
+        return this.weakChr;
+    }
+
+    public final boolean shouldCancel(long now) {
+        return (cancelTime > 0 && cancelTime <= now);
+    }
+
+    public final void cancelTask() {
+        cancelTime = 0;
+    }
+
+    public final boolean isReflect() {
+        return reflect;
+    }
+
+    public final int getFromID() {
+        return weakChr == null || weakChr.get() == null ? 0 : weakChr.get().getId();
+    }
+
+    public final int getPoisonSchedule() {
+        return this.poisonSchedule;
+    }
+
+    public final void cancelPoisonSchedule(MapleMonster mm) {
+        mm.doPoison(this, weakChr);
+        this.weakChr = null;
+    }
+
+    public final static int genericSkill(MonsterStatus stat) {
+        switch (stat) {
+            case STUN:
+                return 3101005;
+            case SPEED:
+                return 2101003;
+            case MDEF:
+                return 12101001;
+            case POISON:
+                return 2101005;
+            case DARKNESS:
+                return 3221006;
+            case SEAL:
+                return 2111004;
+            case FREEZE:
+                return 2201004;
+            case MAGIC_CRASH:
+                return 1111007;
+            case SHOWDOWN:
+                return 4121003;
+            case IMPRINT:
+                return 22161002;
+            case SHADOW_WEB:
+                return 4111003;
+            case BURN:
+                return 5211004;
+            case DOOM: //not used
+                return 2311005;
+            case NINJA_AMBUSH: //not used
+                return 4121004;
+
+        }
+        return 0;
+    }
+
+    public int getVenomCount() {
+        return venomCount;
+    }
+
+    public void setVenomCount(int a) {
+        this.venomCount = a;
+    }
 }

@@ -21,13 +21,14 @@
 package tools;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.Charset;
 
 /**
  * Provides a class for manipulating hexadecimal numbers.
  *
  * @author Frz
- * @since Revision 206
  * @version 1.0
+ * @since Revision 206
  */
 public class HexTool {
 
@@ -87,13 +88,7 @@ public class HexTool {
                 ret[x] = (byte) chr;
             }
         }
-        try {
-            String str = new String(ret, "MS949");
-            return str;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+        return new String(ret, Charset.forName("MS949"));
     }
 
     public static final String toPaddedStringFromAscii(final byte[] bytes) {

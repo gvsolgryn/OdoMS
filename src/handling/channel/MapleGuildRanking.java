@@ -1,121 +1,135 @@
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package handling.channel;
 
-import handling.world.World;
-import handling.world.guild.MapleGuild;
-import tools.Triple;
+import database.DatabaseConnection;
 
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
 public class MapleGuildRanking {
-  private static MapleGuildRanking instance = new MapleGuildRanking();
-  
-  private List<GuildRankingInfo> honorRank = new LinkedList<>();
-  
-  private List<GuildRankingInfo> flagRaceRank = new LinkedList<>();
-  
-  private List<GuildRankingInfo> culvertRank = new LinkedList<>();
-  
-  private static long lastReloadTime = 0L;
-  
-  public static MapleGuildRanking getInstance() {
-    return instance;
-  }
-  
-  public void load() {
-    reload();
-  }
-  
-  public List<GuildRankingInfo> getHonorRank() {
-    return this.honorRank;
-  }
-  
-  private void reload() {
-    this.honorRank.clear();
-    this.flagRaceRank.clear();
-    this.culvertRank.clear();
-    List<Triple<String, Integer, Integer>> honorranks = new ArrayList<>();
-    List<Triple<String, Integer, Integer>> flagRaceRanks = new ArrayList<>();
-    List<Triple<String, Integer, Integer>> culvertRanks = new ArrayList<>();
-    for (MapleGuild g : World.Guild.getGuilds()) {
-      if (g.getWeekReputation() > 0)
-        honorranks.add(new Triple<>(g.getName(), Integer.valueOf(g.getWeekReputation()), Integer.valueOf(g.getId()))); 
-      if (g.getGuildScore() > 0.0D)
-        culvertRanks.add(new Triple<>(g.getName(), Integer.valueOf((int)g.getGuildScore()), Integer.valueOf(g.getId()))); 
-    } 
-    int i;
-    for (i = 0; i < honorranks.size() - 1; i++) {
-      for (int j = 0; j < honorranks.size() - i - 1; j++) {
-        if (((Integer)((Triple)honorranks.get(j)).getMid()).intValue() < ((Integer)((Triple)honorranks.get(j + 1)).getMid()).intValue()) {
-          String names = (String)((Triple)honorranks.get(j + 1)).getLeft();
-          int chridtmp = ((Integer)((Triple)honorranks.get(j + 1)).getMid()).intValue();
-          int chrpointtmp = ((Integer)((Triple)honorranks.get(j + 1)).getRight()).intValue();
-          honorranks.set(j + 1, honorranks.get(j));
-          honorranks.set(j, new Triple<>(names, Integer.valueOf(chridtmp), Integer.valueOf(chrpointtmp)));
-        } 
-      } 
-    } 
-    for (i = 0; i < culvertRanks.size() - 1; i++) {
-      for (int j = 0; j < culvertRanks.size() - i - 1; j++) {
-        if (((Integer)((Triple)culvertRanks.get(j)).getMid()).intValue() < ((Integer)((Triple)culvertRanks.get(j + 1)).getMid()).intValue()) {
-          String names = (String)((Triple)culvertRanks.get(j + 1)).getLeft();
-          int chridtmp = ((Integer)((Triple)culvertRanks.get(j + 1)).getMid()).intValue();
-          int chrpointtmp = ((Integer)((Triple)culvertRanks.get(j + 1)).getRight()).intValue();
-          culvertRanks.set(j + 1, culvertRanks.get(j));
-          culvertRanks.set(j, new Triple<>(names, Integer.valueOf(chridtmp), Integer.valueOf(chrpointtmp)));
-        } 
-      } 
-    } 
-    for (Triple<String, Integer, Integer> list : honorranks)
-      this.honorRank.add(new GuildRankingInfo(list.getLeft(), ((Integer)list.getMid()).intValue(), ((Integer)list.getRight()).intValue())); 
-    for (Triple<String, Integer, Integer> list : culvertRanks)
-      this.culvertRank.add(new GuildRankingInfo(list.getLeft(), ((Integer)list.getMid()).intValue(), ((Integer)list.getRight()).intValue())); 
-  }
-  
-  public List<GuildRankingInfo> getCulvertRank() {
-    return this.culvertRank;
-  }
-  
-  public void setCulvertRank(List<GuildRankingInfo> culvertRank) {
-    this.culvertRank = culvertRank;
-  }
-  
-  public List<GuildRankingInfo> getFlagRaceRank() {
-    return this.flagRaceRank;
-  }
-  
-  public void setFlagRaceRank(List<GuildRankingInfo> flagRaceRank) {
-    this.flagRaceRank = flagRaceRank;
-  }
-  
-  public static class GuildRankingInfo {
-    private String name;
-    
-    private int score;
-    
-    private int id;
-    
-    public GuildRankingInfo(String name, int score, int id) {
-      this.name = name;
-      this.score = score;
-      this.id = id;
+
+    private static MapleGuildRanking instance = new MapleGuildRanking();
+    private List<GuildRankingInfo> ranks = new LinkedList<GuildRankingInfo>();
+
+    public static MapleGuildRanking getInstance() {
+        return instance;
     }
-    
-    public String getName() {
-      return this.name;
+
+    public void load() {
+        if (ranks.isEmpty()) {
+            reload();
+        }
     }
-    
-    public int getScore() {
-      return this.score;
+
+    public List<GuildRankingInfo> getRank() {
+        return ranks;
     }
-    
-    public int getId() {
-      return this.id;
+
+    private void reload() {
+        ranks.clear();
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT * FROM guilds ORDER BY `GP` DESC LIMIT 50");
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                final GuildRankingInfo rank = new GuildRankingInfo(
+                        rs.getString("name"),
+                        rs.getInt("GP"),
+                        rs.getInt("logo"),
+                        rs.getInt("logoColor"),
+                        rs.getInt("logoBG"),
+                        rs.getInt("logoBGColor"));
+
+                ranks.add(rank);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error handling guildRanking");
+            e.printStackTrace();
+        } finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (Exception e) {
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (Exception e) {
+                }
+            }
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Exception e) {
+                }
+            }
+        }
     }
-    
-    public void setId(int gid) {
-      this.id = gid;
+
+    public static class GuildRankingInfo {
+
+        private String name;
+        private int gp, logo, logocolor, logobg, logobgcolor;
+
+        public GuildRankingInfo(String name, int gp, int logo, int logocolor, int logobg, int logobgcolor) {
+            this.name = name;
+            this.gp = gp;
+            this.logo = logo;
+            this.logocolor = logocolor;
+            this.logobg = logobg;
+            this.logobgcolor = logobgcolor;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getGP() {
+            return gp;
+        }
+
+        public int getLogo() {
+            return logo;
+        }
+
+        public int getLogoColor() {
+            return logocolor;
+        }
+
+        public int getLogoBg() {
+            return logobg;
+        }
+
+        public int getLogoBgColor() {
+            return logobgcolor;
+        }
     }
-  }
 }

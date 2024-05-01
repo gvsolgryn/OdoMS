@@ -1,12 +1,11 @@
 package database;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.pool.KeyedObjectPoolFactory;
 import org.apache.commons.pool.ObjectPool;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 /**
  * copy & pasted from aionemu project. <br/>

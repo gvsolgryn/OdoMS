@@ -1,87 +1,137 @@
-package handling.channel.handler;
+/*
+ This file is part of the OdinMS Maple Story Server
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Matthias Butz <matze@odinms.de>
+ Jan Christian Meyer <vimes@odinms.de>
 
-import client.MapleCharacter;
-import client.MapleCharacterUtil;
-import client.MapleClient;
-import client.inventory.Item;
-import client.inventory.ItemFlag;
-import client.inventory.ItemLoader;
-import client.inventory.MapleInventoryType;
-import constants.GameConstants;
-import database.DatabaseConnection;
-import handling.channel.ChannelServer;
-import handling.world.World;
-import server.MapleDueyActions;
-import server.MapleInventoryManipulator;
-import server.MapleItemInformationProvider;
-import tools.data.LittleEndianAccessor;
-import tools.packet.CField;
-import tools.packet.CWvsContext;
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License version 3
+ as published by the Free Software Foundation. You may not use, modify
+ or distribute this program under any other version of the
+ GNU Affero General Public License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package handling.channel.handler;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import client.inventory.Item;
+import client.inventory.ItemFlag;
+import constants.GameConstants;
+import client.inventory.ItemLoader;
+import client.MapleCharacter;
+import client.MapleCharacterUtil;
+import client.MapleClient;
+import client.inventory.MapleInventoryType;
+import database.DatabaseConnection;
+import handling.channel.ChannelServer;
+import handling.world.World;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
+import server.AutobanManager;
+import tools.data.LittleEndianAccessor;
+import server.MapleDueyActions;
+import server.MapleInventoryManipulator;
+import server.MapleItemInformationProvider;
+import server.log.LogType;
+import server.log.ServerLogger;
+import tools.MaplePacketCreator;
+import tools.Pair;
 
 public class DueyHandler {
-    public static final void DueyOperation(LittleEndianAccessor slea, MapleClient c) {
-        String secondPassword;
-        byte inventId;
-        int packageid;
-        short itemPos;
-        MapleDueyActions dp;
-        short amount;
-        int mesos;
-        String recipient;
-        boolean quickdelivery;
-        String letter;
-        int qq;
-        long finalcost;
-        byte operation = slea.readByte();
+
+    /*
+     * 19 = Successful
+     * 18 = One-of-a-kind Item is already in Reciever's delivery
+     * 17 = The Character is unable to recieve the parcel
+     * 15 = Same account
+     * 14 = Name does not exist
+     */
+    public static final void DueyOperation(final LittleEndianAccessor slea, final MapleClient c) {
+
+        final byte operation = slea.readByte();
+
         switch (operation) {
-            case 1:
-                int conv = c.getPlayer().getConversation();
-                if (conv == 2) {
-                    List<MapleDueyActions> list1 = new ArrayList<>();
-                    List<MapleDueyActions> list2 = new ArrayList<>();
-                    for (MapleDueyActions mapleDueyActions : loadItems(c.getPlayer())) {
-                        if (mapleDueyActions.isExpire()) {
-                            list2.add(mapleDueyActions);
-                            continue;
+            case 0: { //택배가 도착했당께
+                c.getPlayer().setConversation(2);
+                c.getSession().write(MaplePacketCreator.sendDuey((byte) 9, null, null));
+                break;
+            }
+            case 1: { // Start Duey, 13 digit AS
+                //final String AS13Digit = slea.readMapleAsciiString();
+                //		int unk = slea.readInt(); // Theres an int here, value = 1
+                //  9 = error
+                slea.skip(4);
+                final int conv = c.getPlayer().getConversation();
+
+                if (conv == 2) { // Duey
+                    List<MapleDueyActions> list1 = new ArrayList<MapleDueyActions>();
+                    List<MapleDueyActions> list2 = new ArrayList<MapleDueyActions>();
+                    for (MapleDueyActions dp : loadItems((c.getPlayer()))) {
+                        if (dp.isExpire()) {
+                            list2.add(dp);
+                        } else {
+                            list1.add(dp);
                         }
-                        list1.add(mapleDueyActions);
                     }
-                    c.getSession().writeAndFlush(CField.sendDuey((byte) 10, list1, list2));
-                    for (MapleDueyActions mapleDueyActions : list2)
-                        removeItemFromDB(mapleDueyActions.getPackageId(), c.getPlayer().getId());
+                    c.getSession().write(MaplePacketCreator.sendDuey((byte) 10, list1, list2));
+                    for (MapleDueyActions dp : list2) {
+                        removeItemFromDB(dp.getPackageId(), c.getPlayer().getId());
+                    }
                 }
-                return;
-            case 3:
-                if (c.getPlayer().getConversation() != 2)
-                    return;
-                if (!c.getPlayer().isGM()) {
-                    c.getPlayer().dropMessage(1, "현재 아이템 및 메소 수령만 가능합니다.");
+                break;
+            }
+            case 3: { // Send Item
+                if (c.getPlayer().getConversation() != 2) {
                     return;
                 }
-                inventId = slea.readByte();
-                itemPos = slea.readShort();
-                amount = slea.readShort();
-                mesos = slea.readInt();
-                recipient = slea.readMapleAsciiString();
-                quickdelivery = (slea.readByte() > 0);
-                letter = "";
-                qq = 0;
+                final byte inventId = slea.readByte();
+                final short itemPos = slea.readShort();
+                short amount = slea.readShort();
+                if (amount < 0) {
+                   return;
+                }
+                final int mesos = slea.readInt();
+                final String recipient = slea.readMapleAsciiString();
+                boolean quickdelivery = slea.readByte() > 0;
+                String letter = "";
+                int qq = 0;
                 if (quickdelivery) {
+                    if (!c.getPlayer().haveItem(5330000, 1) && !c.getPlayer().haveItem(5330001, 1)) {
+                        return;
+                    }
                     letter = slea.readMapleAsciiString();
                     qq = slea.readInt();
                 }
-                finalcost = mesos + GameConstants.getTaxAmount(mesos) + (quickdelivery ? 0L : 5000L);
+                //inventId = 아이템 등록시에만 이 값이 들어옴.
+                if (inventId > 0 && (amount <= 0 || amount > 9999)) {//듀이 복사       
+                    //World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(2, "[핵감지기] : " + c.getPlayer().getName() + "님이 택배 복사를 시도하여 오토벤이 작동되어 영구정지 처리 되었습니다."));
+                    AutobanManager.getInstance().autoban(c, "Send 택배 복사");
+                    c.getSession().close();
+                    return;
+                }
+
+                final int finalcost = mesos + GameConstants.getTaxAmount(mesos) + (quickdelivery ? 0 : 5000);
+
                 if (mesos >= 0 && mesos <= 100000000 && c.getPlayer().getMeso() >= finalcost) {
-                    int accid = MapleCharacterUtil.getAccByName(recipient);
-                    int cid = MapleCharacterUtil.getIdByName(recipient);
+                    final int accid = MapleCharacterUtil.getAccByName(recipient);
+                    final int cid = MapleCharacterUtil.getIdByName(recipient);
                     if (accid != -1) {
                         if (accid != c.getAccID()) {
+
                             boolean recipientOn = false;
                             MapleClient rClient = null;
                             int channel = World.Find.findChannel(recipient);
@@ -90,11 +140,12 @@ public class DueyHandler {
                                 ChannelServer rcserv = ChannelServer.getInstance(channel);
                                 rClient = rcserv.getPlayerStorage().getCharacterByName(recipient).getClient();
                             }
+
                             if (inventId > 0) {
-                                MapleInventoryType inv = MapleInventoryType.getByType(inventId);
-                                Item item = c.getPlayer().getInventory(inv).getItem(itemPos);
+                                final MapleInventoryType inv = MapleInventoryType.getByType(inventId);
+                                final Item item = c.getPlayer().getInventory(inv).getItem((byte) itemPos);
                                 if (item == null) {
-                                    c.getSession().writeAndFlush(CField.sendDuey((byte) 17, null, null));
+                                    c.getSession().write(MaplePacketCreator.sendDuey((byte) 17, null, null)); // Unsuccessfull
                                     return;
                                 }
                                 List<MapleDueyActions> dps = loadItems(c.getPlayer());
@@ -102,106 +153,160 @@ public class DueyHandler {
                                     if (mda.getItem() != null) {
                                         MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
                                         if (ii.isPickupRestricted(mda.getItem().getItemId()) && mda.getItem().getItemId() == item.getItemId()) {
-                                            c.getSession().writeAndFlush(CField.sendDuey((byte) 18, null, null));
+                                            c.getSession().write(MaplePacketCreator.sendDuey((byte) 18, null, null)); // 고유아이템을 받는사람이 갖고있습니다.
                                             return;
                                         }
                                     }
                                 }
-                                int flag = item.getFlag();
+                                final short flag = item.getFlag();
                                 if (ItemFlag.UNTRADEABLE.check(flag) || ItemFlag.LOCK.check(flag)) {
-                                    c.getSession().writeAndFlush(CWvsContext.enableActions(c.getPlayer()));
+                                    c.getSession().write(MaplePacketCreator.enableActions());
                                     return;
                                 }
-                                if ((GameConstants.isThrowingStar(item.getItemId()) || GameConstants.isBullet(item.getItemId())) &&
-                                        item.getQuantity() == 0)
-                                    amount = 0;
+                                if (GameConstants.isThrowingStar(item.getItemId()) || GameConstants.isBullet(item.getItemId())) {
+                                    if (item.getQuantity() == 0) {
+                                        amount = 0;
+                                    }
+                                }
                                 if (c.getPlayer().getItemQuantity(item.getItemId(), false) >= amount) {
-                                    MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+                                    final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
                                     if (!ii.isDropRestricted(item.getItemId()) && !ii.isAccountShared(item.getItemId())) {
                                         Item toSend = item.copy();
-                                        if (!GameConstants.isThrowingStar(toSend.getItemId()) && !GameConstants.isBullet(toSend.getItemId()))
+                                        if (!GameConstants.isThrowingStar(toSend.getItemId()) && !GameConstants.isBullet(toSend.getItemId())) {
                                             toSend.setQuantity(amount);
+                                        }
                                         if (addItemToDB(toSend, mesos, c.getPlayer().getName(), cid, recipientOn, letter, qq, quickdelivery)) {
                                             if (GameConstants.isThrowingStar(toSend.getItemId()) || GameConstants.isBullet(toSend.getItemId())) {
-                                                MapleInventoryManipulator.removeFromSlot(c, inv, (short) (byte) itemPos, toSend.getQuantity(), true, false);
+                                                MapleInventoryManipulator.removeFromSlot(c, inv, (byte) itemPos, toSend.getQuantity(), true, false);
                                             } else {
-                                                MapleInventoryManipulator.removeFromSlot(c, inv, (short) (byte) itemPos, amount, true, false);
+                                                MapleInventoryManipulator.removeFromSlot(c, inv, (byte) itemPos, amount, true, false);
                                             }
-                                            c.getSession().writeAndFlush(CField.sendDuey((byte) 19, null, null));
+                                            if (quickdelivery) {
+                                                if (c.getPlayer().haveItem(5330001, 1)) {
+                                                    MapleInventoryManipulator.removeById(c, MapleInventoryType.CASH, 5330001, 1, false, false);
+                                                } else if (c.getPlayer().haveItem(5330000, 1)) {
+                                                    MapleInventoryManipulator.removeById(c, MapleInventoryType.CASH, 5330000, 1, false, false);
+                                                }
+                                            }
+                                            ServerLogger.getInstance().logTrade(LogType.Trade.Duey, c.getPlayer().getId(), c.getPlayer().getName(), recipient, MapleItemInformationProvider.getInstance().getName(toSend.getItemId()) + " " + toSend.getQuantity() + "개 / 메소 : " + mesos, quickdelivery ? ("퀵배송 (메시지 : " + letter + ")") : "일반배송");                                        
+                                            c.getPlayer().gainMeso(-finalcost, false);
+                                            c.getSession().write(MaplePacketCreator.sendDuey((byte) 19, null, null)); // Successfull
                                         } else {
-                                            c.getSession().writeAndFlush(CField.sendDuey((byte) 17, null, null));
+                                            c.getSession().write(MaplePacketCreator.sendDuey((byte) 17, null, null)); // Unsuccessful
                                         }
                                     } else {
-                                        c.getSession().writeAndFlush(CField.sendDuey((byte) 17, null, null));
+                                        c.getSession().write(MaplePacketCreator.sendDuey((byte) 17, null, null)); // Unsuccessfull
                                     }
                                 } else {
-                                    c.getSession().writeAndFlush(CField.sendDuey((byte) 17, null, null));
+                                    c.getSession().write(MaplePacketCreator.sendDuey((byte) 17, null, null)); // Unsuccessfull
                                 }
-                            } else if (addMesoToDB(mesos, c.getPlayer().getName(), cid, recipientOn, letter, quickdelivery)) {
-                                c.getSession().writeAndFlush(CField.sendDuey((byte) 19, null, null));
                             } else {
-                                c.getSession().writeAndFlush(CField.sendDuey((byte) 17, null, null));
+                                if (addMesoToDB(mesos, c.getPlayer().getName(), cid, recipientOn, letter, quickdelivery)) {
+                                    c.getPlayer().gainMeso(-finalcost, false);
+                                    ServerLogger.getInstance().logTrade(LogType.Trade.Duey, c.getPlayer().getId(), c.getPlayer().getName(), recipient, "메소 : " + mesos, quickdelivery ? ("퀵배송 (메시지 : " + letter + ")") : "일반배송");                                    
+                                    if (quickdelivery) {
+                                        if (c.getPlayer().haveItem(5330001, 1)) {
+                                            MapleInventoryManipulator.removeById(c, MapleInventoryType.CASH, 5330001, 1, false, false);
+                                        } else if (c.getPlayer().haveItem(5330000, 1)) {
+                                            MapleInventoryManipulator.removeById(c, MapleInventoryType.CASH, 5330000, 1, false, false);
+                                        }
+                                    }
+                                    c.getSession().write(MaplePacketCreator.sendDuey((byte) 19, null, null)); // 성공적으로 발송하였습니다.
+                                } else {
+                                    c.getSession().write(MaplePacketCreator.sendDuey((byte) 17, null, null)); // Unsuccessfull
+                                }
                             }
-                            if (recipientOn && rClient != null &&
-                                    quickdelivery)
-                                rClient.getSession().writeAndFlush(CField.receiveParcel(c.getPlayer().getName(), quickdelivery));
+                            if (recipientOn && rClient != null) {
+                                if (quickdelivery) {
+                                    rClient.getSession().write(MaplePacketCreator.receiveParcel(c.getPlayer().getName(), quickdelivery)); //택배물 도착1
+                                }
+                            }
                         } else {
-                            c.getSession().writeAndFlush(CField.sendDuey((byte) 15, null, null));
+                            c.getSession().write(MaplePacketCreator.sendDuey((byte) 15, null, null)); // 같은 계정의 캐릭터에게는 보낼 수 없습니다.
                         }
                     } else {
-                        c.getSession().writeAndFlush(CField.sendDuey((byte) 14, null, null));
+                        c.getSession().write(MaplePacketCreator.sendDuey((byte) 14, null, null)); // 받는 사람 이름을 다시 확인해주세요.
                     }
                 } else {
-                    c.getSession().writeAndFlush(CField.sendDuey((byte) 12, null, null));
+                    c.getSession().write(MaplePacketCreator.sendDuey((byte) 12, null, null)); // 택배 비용을 지불하기에 보유 메소가 부족합니다.
                 }
-                return;
-            case 5:
-                if (c.getPlayer().getConversation() != 2)
+                break;
+            }
+            case 5: { // Recieve Package
+                if (c.getPlayer().getConversation() != 2) {
                     return;
-                packageid = slea.readInt();
-                dp = loadSingleItem(packageid, c.getPlayer().getId());
-                if (dp == null)
+                }
+                final int packageid = slea.readInt();
+                //System.out.println("Item attempted : " + packageid);
+                final MapleDueyActions dp = loadSingleItem(packageid, c.getPlayer().getId());
+                if (dp == null) {
                     return;
-                if (dp.isExpire() || !dp.canReceive())
+                }
+                if (dp.isExpire() || !dp.canReceive()) { //packet edit;
                     return;
+                }
                 if (dp.getItem() != null && !MapleInventoryManipulator.checkSpace(c, dp.getItem().getItemId(), dp.getItem().getQuantity(), dp.getItem().getOwner())) {
-                    c.getSession().writeAndFlush(CField.sendDuey((byte) 16, null, null));
+                    c.getSession().write(MaplePacketCreator.sendDuey((byte) 16, null, null)); // 받는 사람의 택배 보관함이 찼습니다.
+                    return;
+                } else if (dp.getMesos() < 0 || (dp.getMesos() + c.getPlayer().getMeso()) < 0) {
+                    c.getSession().write(MaplePacketCreator.sendDuey((byte) 17, null, null)); // 택배를 받을 수 없는 캐릭터입니다.
                     return;
                 }
-                if (dp.getMesos() < 0 || dp.getMesos() + c.getPlayer().getMeso() < 0L) {
-                    c.getSession().writeAndFlush(CField.sendDuey((byte) 17, null, null));
-                    return;
+                if (dp.getItem() != null) {
+                    if (c.getPlayer().haveItem(dp.getItem().getItemId(), 1, true, true) && MapleItemInformationProvider.getInstance().isPickupRestricted(dp.getItem().getItemId())) {
+                        c.getSession().write(MaplePacketCreator.sendDuey((byte) 18, null, null)); // 고유아이템이라 받을수 없어..
+                        return;
+                    }
                 }
-                if (dp.getItem() != null &&
-                        c.getPlayer().haveItem(dp.getItem().getItemId(), 1, true, true) && MapleItemInformationProvider.getInstance().isPickupRestricted(dp.getItem().getItemId())) {
-                    c.getSession().writeAndFlush(CField.sendDuey((byte) 18, null, null));
-                    return;
+                removeItemFromDB(packageid, c.getPlayer().getId()); // Remove first
+                //System.out.println("Item removed : " + packageid);
+                if (dp.getItem() != null) {
+                    MapleInventoryManipulator.addFromDrop(c, dp.getItem(), false);
                 }
-                removeItemFromDB(packageid, c.getPlayer().getId());
-                if (dp.getItem() != null && dp.getItem().getQuantity() > 0)
-                    MapleInventoryManipulator.addbyItem(c, dp.getItem(), false);
-                if (dp.getMesos() != 0)
+                if (dp.getMesos() != 0) {
                     c.getPlayer().gainMeso(dp.getMesos(), false);
-                c.getSession().writeAndFlush(CField.removeItemFromDuey(false, packageid));
-                return;
-            case 6:
-                if (c.getPlayer().getConversation() != 2)
+                }
+                c.getSession().write(MaplePacketCreator.removeItemFromDuey(false, packageid));
+                break;
+            }
+            case 6: { // Remove package
+                if (c.getPlayer().getConversation() != 2) {
                     return;
-                packageid = slea.readInt();
+                }
+                final int packageid = slea.readInt();
                 removeItemFromDB(packageid, c.getPlayer().getId());
-                c.getSession().writeAndFlush(CField.removeItemFromDuey(true, packageid));
-                return;
-            case 8:
+                c.getSession().write(MaplePacketCreator.removeItemFromDuey(true, packageid));
+                break;
+            }
+            case 8: { // Close Duey
                 c.getPlayer().setConversation(0);
-                return;
+                break;
+            }
+
+            default: {
+                System.out.println("Unhandled Duey operation : " + operation);
+                break;
+            }
         }
-        System.out.println("Unhandled Duey operation : " + slea.toString());
     }
 
-    private static final boolean addMesoToDB(int mesos, String sName, int recipientID, boolean isOn, String content, boolean quick) {
+    public static boolean addNewItemToDb(int itemid, int quantity, int to, String from, String content, boolean ison) {
+        Item item = null;
+        if (quantity < 0 || quantity > 9999) {//수량 복사 패킷           
+            return false;
+        }
+        if (itemid / 1000000 == 1) {
+            item = MapleItemInformationProvider.getInstance().getEquipById(itemid);
+        } else {
+            item = new Item(itemid, (byte) 0, (short) quantity);
+        }
+
+        return addItemToDB(item, 0, from, to, ison, content, 1, true);
+    }    
+    
+    private static final boolean addMesoToDB(final int mesos, final String sName, final int recipientID, final boolean isOn, String content, boolean quick) {
         Connection con = null;
         PreparedStatement ps = null;
-        ResultSet rs = null;
         try {
             con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("INSERT INTO dueypackages (RecieverId, SenderName, Mesos, TimeStamp, Checked, Type, `Quick`, content) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -213,67 +318,134 @@ public class DueyHandler {
             ps.setInt(6, 3);
             ps.setInt(7, quick ? 1 : 0);
             ps.setString(8, content);
+
             ps.executeUpdate();
             ps.close();
+
             return true;
         } catch (SQLException se) {
             se.printStackTrace();
             return false;
         } finally {
-            try {
-                if (con != null)
+            if (con != null) {
+                try {
                     con.close();
-                if (ps != null)
+                } catch (Exception e) {
+                }
+            }
+            if (ps != null) {
+                try {
                     ps.close();
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException se) {
-                se.printStackTrace();
+                } catch (Exception e) {
+                }
             }
         }
     }
 
-    public static final boolean addItemToDB(Item item, int mesos, String sName, int recipientID, boolean isOn, String content, int qq, boolean Quick) {
+    public static final boolean addItemToDB(final Item item, final int mesos, final String sName, final int recipientID, final boolean isOn, String content, int qq, boolean Quick) {
         Connection con = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
             con = DatabaseConnection.getConnection();
-            ps = con.prepareStatement("INSERT INTO dueypackages (RecieverId, SenderName, Mesos, TimeStamp, Checked, Type, content, `Quick`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 1);
+            ps = con.prepareStatement("INSERT INTO dueypackages (RecieverId, SenderName, Mesos, TimeStamp, Checked, Type, content, `Quick`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", DatabaseConnection.RETURN_GENERATED_KEYS);
             ps.setInt(1, recipientID);
             ps.setString(2, sName);
             ps.setInt(3, mesos);
             ps.setLong(4, System.currentTimeMillis());
             ps.setInt(5, isOn ? 0 : 1);
+
             ps.setInt(6, item.getType());
             ps.setString(7, content);
             ps.setInt(8, Quick ? 1 : 0);
             ps.executeUpdate();
+
             rs = ps.getGeneratedKeys();
-            if (rs.next())
-                ItemLoader.DUEY.saveItems(Collections.singletonList(item), con, rs.getInt(1), GameConstants.getInventoryType(item.getItemId()), true);
+            if (rs.next()) {
+                ItemLoader.DUEY.saveItems(Collections.singletonList(new Pair<Item, MapleInventoryType>(item, GameConstants.getInventoryType(item.getItemId()))), rs.getInt(1));
+            }
             rs.close();
             ps.close();
+
             return true;
         } catch (SQLException se) {
             se.printStackTrace();
             return false;
         } finally {
-            try {
-                if (con != null)
+            if (con != null) {
+                try {
                     con.close();
-                if (ps != null)
-                    ps.close();
-                if (rs != null)
+                } catch (Exception e) {
+                }
+            }
+            if (rs != null) {
+                try {
                     rs.close();
-            } catch (SQLException se) {
-                se.printStackTrace();
+                } catch (Exception e) {
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (Exception e) {
+                }
             }
         }
     }
+    
+    public static final void checkReceivePackage(MapleCharacter chr) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT packageid, `Quick`, `TimeStamp`, `SenderName` FROM dueypackages WHERE RecieverId = ? AND Checked = 1 LIMIT 1");
+            ps.setInt(1, chr.getId());
+            rs = ps.executeQuery();
+            boolean b = rs.next();
+            if (b) {
+                boolean quick = rs.getInt("Quick") == 1;
+                long timestamp = rs.getLong("TimeStamp");
+                String s = rs.getString("SenderName");
+                if (rs.next() && !rs.getString("SenderName").startsWith("[") && !rs.getString("SenderName").endsWith("]")) {
+                    chr.getClient().getSession().write(MaplePacketCreator.sendDuey((byte) 28, null, null));
+                    reciveMsg(chr.getClient(), chr.getId());
+                } else if (b) {
+                    if (quick) {
+                        chr.getClient().getSession().write(MaplePacketCreator.receiveParcel(s, true));
+                        reciveMsg(chr.getClient(), chr.getId());
+                    } else if (timestamp + 12 * 3600000L < System.currentTimeMillis()) {
+                        chr.getClient().getSession().write(MaplePacketCreator.receiveParcel(s, false));
+                        reciveMsg(chr.getClient(), chr.getId());
+                    }
+                }
+            }
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (Exception e) {
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (Exception e) {
+                }
+            }
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Exception e) {
+                }
+            }
+        }
+    }    
 
-    public static final List<MapleDueyActions> loadItems(MapleCharacter chr) {
-        List<MapleDueyActions> packages = new LinkedList<>();
+    public static final List<MapleDueyActions> loadItems(final MapleCharacter chr) {
+        List<MapleDueyActions> packages = new LinkedList<MapleDueyActions>();
         Connection con = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -288,7 +460,7 @@ public class DueyHandler {
                 dueypack.setMesos(rs.getInt("Mesos"));
                 dueypack.setSentTime(rs.getLong("TimeStamp"));
                 dueypack.setContent(rs.getString("content"));
-                dueypack.setQuick((rs.getInt("Quick") > 0));
+                dueypack.setQuick(rs.getInt("Quick") > 0);
                 packages.add(dueypack);
             }
             rs.close();
@@ -298,21 +470,29 @@ public class DueyHandler {
             se.printStackTrace();
             return null;
         } finally {
-            try {
-                if (con != null)
+            if (con != null) {
+                try {
                     con.close();
-                if (ps != null)
-                    ps.close();
-                if (rs != null)
+                } catch (Exception e) {
+                }
+            }
+            if (rs != null) {
+                try {
                     rs.close();
-            } catch (SQLException se) {
-                se.printStackTrace();
+                } catch (Exception e) {
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (Exception e) {
+                }
             }
         }
     }
 
-    public static final MapleDueyActions loadSingleItem(int packageid, int charid) {
-        List<MapleDueyActions> packages = new LinkedList<>();
+    public static final MapleDueyActions loadSingleItem(final int packageid, final int charid) {
+        List<MapleDueyActions> packages = new LinkedList<MapleDueyActions>();
         Connection con = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -322,41 +502,49 @@ public class DueyHandler {
             ps.setInt(1, packageid);
             ps.setInt(2, charid);
             rs = ps.executeQuery();
+
             if (rs.next()) {
                 MapleDueyActions dueypack = getItemByPID(packageid);
                 dueypack.setSender(rs.getString("SenderName"));
                 dueypack.setMesos(rs.getInt("Mesos"));
                 dueypack.setSentTime(rs.getLong("TimeStamp"));
                 dueypack.setContent(rs.getString("content"));
-                dueypack.setQuick((rs.getInt("Quick") > 0));
+                dueypack.setQuick(rs.getInt("Quick") > 0);
                 packages.add(dueypack);
+                return dueypack;
+            } else {
                 rs.close();
                 ps.close();
-                return dueypack;
+                return null;
             }
-            rs.close();
-            ps.close();
-            return null;
         } catch (SQLException se) {
+//	    se.printStackTrace();
             return null;
         } finally {
-            try {
-                if (con != null)
+            if (con != null) {
+                try {
                     con.close();
-                if (ps != null)
-                    ps.close();
-                if (rs != null)
+                } catch (Exception e) {
+                }
+            }
+            if (rs != null) {
+                try {
                     rs.close();
-            } catch (SQLException se) {
-                se.printStackTrace();
+                } catch (Exception e) {
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (Exception e) {
+                }
             }
         }
     }
 
-    public static final void reciveMsg(MapleClient c, int recipientId) {
+    public static final void reciveMsg(final MapleClient c, final int recipientId) {
         Connection con = null;
         PreparedStatement ps = null;
-        ResultSet rs = null;
         try {
             con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("UPDATE dueypackages SET Checked = 0 where RecieverId = ?");
@@ -366,23 +554,24 @@ public class DueyHandler {
         } catch (SQLException se) {
             se.printStackTrace();
         } finally {
-            try {
-                if (con != null)
+            if (con != null) {
+                try {
                     con.close();
-                if (ps != null)
+                } catch (Exception e) {
+                }
+            }
+            if (ps != null) {
+                try {
                     ps.close();
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException se) {
-                se.printStackTrace();
+                } catch (Exception e) {
+                }
             }
         }
     }
 
-    private static final void removeItemFromDB(int packageid, int charid) {
+    public static final void removeItemFromDB(final int packageid, final int charid) {
         Connection con = null;
         PreparedStatement ps = null;
-        ResultSet rs = null;
         try {
             con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("DELETE FROM dueypackages WHERE PackageId = ? and RecieverId = ?");
@@ -393,27 +582,27 @@ public class DueyHandler {
         } catch (SQLException se) {
             se.printStackTrace();
         } finally {
-            try {
-                if (con != null)
+            if (con != null) {
+                try {
                     con.close();
-                if (ps != null)
+                } catch (Exception e) {
+                }
+            }
+            if (ps != null) {
+                try {
                     ps.close();
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException se) {
-                se.printStackTrace();
+                } catch (Exception e) {
+                }
             }
         }
     }
 
-    private static final MapleDueyActions getItemByPID(int packageid) {
+    private static final MapleDueyActions getItemByPID(final int packageid) {
         try {
-            Map<Long, Item> iter = ItemLoader.DUEY.loadItems(false, packageid, null);
+            Map<Long, Pair<Item, MapleInventoryType>> iter = ItemLoader.DUEY.loadItems(false, packageid);
             if (iter != null && iter.size() > 0) {
-                Iterator<Map.Entry<Long, Item>> iterator = iter.entrySet().iterator();
-                if (iterator.hasNext()) {
-                    Map.Entry<Long, Item> i = iterator.next();
-                    return new MapleDueyActions(packageid, i.getValue());
+                for (Pair<Item, MapleInventoryType> i : iter.values()) {
+                    return new MapleDueyActions(packageid, i.getLeft());
                 }
             }
         } catch (Exception se) {
